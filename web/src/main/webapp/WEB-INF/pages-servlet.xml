@@ -75,6 +75,7 @@
         <property name="supportedMediaTypes" value="application/json"/>
     </bean>
  
+	
     <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
     
     <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
@@ -82,6 +83,7 @@
             <util:list id="beanList">
                 <ref bean="marshallingHttpMessageConverter"/>
                 <ref bean="jacksonMessageConverter"/>
+                <ref bean="stringHttpMessageConverter"/>
             </util:list>
         </property>
     </bean>
