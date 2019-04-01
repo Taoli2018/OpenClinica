@@ -96,6 +96,20 @@ function hideCols(tableId,columnNumArray,showTable){
         }
     }
 
+    //spesial case for queries/listNotes
+    if (tableId === "listNotes") {
+        recalculateDropDownPos();
+    }
+
+}
+
+function recalculateDropDownPos() {
+    var table = jQuery('.aka_revised_content'),
+    dropdown = document.getElementById('subnav_Tasks'),
+    basePx = parseFloat(jQuery('#subnav_Tasks').css('font-size')),
+    widthInPx = basePx * 36,
+    tableWidth = table.width();
+    dropdown.style.left = 180 + 16 + tableWidth - widthInPx + 'px';
 }
 
 function toggleName(str){
@@ -418,7 +432,7 @@ function clearInputElementValues(trElement) {
     var myId="";
     var defValDelimiter = "-----";
 	var defValDelimiterValues = ",";
-  
+
     if(tdElements){
         for(var i = 0; i < tdElements.length; i++) {
         try {
@@ -455,38 +469,38 @@ function clearInputElementValues(trElement) {
                                         inputs[j].getAttribute("type").indexOf("checkbox") != -1 ){
     									inputs[j].removeAttribute("checked");
                                         inputs[j].checked=false;
-										
-										if(defVal && defVal.length > 0 && defVal.indexOf(defValDelimiter)>0)	{ 
+
+										if(defVal && defVal.length > 0 && defVal.indexOf(defValDelimiter)>0)	{
     										var def_temp = defVal.split(defValDelimiter);
     										var lookedId = def_temp[0];
 											var def_tmp= def_temp[1];
-											
+
 											if(inputs[j].getAttribute("id")==lookedId && def_temp.size() == 2 && def_tmp.length>0) {
 												var defValuesArrayCheckbox=def_temp[1].split("_____");
 												var defValForCheckBox = defValuesArrayCheckbox[0].split(defValDelimiterValues);
 												var allValuesForCheckbox = defValuesArrayCheckbox[1].split("|||||");
-						
+
 												for (var i_count = 0; i_count < allValuesForCheckbox.length; i_count++){
     												var cur_checkbox = allValuesForCheckbox[i_count];
     												var cur_checkbox_text_value = cur_checkbox.split(".....");
-				
+
     												if ( cur_checkbox_text_value.length==2 && inputs[j].value == cur_checkbox_text_value[0] &&
     													(defValForCheckBox.indexOf (cur_checkbox_text_value[1])!= -1
 														|| defValForCheckBox.indexOf (cur_checkbox_text_value[0])!= -1)){
     													inputs[j].checked=true;
 													}
     											}
-    											
+
     										}
-    										
-    										
+
+
     									}
-										
+
                                 }
-    							
+
                             if(inputs[j].getAttribute("type") &&
                                inputs[j].getAttribute("type").indexOf("text") != -1) {
-	                           if(defVal && defVal.length > 0 && defVal.indexOf(defValDelimiter)>0)	{ 
+	                           if(defVal && defVal.length > 0 && defVal.indexOf(defValDelimiter)>0)	{
 	                        	    var lookedId = defVal.split(defValDelimiter)[0];
 	                        		if(inputs[j].getAttribute("id")==lookedId) {
 	                        			inputs[j].setAttribute("value",defVal.split(defValDelimiter)[1]); defVal="";}
@@ -557,7 +571,7 @@ function clearInputElementValues(trElement) {
                          if(selects[h]){
                              options = selects[h].getElementsByTagName("option");
                              var def_temp="";
- 							if(defVal && defVal.length > 0 && defVal.indexOf(defValDelimiter)>0)	{ 
+ 							if(defVal && defVal.length > 0 && defVal.indexOf(defValDelimiter)>0)	{
  									def_temp = defVal.split(defValDelimiter);
  	                        	    var lookedId = def_temp[0];
  	                        		if(selects[h].getAttribute("id")==lookedId) {
@@ -619,11 +633,11 @@ function detectIEWindowsNew(userAgentString) {
 		  return false;
 		 else if (ieversion>=7 || ieversion>=6)
 		  return true;
-		 
-		  
+
+
 		  }
 		  return false;
-  
+
 }
 /*A METHOD CALLED BY THE WEB 2.0 FORMS JS LIBRARY, AFTER LINE 942.
  BWP: 08/21/2008; The method sets a discrepancy note icon to a certain image, to prevent the copying of
@@ -643,7 +657,7 @@ function changeDNoteIcon(trElement) {
                     if(hrefElements[j].childNodes){
                         for(var h = 0; h < hrefElements[j].childNodes.length; h++){
                             checkImgIcon(hrefElements[j].childNodes[h]);
-							
+
                         }
                     }
                 }
@@ -1216,7 +1230,7 @@ function openPrintCRFWindow(inURL) {
 function processPrintCRFRequest(url) {
 	url = encodeURI(url);
   openPrintCRFWindow(url);
-  //var pdfUrl = url.replace("/html/print/", "/pdf/print/");	
+  //var pdfUrl = url.replace("/html/print/", "/pdf/print/");
   //openPrintCRFWindow(pdfUrl);
 }
 
@@ -1340,11 +1354,9 @@ function setImageInParentWin(strParentWinImageName,strParentWinImageFullPath) {
 
     if (window.opener && !window.opener.closed) {
         //alert(strParentWinImageName);
-        objImage = MM_findObjInParentWin(strParentWinImageName);
+        objImage = window.opener.document.getElementById(strParentWinImageName);
         if (objImage != null) {
-            //alert(objImage.name);
-            //alert(objImage.src);
-            objImage.src = strParentWinImageFullPath;
+            objImage.className = strParentWinImageFullPath;
         }
 
     }
@@ -1689,23 +1701,24 @@ function refreshSource(isRefresh, pattern) {
 function findPos(navElement)
 {
 	var subnavElement='sub'+navElement;
-	var parentobj = document.getElementById(navElement);
-	var obj = document.getElementById(subnavElement);
-	var posX = parentobj.offsetLeft;var posY = parentobj.offsetTop;
-	var offsetx = -14;
-	var offsety = (parentobj.offsetHeight);
-	while(parentobj.offsetParent)
-	{
-		posX=posX+parentobj.offsetParent.offsetLeft;
-		posY=posY+parentobj.offsetParent.offsetTop;
-		if(parentobj==document.getElementsByTagName('body')[0]){break}
-		else
-		{
-			parentobj=parentobj.offsetParent;
-		}
-	}
-	obj.style.top  = (posY + offsety) + 'px';
-	obj.style.left = (posX + offsetx) + 'px';
+    // // overrided by css
+	// var parentobj = document.getElementById(navElement);
+	// var obj = document.getElementById(subnavElement);
+	// var posX = parentobj.offsetLeft;var posY = parentobj.offsetTop;
+	// var offsetx = -14;
+	// var offsety = (parentobj.offsetHeight);
+	// while(parentobj.offsetParent)
+	// {
+	// 	posX=posX+parentobj.offsetParent.offsetLeft;
+	// 	posY=posY+parentobj.offsetParent.offsetTop;
+	// 	if(parentobj==document.getElementsByTagName('body')[0]){break}
+	// 	else
+	// 	{
+	// 		parentobj=parentobj.offsetParent;
+	// 	}
+	// }
+	// obj.style.top  = (posY + offsety) + 'px';
+	// obj.style.left = (posX + offsetx) + 'px';
 	displayObject( subnavElement, true );
 }
 
@@ -1840,4 +1853,78 @@ if(BrowserDetect.browser=='Explorer' && BrowserDetect.version<7)
 	document.write('.loginBox { background-image: url(images/login_box_BG.gif); }');
 	document.write('.dropdown { background-image: url(images/dropdown_BG.gif); }');
 	document.write('</style>');
+}
+
+function pageWidth() {return window.innerWidth != null? window.innerWidth: document.documentElement && document.documentElement.clientWidth ? document.documentElement.clientWidth:document.body != null? document.body.clientWidth:null;}
+function pageHeight() {return window.innerHeight != null? window.innerHeight: document.documentElement && document.documentElement.clientHeight ? document.documentElement.clientHeight:document.body != null? document.body.clientHeight:null;}
+function posLeft() {return typeof window.pageXOffset != 'undefined' ? window.pageXOffset:document.documentElement && document.documentElement.scrollLeft? document.documentElement.scrollLeft:document.body.scrollLeft? document.body.scrollLeft:0;}
+function posTop() {return typeof window.pageYOffset != 'undefined' ? window.pageYOffset:document.documentElement && document.documentElement.scrollTop? document.documentElement.scrollTop: document.body.scrollTop?document.body.scrollTop:0;}
+function $(x){return document.getElementById(x);}
+function scrollFix(){var obol=$('ol');obol.style.top=posTop()+'px';obol.style.left=posLeft()+'px'}
+function sizeFix(){var obol=$('ol');obol.style.height=pageHeight()+'px';obol.style.width=pageWidth()+'px';}
+function kp(e){ky=e?e.which:event.keyCode;if(ky==88||ky==120)hm();return false}
+function inf(h){tag=document.getElementsByTagName('select');for(i=tag.length-1;i>=0;i--)tag[i].style.visibility=h;tag=document.getElementsByTagName('iframe');for(i=tag.length-1;i>=0;i--)tag[i].style.visibility=h;tag=document.getElementsByTagName('object');for(i=tag.length-1;i>=0;i--)tag[i].style.visibility=h;}
+
+// Initialize markup
+function initmb() {
+  var ab = 'absolute';
+  var n = 'none';
+  var obody = document.getElementsByTagName('body')[0];
+  var frag = document.createDocumentFragment();
+  var obol = document.createElement('div');
+  obol.setAttribute('id', 'ol');
+  obol.style.display = n;
+  obol.style.position = ab;
+  obol.style.top = 0;
+  obol.style.left = 0;
+  obol.style.zIndex = 998;
+  obol.style.width = '100%';
+  frag.appendChild(obol);
+  var obbx = document.createElement('div');
+  obbx.setAttribute('id', 'mbox');
+  obbx.style.display = n;
+  obbx.style.position = ab;
+  obbx.style.zIndex = 999;
+  var obl = document.createElement('span');
+  obbx.appendChild(obl);
+  var obbxd = document.createElement('div');
+  obbxd.setAttribute('id', 'mbd');
+  obl.appendChild(obbxd);
+  frag.insertBefore(obbx, obol.nextSibling);
+  obody.insertBefore(frag, obody.firstChild);
+}
+
+// Show markup
+function sm(obl, wd, ht) {
+  var h = 'hidden';
+  var b = 'block';
+  var p = 'px';
+  var obol = document.getElementById('ol');
+  var obbxd = document.getElementById('mbd');
+  obbxd.innerHTML = document.getElementById(obl).innerHTML;
+  obol.style.height = pageHeight() + p;
+  obol.style.width = pageWidth() + p;
+  obol.style.top = posTop() + p;
+  obol.style.left = posLeft() + p;
+  obol.style.display = b;
+  var tp = posTop() + ((pageHeight() - ht) / 2) - 12;
+  var lt = posLeft() + ((pageWidth() - wd) / 2) - 12;
+  var obbx = document.getElementById('mbox');
+  obbx.style.top = (tp < 0 ? 0 : tp) + p;
+  obbx.style.left = (lt < 0 ? 0 : lt) + p;
+  obbx.style.width = wd + p;
+  obbx.style.height = ht + p;
+  inf(h);
+  obbx.style.display = b;
+  return false;
+}
+
+// Close markup
+function hm() {
+  var v = 'visible';
+  var n = 'none';
+  document.getElementById('ol').style.display = n;
+  document.getElementById('mbox').style.display = n;
+  inf(v);
+  document.onkeypress = ''
 }

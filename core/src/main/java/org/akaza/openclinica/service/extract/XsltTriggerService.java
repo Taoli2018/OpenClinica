@@ -1,14 +1,18 @@
 package org.akaza.openclinica.service.extract;
 
 import java.math.BigInteger;
-import java.util.Date;
 
 import org.akaza.openclinica.bean.extract.ExtractPropertyBean;
 import org.akaza.openclinica.bean.login.UserAccountBean;
-import org.quartz.JobDataMap;
+import org.akaza.openclinica.bean.managestudy.StudyBean;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
+import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.quartz.SimpleTriggerFactoryBean;
 
 public class XsltTriggerService {
+
     public XsltTriggerService() {
 
     }
@@ -23,6 +27,7 @@ public class XsltTriggerService {
     public static final String EXTRACT_PROPERTY = "extractProperty";
     public static final String LOCALE = "locale";
     public static final String STUDY_ID = "studyId";
+    public static final String TENANT_SCHEMA = "tenantSchema";
     public static final String ZIPPED="zipped";
     public static final String DELETE_OLD="deleteOld";
     public static final String SUCCESS_MESSAGE="SUCCESS_MESSAGE";
@@ -42,50 +47,25 @@ public class XsltTriggerService {
     public static final String POST_PROC_EXPORT_NAME="postProcExportName";
     public static final String COUNT="count";
 
-    public SimpleTrigger generateXsltTrigger(String xslFile, String xmlFile, String endFilePath,
-            String endFile, int datasetId, ExtractPropertyBean epBean, UserAccountBean userAccountBean, String locale,int cnt, String xsltPath, String triggerGroupName) {
-        Date startDateTime = new Date(System.currentTimeMillis());
+
+    public SimpleTrigger generateXsltTrigger(Scheduler scheduler, String xslFile, String xmlFile, String endFilePath,
+            String endFile, int datasetId, ExtractPropertyBean epBean, UserAccountBean userAccountBean, String locale,int cnt, String xsltPath, String triggerGroupName,
+            StudyBean currentPublicStudy,StudyBean currentStudy) {
+        //Date startDateTime = new Date(System.currentTimeMillis());
         String jobName =  datasetId+ "_"+epBean.getExportFileName()[0];
         if(triggerGroupName!=null)
             TRIGGER_GROUP_NAME = triggerGroupName;
 
-        SimpleTrigger trigger = new SimpleTrigger(jobName, triggerGroupName);
-
-        trigger.setStartTime(startDateTime);
-        trigger.setName(jobName);// + datasetId);
-        trigger.setGroup(triggerGroupName);// + datasetId);
-        trigger.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
-        // set job data map
-        JobDataMap jobDataMap = new JobDataMap();
-
-        jobDataMap.put(XSL_FILE_PATH, xslFile);
-        jobDataMap.put(XML_FILE_PATH, endFilePath);
-        jobDataMap.put(POST_FILE_PATH, endFilePath);
-        jobDataMap.put(POST_FILE_NAME, endFile);
-
-        jobDataMap.put(EXTRACT_PROPERTY, epBean.getId());
-        jobDataMap.put(USER_ID, userAccountBean.getId());
-        jobDataMap.put(STUDY_ID, userAccountBean.getActiveStudyId());
-        jobDataMap.put(LOCALE, locale);
-        jobDataMap.put(DATASET_ID, datasetId);
-        jobDataMap.put(EMAIL, userAccountBean.getEmail());
-        jobDataMap.put(ZIPPED,epBean.getZipFormat());
-        jobDataMap.put(DELETE_OLD,epBean.getDeleteOld());
-        jobDataMap.put(SUCCESS_MESSAGE,epBean.getSuccessMessage());
-        jobDataMap.put(FAILURE_MESSAGE,epBean.getFailureMessage());
-
-        jobDataMap.put(POST_PROC_DELETE_OLD, epBean.getPostProcDeleteOld());
-        jobDataMap.put(POST_PROC_ZIP, epBean.getPostProcZip());
-        jobDataMap.put(POST_PROC_LOCATION, epBean.getPostProcLocation());
-        jobDataMap.put(POST_PROC_EXPORT_NAME, epBean.getPostProcExportName());
-        jobDataMap.put(COUNT,cnt);
-        jobDataMap.put(XSLT_PATH,xsltPath);
-        // jobDataMap.put(DIRECTORY, directory);
-        // jobDataMap.put(ExampleSpringJob.LOCALE, locale);
-        jobDataMap.put(EP_BEAN, epBean);
-
-        trigger.setJobDataMap(jobDataMap);
-        trigger.setVolatility(false);
+        //WebApplicationContext context = ContextLoader.getCurrentWebApplicationContext();
+        ApplicationContext context = null;
+        try {
+            context = (ApplicationContext) scheduler.getContext().get("applicationContext");
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
+        SimpleTriggerFactoryBean triggerFactoryBean = context.getBean(
+                SimpleTriggerFactoryBean.class, xslFile, xmlFile, endFilePath, endFile, datasetId, epBean, userAccountBean, locale, cnt, xsltPath, currentPublicStudy, currentStudy);
+        SimpleTrigger trigger = triggerFactoryBean.getObject();
 
         return trigger;
     }
@@ -108,6 +88,26 @@ public class XsltTriggerService {
             // day?
         }
         return interval.longValue();
+    }
+
+    public static int getIntervalTimeInSeconds(String period) {
+        Integer interval = new Integer("0");
+        if ("monthly".equalsIgnoreCase(period)) {
+            interval = new Integer("2419200"); // how many
+            // milliseconds in
+            // a month? should
+            // be 24192000000
+        } else if ("weekly".equalsIgnoreCase(period)) {
+            interval = new Integer("604800"); // how many
+            // milliseconds in
+            // a week? should
+            // be 6048000000
+        } else { // daily
+            interval = new Integer("86400");// how many
+            // milliseconds in a
+            // day?
+        }
+        return interval.intValue();
     }
 
     public String getTriggerGroupNameForExportJobs()

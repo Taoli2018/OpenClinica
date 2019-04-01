@@ -7,28 +7,30 @@
  */
 package org.akaza.openclinica.control.submit;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-
 import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
+import org.akaza.openclinica.control.SpringServletAccess;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormDiscrepancyNotes;
 import org.akaza.openclinica.control.form.FormProcessor;
-import org.akaza.openclinica.dao.managestudy.EventDefinitionCRFDAO;
-import org.akaza.openclinica.dao.managestudy.StudyDAO;
-import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
-import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
-import org.akaza.openclinica.dao.managestudy.StudyGroupClassDAO;
-import org.akaza.openclinica.dao.managestudy.StudyGroupDAO;
-import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
+import org.akaza.openclinica.dao.core.CoreResources;
+import org.akaza.openclinica.dao.hibernate.FormLayoutDao;
+import org.akaza.openclinica.dao.hibernate.StudyParameterValueDao;
+import org.akaza.openclinica.dao.managestudy.*;
 import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
 import org.akaza.openclinica.dao.submit.EventCRFDAO;
 import org.akaza.openclinica.dao.submit.SubjectDAO;
 import org.akaza.openclinica.dao.submit.SubjectGroupMapDAO;
+import org.akaza.openclinica.domain.datamap.StudyParameterValue;
 import org.akaza.openclinica.i18n.core.LocaleResolver;
+import org.akaza.openclinica.service.UserService;
 import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
 
 /**
  * Servlet for creating a table.
@@ -49,8 +51,8 @@ public class ListStudySubjectsServlet extends SecureController {
     private EventCRFDAO eventCRFDAO;
     private EventDefinitionCRFDAO eventDefintionCRFDAO;
     private StudyGroupDAO studyGroupDAO;
-    private boolean showMoreLink;
     private StudyParameterValueDAO studyParameterValueDAO;
+    private UserService userService;
     Locale locale;
 
     /*
@@ -72,19 +74,39 @@ public class ListStudySubjectsServlet extends SecureController {
         }
 
         addPageMessage(respage.getString("no_have_correct_privilege_current_study") + respage.getString("change_study_contact_sysadmin"));
-        throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("may_not_submit_data"), "1");
+        throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("" +
+                "may_not_submit_data"), "1");
     }
 
     @Override
     protected void processRequest() throws Exception {
-        getCrfLocker().unlockAllForUser(ub.getId());
+        WebApplicationContext webApplicationContext = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
         FormProcessor fp = new FormProcessor(request);
+        boolean showMoreLink;
+
+        int parentStudyId = currentStudy.getParentStudyId() > 0 ? currentStudy.getParentStudyId() : currentStudy.getId();
+
+        StudyParameterValueDao studyParameterValueDao = (StudyParameterValueDao) SpringServletAccess.getApplicationContext(context).getBean("studyParameterValueDao");
+        StudyParameterValue parentSPV = studyParameterValueDao.findByStudyIdParameter(parentStudyId, "subjectIdGeneration");
+
+        currentStudy.getStudyParameterConfig().setSubjectIdGeneration(parentSPV.getValue());
+
+        String addNewSubjectOverlay = fp.getRequest().getParameter("addNewSubject");
+        if (addNewSubjectOverlay != null){
+            if (addNewSubjectOverlay.equals("true")){
+                request.setAttribute("showOverlay", true);
+            }
+        }
+
         if(fp.getString("showMoreLink").equals("")){
             showMoreLink = true;
         }else {
             showMoreLink = Boolean.parseBoolean(fp.getString("showMoreLink"));
         }
+        logger.info("CurrentStudy:" + currentPublicStudy.getSchemaName());
+        logger.info("StudyParameterConfig:" + currentPublicStudy.getStudyParameterConfig().toString());
         String idSetting = currentStudy.getStudyParameterConfig().getSubjectIdGeneration();
+        logger.info("idSetting:" + idSetting);
         // set up auto study subject id
         if (idSetting.equals("auto editable") || idSetting.equals("auto non-editable")) {
             //Shaoyu Su
@@ -112,15 +134,15 @@ public class ListStudySubjectsServlet extends SecureController {
                 request.setAttribute("id", new Integer(studySubject.getId()).toString());
                 forwardPage(Page.VIEW_STUDY_SUBJECT_SERVLET);
             } else {
-                createTable();
+                createTable(showMoreLink);
             }
         } else {
-            createTable();
+            createTable(showMoreLink);
         }
 
     }
 
-    private void createTable() {
+    private void createTable(boolean showMoreLink) {
 
         ListStudySubjectTableFactory factory = new ListStudySubjectTableFactory(showMoreLink);
         factory.setStudyEventDefinitionDao(getStudyEventDefinitionDao());
@@ -137,15 +159,18 @@ public class ListStudySubjectsServlet extends SecureController {
         factory.setEventDefintionCRFDAO(getEventDefinitionCRFDAO());
         factory.setStudyGroupDAO(getStudyGroupDAO());
         factory.setStudyParameterValueDAO(getStudyParameterValueDAO());
+        factory.setUserService(getUserService());
+        factory.setRequest(request);
         String findSubjectsHtml = factory.createTable(request, response).render();
 
         request.setAttribute("findSubjectsHtml", findSubjectsHtml);
         // A. Hamid.
         // For event definitions and group class list in the add subject popup
-        request.setAttribute("allDefsArray", super.getEventDefinitionsByCurrentStudy());
+        // request.setAttribute("allDefsArray", super.getEventDefinitionsByCurrentStudy());
         request.setAttribute("studyGroupClasses", super.getStudyGroupClassesByCurrentStudy());
         FormDiscrepancyNotes discNotes = new FormDiscrepancyNotes();
         session.setAttribute(AddNewSubjectServlet.FORM_DISCREPANCY_NOTES_NAME, discNotes);
+        request.setAttribute("participantIDVerification", CoreResources.getField("participantIDVerification.enabled"));
 
         forwardPage(Page.LIST_STUDY_SUBJECTS);
 
@@ -213,6 +238,10 @@ public class ListStudySubjectsServlet extends SecureController {
     public StudyGroupDAO getStudyGroupDAO() {
         studyGroupDAO = this.studyGroupDAO == null ? new StudyGroupDAO(sm.getDataSource()) : studyGroupDAO;
         return studyGroupDAO;
+    }
+
+    public UserService getUserService() {
+        return userService= (UserService) SpringServletAccess.getApplicationContext(context).getBean("userService");
     }
 
 }

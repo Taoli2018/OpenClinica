@@ -52,13 +52,13 @@
 
 <!-- Table Actions row (pagination, search, tools) -->
 
-		<tr>
-	
+		
+
 	<!-- Pagination cell (for multi-page tables) -->
 	
-		<td width="33%" valign="top" class="table_actions">
+		<td width="33%" class="table_actions">
 		<table border="0" cellpadding="0" cellspacing="0">
-			<tr>
+			
 				<td valign="top" class="table_tools">
 					<c:if test="${table.paginated && (table.currPageNumber > 1)}">
 						<a href="<c:out value="${firstPageQuery}"/>"><img src="images/arrow_first.gif" border="0" alt="<fmt:message key="first_page" bundle="${resword}"/>" title="<fmt:message key="first_page" bundle="${resword}"/>"></a>
@@ -76,19 +76,12 @@
 						<a href="<c:out value="${lastPageQuery}"/>"><img src="images/arrow_last.gif" border="0" alt="<fmt:message key="last_page" bundle="${resword}"/>" title="<fmt:message key="last_page" bundle="${resword}"/>"></a>
 					</c:if>
 				</td>
-			</tr>
-		</table>
-		</td>
-	
-	<!-- End Pagination cell -->
-	
-	<!-- Search cell (for multi-page tables) -->
 
-		<c:if test="${searchFormDisplayed != 0}">
+				<c:if test="${searchFormDisplayed != 0}">
 			<form action="<c:out value="${table.postAction}" />?module=${module}" method="POST">
 		</c:if>
 	
-		<td width="33%" valign="top" align="center" class="table_actions">
+		<td width="33%" align="center" class="table_actions">
 		
 
 				<jsp:include page="showSubmitted.jsp" />
@@ -104,8 +97,8 @@
 				<tr>
 					<td valign="top">
 						<div class="formfieldM_BG">
-						<input name="ebl_filterKeyword" type="text" class="formfieldM" value="<c:out value="${table.keywordFilter}"/>" /> 
-						</div>
+						<input name="ebl_filterKeyword" type="text" class="formfieldM" value="" /> 
+						</div> 
 					</td>
 					<td valign="top">
 						<input type="submit" class="button_search" value="<fmt:message key="find" bundle="${resword}"/>" 
@@ -121,6 +114,16 @@
 					</td>
 				</tr>
 			</table>
+			
+		</table>
+		</td>
+	
+	<!-- End Pagination cell -->
+	
+	<!-- Search cell (for multi-page tables) -->
+
+		
+			<br/>
 
 		</td>
 
@@ -132,12 +135,12 @@
 	
 	<!-- Table Tools/Actions cell -->
 	
-		<td width="33%" align="left" valign="top" class="table_actions">
+		<td width="33%" align="left" class="table_actions">
 			<table border="0" cellpadding="0" cellspacing="0">
 				<tr>
 					<c:set var="isFirstLink" value="${true}" />
 					<c:if test="${table.filtered}">
-						<td class="table_tools"><a href="<c:out value="${removeFilterQuery}"/>"><fmt:message key="clear_search_keywords" bundle="${restext}"/></a></td>
+						<td class="table_tools"><a style="text-decoration: none" href="<c:out value="${removeFilterQuery}"/>"><fmt:message key="clear_search_keywords" bundle="${restext}"/></a></td>
 						<c:set var="isFirstLink" value="${false}" />
 					</c:if>
 					<c:forEach var="link" items="${table.links}">
@@ -147,10 +150,10 @@
 						
 						<c:choose>
 							<c:when test="${link.caption != 'OpenClinica CRF Library'}">
-								<td class="table_tools"><b><a href="<c:out value="${link.url}"/>"><c:out value="${link.caption}" /></a></b></td>
+								<td class="table_tools"><a style="text-decoration: none" href="<c:out value="${link.url}"/>"><input type="button" value='<c:out value="${link.caption}" />'></a></td>
 							</c:when>
 							<c:otherwise>
-								<td class="table_tools"><b><a href="<c:out value="${link.url}"/>" target="_blank"><c:out value="${link.caption}" /></a></b></td>
+								<td class="table_tools"><b><a style="text-decoration: none" href="<c:out value="${link.url}"/>" target="_blank"><c:out value="${link.caption}" /></a></b></td>
 							</c:otherwise>
 						</c:choose>
 						<c:set var="isFirstLink" value="${false}" />
@@ -209,7 +212,7 @@
 						<td class="table_header_row">
 						</c:otherwise>
 						</c:choose>
-							<c:if test="${column.showLink}"><a href="<c:out value="${orderByQuery}"/>"></c:if>
+							<c:if test="${column.showLink}"><a style="text-decoration: none" href="<c:out value="${orderByQuery}"/>"></c:if>
             <%-- Alter header format to reduce table space--%>
             <c:choose>
             	<c:when test="${column.name eq 'Date Updated'}">
@@ -226,14 +229,15 @@
             	</c:otherwise>
             </c:choose>
             <c:if test="${column.showLink}">
+	            <c:if test="${(table.sortingColumnInd == i) && column.showLink}">
+					<c:choose>
+						<c:when test="${table.ascendingSort}"><span class="icon icon-caret-down gray" alt="<fmt:message key="ascending_sort" bundle="${resword}"/>" title="<fmt:message key="ascending_sort" bundle="${resword}"/>" /></c:when>
+						<c:otherwise><span class="icon icon-caret-up gray" alt="<fmt:message key="descending_sort" bundle="${resword}"/>" title="<fmt:message key="descending_sort" bundle="${resword}"/>" /></c:otherwise>
+					</c:choose>
+				</c:if>
             	</a>
             </c:if>
-							<c:if test="${(table.sortingColumnInd == i) && column.showLink}">
-								<c:choose>
-									<c:when test="${table.ascendingSort}"><img src="images/bt_sort_ascending.gif" alt="<fmt:message key="ascending_sort" bundle="${resword}"/>" title="<fmt:message key="ascending_sort" bundle="${resword}"/>" /></c:when>
-									<c:otherwise><img src="images/bt_sort_descending.gif" alt="<fmt:message key="descending_sort" bundle="${resword}"/>" title="<fmt:message key="descending_sort" bundle="${resword}"/>" /></c:otherwise>
-								</c:choose>
-							</c:if>
+			
 
             </td>
 						<c:set var="i" value="${i + 1}" />

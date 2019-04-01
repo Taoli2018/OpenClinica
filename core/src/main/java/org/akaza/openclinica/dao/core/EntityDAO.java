@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -161,18 +162,18 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         ArrayList results = new ArrayList();
         ResultSet rs = null;
         Connection con = null;
-        PreparedStatement ps = null;
-
+        Statement ps = null;
         logger.debug("query???" + query);
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: GenericDAO.select!");
                 throw new SQLException();
             }
-            ps = con.prepareStatement(query);
-            rs = ps.executeQuery();
+            ps = con.createStatement();
+            rs = ps.executeQuery(query);
             // if (logger.isInfoEnabled()) {
             logger.debug("Executing static query, GenericDAO.select: " + query);
             // logger.info("fond information about result set: was null: "+
@@ -209,6 +210,8 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
 
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: GenericDAO.select!");
@@ -217,7 +220,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
 
             ps = con.prepareStatement(query);
 
-            ps = psf.generate(ps);// enter variables here!
+            ps = psf.generate(ps,con);// enter variables here!
 
             {
                 rs = ps.executeQuery();
@@ -294,6 +297,8 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
 
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: GenericDAO.select!");
@@ -359,6 +364,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         try {
             if (!isTrasactional) {
                 con = ds.getConnection();
+                CoreResources.setSchema(con);
             }
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
@@ -407,6 +413,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         try {
             if (!isTrasactional) {
                 con = ds.getConnection();
+                CoreResources.setSchema(con);
             }
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
@@ -457,6 +464,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         try {
             if (!isTrasactional) {
                 con = ds.getConnection();
+                CoreResources.setSchema(con);
             }
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
@@ -505,6 +513,8 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         PreparedStatementFactory psf = new PreparedStatementFactory(variables, nullVars);
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: EntityDAO.execute!");
@@ -813,7 +823,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         } // end of catch
     }
 
-    public void closeIfNecessary(Connection con, ResultSet rs, PreparedStatement ps) {
+    public void closeIfNecessary(Connection con, ResultSet rs, Statement ps) {
         try {
             if (ps != null)
                 ps.close();
@@ -831,6 +841,21 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
     }
 
     public void closeIfNecessary(ResultSet rs, PreparedStatement ps) {
+        try {
+            if (ps != null)
+                ps.close();
+            if (rs != null)
+                rs.close();
+        } catch (SQLException sqle) {// eventually throw a custom
+            // exception,tbh
+            if (logger.isWarnEnabled()) {
+                logger.warn("Exception thrown in GenericDAO.closeIfNecessary(rs,ps)");
+                logger.error(sqle.getMessage(), sqle);
+            }
+        } // end of catch
+    }
+
+    public void closeIfNecessary(ResultSet rs, Statement ps) {
         try {
             if (ps != null)
                 ps.close();
@@ -987,7 +1012,6 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
      * This is the first operation created for the database, so therefore it is the simplest; cull information from the
      * database but not specify any parameters.
      *
-     * @param query
      *            a static query of the database.
      * @return ArrayList of HashMaps carrying the database values.
      */
@@ -1000,19 +1024,20 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         ArrayList results = new ArrayList();
         ResultSet rs = null;
         Connection con = null;
-        PreparedStatement ps = null;
+        Statement ps = null;
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             con.setAutoCommit(false);
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: GenericDAO.select!");
                 throw new SQLException();
             }
-
-            ps = con.prepareStatement(query);
+            ps = con.createStatement();
             ps.setFetchSize(50);
-            rs = ps.executeQuery();
+            rs = ps.executeQuery(query);
             if (logger.isInfoEnabled()) {
                 logger.debug("Executing static query, GenericDAO.select: " + query);
                 // logger.info("fond information about result set: was null: "+
@@ -1293,19 +1318,21 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         boolean bret = false;
         ResultSet rs = null;
         Connection con = null;
-        PreparedStatement ps = null;
+        Statement ps = null;
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             con.setAutoCommit(false);
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: GenericDAO.select!");
                 throw new SQLException();
             }
-            ps = con.prepareStatement(query);
+            ps = con.createStatement();
             ps.setFetchSize(50);
 
-            rs = ps.executeQuery();
+            rs = ps.executeQuery(query);
             if (logger.isInfoEnabled()) {
                 logger.debug("Executing static query, GenericDAO.select: " + query);
                 // logger.info("fond information about result set: was null: "+
@@ -1353,20 +1380,21 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         boolean bret = false;
         ResultSet rs = null;
         Connection con = null;
-        PreparedStatement ps = null;
+        Statement ps = null;
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             con.setAutoCommit(false);
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: GenericDAO.select!");
                 throw new SQLException();
             }
-
-            ps = con.prepareStatement(query);
+            ps = con.createStatement();
             ps.setFetchSize(50);
 
-            rs = ps.executeQuery();
+            rs = ps.executeQuery(query);
             logger.debug("Executing static query, GenericDAO.select: " + query);
             // logger.info("fond information about result set: was null: "+
             // rs.wasNull());
@@ -1901,10 +1929,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + " 		WHERE  " + " 			event_crf.study_event_id IN  " + " 			( "
                     + " 				SELECT study_event_id FROM study_event  " + " 				WHERE "
                     + " 					study_event.study_event_definition_id IN " + sedin + " 				   AND  "
-                    + " 					(	study_event.sample_ordinal IS NOT NULL AND "
-                    // + " study_event.location IS NOT NULL AND " //JN:Starting 3.1 study event location is no longer
-                    // null
-                    + " 						study_event.date_start IS NOT NULL  " + " 					) " + " 				   AND "
+                    + " 					(	study_event.sample_ordinal IS NOT NULL 	) " + " 				   AND "
                     + " 					study_event.study_subject_id IN " + " 				   ( "
                     + " 					SELECT DISTINCT study_subject.study_subject_id " + " 					 FROM  	study_subject   "
                     + " 					 JOIN	study  			ON ( " + " 										study.study_id = study_subject.study_id  "
@@ -1964,9 +1989,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + "       WHERE  " + "           event_crf.study_event_id IN  " + "           ( "
                     + "               SELECT study_event_id FROM study_event  " + "               WHERE "
                     + "                   study_event.study_event_definition_id IN " + sedin + "                  AND  "
-                    + "                   (   study_event.sample_ordinal IS NOT NULL AND "
-                    // + " study_event.location IS NOT NULL AND " JN: starting 3.1 study_event.location can be null
-                    + "                       study_event.date_start IS NOT NULL  " + "                   ) " + "                  AND "
+                    + "                   (   study_event.sample_ordinal IS NOT NULL  ) " + "                  AND "
                     + "                   study_event.study_subject_id IN " + "                  ( "
                     + "                   SELECT DISTINCT study_subject.study_subject_id " + "                    FROM   study_subject   "
                     + "                    JOIN   study           ON ( "
@@ -1987,7 +2010,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + "                                      AND  "
                     + "                                       study_event.study_subject_id = event_crf.study_subject_id  "
                     + "                                      AND " + "                                       (event_crf.status_id " + ecStatusConstraint + ") "
-                    + "                                      ) " + "                   WHERE " + dateConstraint + "                       AND "
+                    + "                                      ) " + "                   WHERE "
                     + "                       study_event_definition.study_event_definition_id IN " + sedin + "                  )  " + "           ) "
                     + "           AND study_subject_id IN ( " + "               SELECT DISTINCT study_subject.study_subject_id "
                     + "                FROM   study_subject   " + "                JOIN   study           ON ( "
@@ -2006,7 +2029,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + "                                   study_event.study_event_id = event_crf.study_event_id  " + "                                  AND  "
                     + "                                   study_event.study_subject_id = event_crf.study_subject_id  "
                     + "                                  AND " + "                                   (event_crf.status_id " + ecStatusConstraint + ") "
-                    + "                                  ) " + "               WHERE " + dateConstraint + "                   AND "
+                    + "                                  ) " + "               WHERE  "
                     + "                   study_event_definition.study_event_definition_id IN " + sedin + "           ) " + "           AND "
                     + "           (event_crf.status_id " + ecStatusConstraint + ") " + "   )  " + "   AND  " + "   (item_data.status_id " + itStatusConstraint
                     + ")  " + " ) AS SBQONE, study_event, study_event_definition " + " WHERE  " + " (study_event.study_event_id = SBQONE.studyeventid) "
@@ -2133,8 +2156,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + " 		WHERE  " + " 			event_crf.study_event_id IN  " + " 			( "
                     + " 				SELECT study_event_id FROM study_event  " + " 				WHERE "
                     + " 					study_event.study_event_definition_id IN " + sedin + " 				   AND  "
-                    + " 					(	study_event.sample_ordinal IS NOT NULL AND " + " 						study_event.location IS NOT NULL AND "
-                    + " 						study_event.date_start IS NOT NULL  " + " 					) " + " 				   AND "
+                    + " 					(	study_event.sample_ordinal IS NOT NULL 	) " + " 				   AND "
                     + " 					study_event.study_subject_id IN " + " 				   ( "
                     + " 					SELECT DISTINCT study_subject.study_subject_id " + " 					 FROM  	study_subject   "
                     + " 					 JOIN	study  			ON ( " + " 										study.study_id = study_subject.study_id  "
@@ -2201,8 +2223,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + "       WHERE  " + "           event_crf.study_event_id IN  " + "           ( "
                     + "               SELECT study_event_id FROM study_event  " + "               WHERE "
                     + "                   study_event.study_event_definition_id IN " + sedin + "                  AND  "
-                    + "                   (   study_event.sample_ordinal IS NOT NULL AND " + "                       study_event.location IS NOT NULL AND "
-                    + "                       study_event.date_start IS NOT NULL  " + "                   ) " + "                  AND "
+                    + "                   (   study_event.sample_ordinal IS NOT NULL   ) " + "                  AND "
                     + "                   study_event.study_subject_id IN " + "                  ( "
                     + "                   SELECT DISTINCT study_subject.study_subject_id " + "                    FROM   study_subject   "
                     + "                    JOIN   study           ON ( "
@@ -2223,7 +2244,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + "                                      AND  "
                     + "                                       study_event.study_subject_id = event_crf.study_subject_id  "
                     + "                                      AND " + "                                       (event_crf.status_id " + ecStatusConstraint + ") "
-                    + "                                      ) " + "                   WHERE " + dateConstraint + "                       AND "
+                    + "                                      ) " + "                   WHERE "
                     + "                       study_event_definition.study_event_definition_id IN " + sedin + "                  )  " + "           ) "
                     + "           AND study_subject_id IN ( " + "               SELECT DISTINCT study_subject.study_subject_id "
                     + "                FROM   study_subject   " + "                JOIN   study           ON ( "
@@ -2242,7 +2263,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
                     + "                                   study_event.study_event_id = event_crf.study_event_id  " + "                                  AND  "
                     + "                                   study_event.study_subject_id = event_crf.study_subject_id  "
                     + "                                  AND " + "                                   (event_crf.status_id " + ecStatusConstraint + ") "
-                    + "                                  ) " + "               WHERE " + dateConstraint + "                   AND "
+                    + "                                  ) " + "               WHERE "
                     + "                   study_event_definition.study_event_definition_id IN " + sedin + "           ) " + "           AND "
                     + "           (event_crf.status_id " + ecStatusConstraint + ") " + "   )  " + "   AND  " + "   (item_data.status_id " + itStatusConstraint
                     + ")  " + " ) AS SBQONE, item_group_metadata, item_group " + " WHERE  "
@@ -2254,9 +2275,7 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
     /**
      *
      * @param sedin
-     * @param itin
-     * @param currentstudyid
-     * @param parentstudyid
+
      * @return
      */
     protected String getSQLInKeyDatasetHelper(int studyid, int studyparentid, String sedin, String it_in, String dateConstraint, String ecStatusConstraint,
@@ -2402,16 +2421,18 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         HashMap results = new HashMap();
         ResultSet rs = null;
         Connection con = null;
-        PreparedStatement ps = null;
+        Statement ps = null;
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: setHashMapInKeysHelper.select!");
                 throw new SQLException();
             }
-            ps = con.prepareStatement(query);
-            rs = ps.executeQuery();
+            ps = con.createStatement();
+            rs = ps.executeQuery(query);
             // if (logger.isInfoEnabled()) {
             logger.debug("Executing static query, setHashMapInKeysHelper.select: " + query);
             // logger.info("fond information about result set: was null: "+
@@ -2523,16 +2544,18 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         ArrayList results = new ArrayList();
         ResultSet rs = null;
         Connection con = null;
-        PreparedStatement ps = null;
+        Statement ps = null;
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: selectStudySubjectIDs!");
                 throw new SQLException();
             }
-            ps = con.prepareStatement(query);
-            rs = ps.executeQuery();
+            ps = con.createStatement();
+            rs = ps.executeQuery(query);
             // if (logger.isInfoEnabled()) {
             logger.debug("Executing static query, selectStudySubjectIDs: " + query);
             // logger.info("fond information about result set: was null: "+
@@ -2701,7 +2724,6 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
      * study_subject_id
      *
      * @param studyid
-     * @param studyparentid
      * @param sedin
      * @return
      */
@@ -2712,16 +2734,18 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         ArrayList results = new ArrayList();
         ResultSet rs = null;
         Connection con = null;
-        PreparedStatement ps = null;
+        Statement ps = null;
         try {
             con = ds.getConnection();
+            CoreResources.setSchema(con);
+
             if (con.isClosed()) {
                 if (logger.isWarnEnabled())
                     logger.warn("Connection is closed: getStudySubjectIDs!");
                 throw new SQLException();
             }
-            ps = con.prepareStatement(query);
-            rs = ps.executeQuery();
+            ps = con.createStatement();
+            rs = ps.executeQuery(query);
             // if (logger.isInfoEnabled()) {
             logger.debug("Executing static query, getStudySubjectIDs: " + query);
             // logger.info("fond information about result set: was null: "+
@@ -2886,8 +2910,8 @@ public abstract class EntityDAO<K extends String, V extends ArrayList> implement
         String sql = eb.getDataset().getSQLStatement();
         String[] os = sql.split("'");
         if ("postgres".equalsIgnoreCase(dbName)) {
-        	dateConstraint = "(study_subject.enrollment_date is NULL OR ((date(study_subject.enrollment_date) >= date('" + os[1] + "')) and (date(study_subject.enrollment_date) <= date('" + os[3]
-                    + "'))))";
+            dateConstraint = " (date(study_subject.enrollment_date) >= date('" + os[1] + "')) and (date(study_subject.enrollment_date) <= date('" + os[3]
+                    + "'))";
         } else if ("oracle".equalsIgnoreCase(dbName)) {
             dateConstraint = " trunc(study_subject.enrollment_date) >= to_date('" + os[1] + "') and trunc(study_subject.enrollment_date) <= to_date('" + os[3]
                     + "')";

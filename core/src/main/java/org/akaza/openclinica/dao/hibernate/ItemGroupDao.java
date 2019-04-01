@@ -6,9 +6,12 @@ import org.akaza.openclinica.bean.oid.ItemGroupOidGenerator;
 import org.akaza.openclinica.bean.oid.OidGenerator;
 import org.akaza.openclinica.domain.datamap.CrfBean;
 import org.akaza.openclinica.domain.datamap.ItemGroup;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 public class ItemGroupDao extends AbstractDomainDao<ItemGroup> {
+
+    String findByCrfVersionIdQuery = "select distinct ig from ItemGroup ig " + "join fetch ig.itemGroupMetadatas igm " + "join fetch igm.crfVersion crf "
+            + "join fetch igm.item as i " + "where crf.crfVersionId = :crfVersionId " + "order by i.itemId";
 
     @Override
     Class<ItemGroup> domainClass() {
@@ -32,18 +35,28 @@ public class ItemGroupDao extends AbstractDomainDao<ItemGroup> {
         return (ItemGroup) q.uniqueResult();
     }
 
-    public static final String findAllByCrfVersionIdQuery = "select distinct ig.* from item_group ig, item_group_metadata igm"
-            + " where igm.crf_version_id = :crfversionid and ig.item_group_id = igm.item_group_id";
+    public ItemGroup findByCrfAndGroupLayout(CrfBean crf, String layout) {
+        getSessionFactory().getStatistics().logSummary();
+        String query = "from " + getDomainClassName() + " do  where do.crf = :crf and do.layoutGroupPath = :layout ";
+        org.hibernate.Query q = getCurrentSession().createQuery(query);
+        q.setEntity("crf", crf);
+        q.setString("layout", layout);
+        return (ItemGroup) q.uniqueResult();
+    }
 
     @SuppressWarnings("unchecked")
     public ArrayList<ItemGroup> findByCrfVersionId(Integer crfVersionId) {
-        Query q = getCurrentSession().createSQLQuery(findAllByCrfVersionIdQuery).addEntity(ItemGroup.class);
-        q.setInteger("crfversionid", crfVersionId.intValue());
+        // String query = "select distinct ig.* from item_group ig, item_group_metadata igm where igm.crf_version_id = "
+        // + crfVersionId
+        // + " and ig.item_group_id = igm.item_group_id";
+
+        Query q = getCurrentSession().createQuery(findByCrfVersionIdQuery);
+        q.setParameter("crfVersionId", crfVersionId);
         return (ArrayList<ItemGroup>) q.list();
     }
 
     public String getValidOid(ItemGroup itemGroup, String crfName, String itemGroupLabel, ArrayList<String> oidList) {
-    OidGenerator oidGenerator = new ItemGroupOidGenerator();
+        OidGenerator oidGenerator = new ItemGroupOidGenerator();
         String oid = getOid(itemGroup, crfName, itemGroupLabel);
         String oidPreRandomization = oid;
         while (findByOcOID(oid) != null || oidList.contains(oid)) {

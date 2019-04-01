@@ -4,25 +4,12 @@ package org.akaza.openclinica.domain.datamap;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 
 import org.akaza.openclinica.domain.DataMapDomainObject;
 import org.akaza.openclinica.domain.Status;
 import org.akaza.openclinica.domain.user.UserAccount;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.akaza.openclinica.service.UserStatus;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -32,8 +19,7 @@ import org.hibernate.annotations.Type;
  */
 @Entity
 @Table(name = "study_subject", uniqueConstraints = @UniqueConstraint(columnNames = "oc_oid"))
-@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence", value = "study_subject_study_subject_id_seq") })
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence_name", value = "study_subject_study_subject_id_seq") })
 public class StudySubject  extends DataMapDomainObject {
 
 	private int studySubjectId;
@@ -53,6 +39,9 @@ public class StudySubject  extends DataMapDomainObject {
 	private List<StudyEvent> studyEvents ;
 	private List<EventCrf> eventCrfs;
 	private List<StudyEventDefinition> studyEventDefinitions;
+	private Integer userId;
+	private UserStatus userStatus;
+	private StudySubjectDetail studySubjectDetail;
 	
 	public StudySubject() {
 	}
@@ -108,7 +97,7 @@ public class StudySubject  extends DataMapDomainObject {
 		this.userAccount = userAccount;
 	}
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "study_id")
 	public Study getStudy() {
 		return this.study;
@@ -230,8 +219,7 @@ public class StudySubject  extends DataMapDomainObject {
 	
 	@JoinColumn(name="study_subject_id")
 	
-	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-	public List<StudyEvent> getStudyEvents() {
+		public List<StudyEvent> getStudyEvents() {
 		return this.studyEvents;
 	}
 
@@ -246,6 +234,38 @@ public class StudySubject  extends DataMapDomainObject {
 
 	public void setEventCrfs(List<EventCrf> eventCrfs) {
 		this.eventCrfs = eventCrfs;
+	}
+
+	@Column(name = "user_id")
+	public Integer getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Integer userId) {
+		this.userId = userId;
+	}
+
+	@Column(name = "user_status_id")
+	public UserStatus getUserStatus() {
+		return userStatus;
+	}
+
+	public void setUserStatus(UserStatus userStatus) {
+		this.userStatus = userStatus;
+	}
+
+
+	@OneToOne(mappedBy = "studySubject", cascade = CascadeType.ALL,
+			fetch = FetchType.LAZY, optional = false)
+	public StudySubjectDetail getStudySubjectDetail() {
+		return studySubjectDetail;
+	}
+
+	public void setStudySubjectDetail(StudySubjectDetail detail) {
+		if (detail != null) {
+			detail.setStudySubject(this);
+		}
+		this.studySubjectDetail = detail;
 	}
 
 }

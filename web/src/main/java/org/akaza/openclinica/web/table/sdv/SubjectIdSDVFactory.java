@@ -48,10 +48,12 @@ import org.jmesa.view.html.component.HtmlColumn;
 import org.jmesa.view.html.component.HtmlRow;
 import org.jmesa.view.html.component.HtmlTable;
 import org.jmesa.web.WebContext;
+import org.springframework.stereotype.Component;
 
 /**
  * A Jmesa table that represents study subjects in each row.
  */
+
 public class SubjectIdSDVFactory extends AbstractTableFactory {
 
     private DataSource dataSource;
@@ -306,7 +308,7 @@ public class SubjectIdSDVFactory extends AbstractTableFactory {
         StringBuilder path = new StringBuilder(contextPath).append("/pages/viewAllSubjectSDVtmp?studyId=").append(studyId).append("&sdv_f_studySubjectId=");
         path.append(studySubjectBean.getLabel());
         urlPrefix.append(path).append("\">");
-        actions.append(urlPrefix).append(SDVUtil.VIEW_ICON_HTML).append("</a></td>");
+        actions.append(urlPrefix).append("<span hspace=\"2\" border=\"0\" title=\"View\" alt=\"View\" class=\"icon icon-search\">").append("</a></td>");
 
         if (!studySubjectSDVd && stats.get("shouldDisplaySDVButton") == 1) {
             StringBuilder jsCodeString = new StringBuilder("this.form.method='GET'; this.form.action='").append(contextPath).append("/pages/sdvStudySubject")

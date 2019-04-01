@@ -10,22 +10,22 @@
 
 function selectAll() {
     if (document.cl.all.checked) {
-	  for (var i=0; i <document.cl.elements.length; i++) {
-		if (document.cl.elements[i].name.indexOf('itemSelected') != -1) {
-			document.cl.elements[i].checked = true;
-		}
-	  }
-	} else {
-	  for (var i=0; i <document.cl.elements.length; i++) {
-		if (document.cl.elements[i].name.indexOf('itemSelected') != -1) {
-			document.cl.elements[i].checked = false;
-		}
-	  }
-	}
+    for (var i=0; i <document.cl.elements.length; i++) {
+    if (document.cl.elements[i].name.indexOf('itemSelected') != -1) {
+      document.cl.elements[i].checked = true;
+    }
+    }
+  } else {
+    for (var i=0; i <document.cl.elements.length; i++) {
+    if (document.cl.elements[i].name.indexOf('itemSelected') != -1) {
+      document.cl.elements[i].checked = false;
+    }
+    }
+  }
 }
 function notSelectAll() {
-	if (!this.checked){
-		document.cl.all.checked = false;
+  if (!this.checked){
+    document.cl.all.checked = false;
     }
 
 }
@@ -36,24 +36,48 @@ function notSelectAll() {
 <jsp:include page="../include/extract-header.jsp"/>
 
 
-<jsp:include page="../include/sidebar.jsp"/>
+<%--<jsp:include page="../include/sidebar.jsp"/>--%>
+<!-- move the alert message to the sidebar-->
+<jsp:include page="../include/sideAlert.jsp"/>
+<!-- then instructions-->
+<tr id="sidebar_Instructions_open" style="display: none">
+    <td class="sidebar_tab">
+
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
+
+    <fmt:message key="instructions" bundle="${resword}"/>
+
+    <div class="sidebar_tab_content">
+
+    </div>
+
+    </td>
+
+  </tr>
+  <tr id="sidebar_Instructions_closed" style="display: all">
+    <td class="sidebar_tab">
+
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
+
+    <fmt:message key="instructions" bundle="${resword}"/>
+
+    </td>
+  </tr>
+
+<jsp:include page="../include/createDatasetSideInfo.jsp"/>
 
 <jsp:useBean scope='session' id='userBean' class='org.akaza.openclinica.bean.login.UserAccountBean'/>
 <jsp:useBean scope="request" id="eventlist" class="java.util.HashMap"/>
 
 <c:choose>
 <c:when test="${newDataset.id>0}">
-<h1><span class="title_manage"><fmt:message key="edit_dataset" bundle="${resword}"/> - <fmt:message key="view_selected_items" bundle="${resword}"/> <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/edit-dataset')"><img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></a>
+<h1><span class="title_manage"><fmt:message key="edit_dataset" bundle="${resword}"/> - <fmt:message key="view_selected_items" bundle="${resword}"/> <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/edit-dataset')"><span class="" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></a>
 : <c:out value='${newDataset.name}'/></span></h1>
 </c:when>
 <c:otherwise>
-<h1><span class="title_manage"><fmt:message key="create_dataset" bundle="${resword}"/>: <fmt:message key="view_selected_items" bundle="${resword}"/> <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/create-dataset')"><img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></a></span></h1>
+<h1><span class="title_manage"><fmt:message key="create_dataset" bundle="${resword}"/>: <fmt:message key="view_selected_items" bundle="${resword}"/> <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/create-dataset')"><span class="" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></a></span></h1>
 </c:otherwise>
 </c:choose>
-
-<P><jsp:include page="../showInfo.jsp"/></P>
-
-<P><jsp:include page="../include/alertbox.jsp"/></P>
 
 <c:if test="${newDataset.id<=0}">
 <p><fmt:message key="can_view_items_selected_inclusion" bundle="${restext}"/><fmt:message key="select_all_items_inclusion_clicking" bundle="${restext}"/></p>
@@ -69,7 +93,7 @@ function notSelectAll() {
 <input type="hidden" name="action" value="beginsubmit"/>
 <input type="hidden" name="crfId" value="-1">
 <input type="hidden" name="defId" value="<c:out value="${definition.id}"/>">
-<P><B><fmt:message key="show_items_this_dataset" bundle="${restext}"/></b></p>
+<p><b><fmt:message key="show_items_this_dataset" bundle="${restext}"/></b></p>
 <table border="0" cellpadding="0" cellspacing="0" >
   <tr>
    <td><input type="submit" name="save" value="<fmt:message key="save_and_add_more_items" bundle="${resword}"/>" class="button_xlong"/></td>
@@ -91,8 +115,5 @@ function notSelectAll() {
 </form>
 </c:if>
 <br><br><br>
-<jsp:include page="createDatasetBoxes.jsp" flush="true">
-<jsp:param name="selectStudyEvents" value="1"/>
-</jsp:include>
 
 <jsp:include page="../include/footer.jsp"/>

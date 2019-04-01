@@ -2,18 +2,16 @@ package org.akaza.openclinica.templates;
 
 import org.akaza.openclinica.dao.core.SQLFactory;
 import org.akaza.openclinica.i18n.util.ResourceBundleProvider;
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.dbunit.DataSourceBasedDBTestCase;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import java.io.File;
+import javax.sql.DataSource;
 import java.util.Locale;
 import java.util.Properties;
-
-import javax.sql.DataSource;
 
 public abstract class OcDbTestCase extends DataSourceBasedDBTestCase {
 
@@ -105,7 +103,7 @@ public abstract class OcDbTestCase extends DataSourceBasedDBTestCase {
     }
 
     private String getPropertiesFilePath() {
-        return "/test.properties";
+        return "/datainfo.properties";
     }
 
     /**

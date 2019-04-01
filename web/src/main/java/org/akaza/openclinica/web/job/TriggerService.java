@@ -23,6 +23,9 @@ import org.akaza.openclinica.control.submit.ImportCRFInfoContainer;
 import org.quartz.JobDataMap;
 import org.quartz.SimpleTrigger;
 
+import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
+import static org.quartz.TriggerBuilder.newTrigger;
+
 public class TriggerService {
 
     public TriggerService() {
@@ -78,7 +81,6 @@ public class TriggerService {
         }
         // set up and commit job here
 
-        SimpleTrigger trigger = new SimpleTrigger(jobName, "DEFAULT", 64000, interval.longValue());
 
         // set the job detail name,
         // based on our choice of format above
@@ -86,12 +88,13 @@ public class TriggerService {
         // what is the number of times it should repeat?
         // arbitrary large number, 64K should be enough :)
 
-        trigger.setDescription(jobDesc);
-        // set just the start date
-        trigger.setStartTime(startDateTime);
-        trigger.setName(jobName);// + datasetId);
-        trigger.setGroup("DEFAULT");// + datasetId);
-        trigger.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT);
+        SimpleTrigger trigger = (SimpleTrigger) newTrigger()
+                .forJob(jobName, "DEFAULT")
+                .withDescription(jobDesc)
+                .startAt(startDateTime)
+                .withSchedule(simpleSchedule().withRepeatCount(64000).withIntervalInSeconds(interval.intValue()).withMisfireHandlingInstructionNextWithExistingCount());
+
+
         // set job data map
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(DATASET_ID, datasetId);
@@ -116,10 +119,8 @@ public class TriggerService {
         jobDataMap.put(STUDY_NAME, study.getName());
         jobDataMap.put(STUDY_OID, study.getOid());
 
-        trigger.setJobDataMap(jobDataMap);
-        // trigger.setRepeatInterval(interval.longValue());
-        // System.out.println("default for volatile: " + trigger.isVolatile());
-        trigger.setVolatility(false);
+        trigger.getTriggerBuilder().usingJobData(jobDataMap);
+
         return trigger;
     }
 
@@ -148,13 +149,13 @@ public class TriggerService {
             long minutesInt = minutes * 60000;
             interval = interval + minutesInt;
         }
-        SimpleTrigger trigger = new SimpleTrigger(jobName, IMPORT_TRIGGER, 64000, interval);
-        trigger.setDescription(jobDesc);
-        // set just the start date
-        trigger.setStartTime(startDateTime);
-        trigger.setName(jobName);// + datasetId);
-        trigger.setGroup(IMPORT_TRIGGER);// + datasetId);
-        trigger.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT);
+        SimpleTrigger trigger = (SimpleTrigger) newTrigger()
+                .forJob(jobName, IMPORT_TRIGGER)
+                .withDescription(jobDesc)
+                .startAt(startDateTime)
+                .withSchedule(simpleSchedule().withRepeatCount(64000).withIntervalInSeconds(new Long(interval).intValue()).withMisfireHandlingInstructionNextWithExistingCount());
+
+
         // set job data map
         JobDataMap jobDataMap = new JobDataMap();
 
@@ -167,8 +168,8 @@ public class TriggerService {
         jobDataMap.put("hours", hours);
         jobDataMap.put("minutes", minutes);
 
-        trigger.setJobDataMap(jobDataMap);
-        trigger.setVolatility(false);
+        trigger.getTriggerBuilder().usingJobData(jobDataMap);
+
         return trigger;
     }
 
@@ -212,7 +213,7 @@ public class TriggerService {
         StringBuffer sb = new StringBuffer();
         sb.append("<table border=\'0\' cellpadding=\'0\' cellspacing=\'0\' width=\'100%\'>");
         sb.append("<tr valign=\'top\'> <td class=\'table_header_row\'>Summary Statistics:</td> </tr> <tr valign=\'top\'>");
-        sb.append("<td class=\'table_cell_left\'>Subjects Affected: " + ssBean.getStudySubjectCount() + "</td> </tr>");
+        sb.append("<td class=\'table_cell_left\'>Participants Affected: " + ssBean.getStudySubjectCount() + "</td> </tr>");
         sb.append("<tr valign=\'top\'> <td class=\'table_cell_left\'>Total Event CRFs: " + ssBean.getEventCrfCount() + "</td> </tr> ");
         sb.append("<tr valign=\'top\'> <td class=\'table_cell_left\'>Event CRFs Available for Import: "
                 + (ssBean.getEventCrfCount() - ssBean.getSkippedCrfCount()) + "</td> </tr> ");
@@ -238,7 +239,7 @@ public class TriggerService {
         StringBuffer sb = new StringBuffer();
         sb.append("Skipped CRFs (due to import rules):<br/>");
         sb.append("<table border=\'0\' cellpadding=\'0\' cellspacing=\'0\' width=\'100%\'>");
-        sb.append("<tr valign=\'top\'> <td>Study OID :</td> <td>Study Subject OID :</td> <td>Event CRF OID:</td> <td>CRF Version OID:</td> <td>Event CRF Status:</td> </tr>");
+        sb.append("<tr valign=\'top\'> <td>Study OID :</td> <td>Participant OID :</td> <td>Event CRF OID:</td> <td>CRF Version OID:</td> <td>Event CRF Status:</td> </tr>");
 
         for (ImportCRFInfo importCrfInfo : importCRFList.getImportCRFList()) {
             String preImportStatus = "";
@@ -272,7 +273,7 @@ public class TriggerService {
         String groupRepeatKey = "1";
         sb.append("<table border=\'0\' cellpadding=\'0\' cellspacing=\'0\' width=\'100%\'>");
         for (SubjectDataBean subjectDataBean : subjectData) {
-            sb.append("<tr valign=\'top\'> <td class=\'table_header_row\' colspan=\'4\'>Study Subject: " + subjectDataBean.getSubjectOID() + "</td> </tr>");
+            sb.append("<tr valign=\'top\'> <td class=\'table_header_row\' colspan=\'4\'>Participant: " + subjectDataBean.getSubjectOID() + "</td> </tr>");
             // next step here
             ArrayList<StudyEventDataBean> studyEventDataBeans = subjectDataBean.getStudyEventData();
             for (StudyEventDataBean studyEventDataBean : studyEventDataBeans) {

@@ -7,7 +7,7 @@
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.min.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.jmesa.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa.js"></script>
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.1.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.4.1.js"></script>
 
 <script type="text/javascript">
     function onInvokeAction(id,action) {
@@ -77,7 +77,5 @@
 <br>
 <input type="button" onclick="confirmExit('MainMenu');"  name="exit" value="<fmt:message key="exit" bundle="${resword}"/>   " class="button_medium"/>
 
-<c:import url="../include/workflow.jsp">
-   <c:param name="module" value="submit"/>
-</c:import>
+
 <jsp:include page="../include/footer.jsp"/>

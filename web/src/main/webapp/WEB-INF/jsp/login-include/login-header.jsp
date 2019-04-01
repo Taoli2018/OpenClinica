@@ -21,11 +21,12 @@
 
 <head>
 <c:set var="contextPath" value="${fn:replace(pageContext.request.requestURL, fn:substringAfter(pageContext.request.requestURL, pageContext.request.contextPath), '')}" />
-  <meta http-equiv="X-UA-Compatible" content="IE=8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=11" />
 
-<title><fmt:message key="openclinica" bundle="${resword}"/></title>
+<title><fmt:message key="openclinica" bundle="${resword}"/></title> 
+<link rel="SHORTCUT ICON" href="images/favicon.png" type="image/x-icon" />
 
-<link rel="stylesheet" href="includes/styles.css" type="text/css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/includes/styles.css" type="text/css">
 <%-- <link rel="stylesheet" href="includes/styles2.css" type="text/css">--%>
 <%-- <link rel="stylesheet" href="includes/NewNavStyles.css" type="text/css" />--%>
 <script type="text/JavaScript" language="JavaScript" src="includes/global_functions_javascript.js"></script>
@@ -48,7 +49,7 @@
 <script type="text/JavaScript" language="JavaScript" src="includes/effects.js"></script>--%></head>
 
 
-<body style="width:1024px;" class="main_BG"
+<body style="width:100%;" class="main_BG"
 
 <c:choose>
 
@@ -79,7 +80,7 @@ onload="TabsForwardByNum(<c:out value="${tabId}"/>);<jsp:include page="../includ
                     <td valign="top">
                         <div class="disabled_header"><img src="images/spacer.gif"/></div>
                         <!-- Logo -->
-                        <div class="logo"><img src="images/Logo.gif"></div>
+                        <div class="logo"><img src="images/logo-color-on-dark.svg"></div>
                         <!-- Main Navigation -->
                         <%-- <jsp:include page="../include/navBar.jsp"/> --%>
 

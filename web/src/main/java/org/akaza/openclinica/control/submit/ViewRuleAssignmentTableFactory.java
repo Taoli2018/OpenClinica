@@ -644,12 +644,12 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
             String targetValue =ruleAction.getRuleSetRule().getRuleSetBean().getOriginalTarget().getValue(); 
  
            if(targetValue.startsWith(ExpressionService.STUDY_EVENT_OID_START_KEY)&& (targetValue.endsWith(ExpressionService.STARTDATE)|| targetValue.endsWith(ExpressionService.STATUS)))
-           	{
+            {
              if (ruleAction.getActionType().getCode()!=7)
-        	   appendRunOnForEventAction(builder,ruleAction);
-          	}else{
+               appendRunOnForEventAction(builder,ruleAction);
+            }else{
                 appendRunOn(builder,ruleAction);
-           	}                
+            }                
                 
                 appendDest(builder,ruleAction);
             }
@@ -679,7 +679,7 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
             if(ruleActionRun.getBatch()!=null && ruleActionRun.getBatch()) s+=resword.getString("batch_comma")+" ";
 
             if(s.length()>0){
-            	s = s.trim(); s = s.substring(0,s.length()-1);
+                s = s.trim(); s = s.substring(0,s.length()-1);
                     builder.tr(1).close().td(1).close().append("<i>" + resword.getString("run_on_colon") + "</i>").tdEnd().td(1).close().append(s).tdEnd().trEnd(1);
               }
             }
@@ -731,14 +731,14 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
             if(propertyBeans!=null && propertyBeans.size()>0) {
                 String s = "";
                 for(org.akaza.openclinica.domain.rule.action.PropertyBean p : propertyBeans) {
-                	if(p.getOid()!=null)
-                	{
-                		s += p.getOid().trim() + ", ";
-                	}
-                	else if(p.getProperty()!=null){
-                		s +=p.getProperty().trim()+", ";
-                	}
-                		
+                    if(p.getOid()!=null)
+                    {
+                        s += p.getOid().trim() + ", ";
+                    }
+                    else if(p.getProperty()!=null){
+                        s +=p.getProperty().trim()+", ";
+                    }
+                        
                 }
                 s = s.trim(); 
                 
@@ -814,11 +814,10 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
             String message = actions.get(0).getSummary();
         //    if (isDesignerRequest)
           //  {
-                value += testEditByDesignerBuilder(target, ruleOid, runTime, message);
             //} else
-                if (ruleSetRule.getStatus() != Status.DELETED) {
+            if (ruleSetRule.getStatus() != Status.DELETED) {
                 value +=
-                    viewLinkBuilder(ruleSetId) + executeLinkBuilder(ruleSetId, ruleId , target) + removeLinkBuilder(ruleSetRuleId, ruleSetId)
+                    viewLinkBuilder(ruleSetId) + removeLinkBuilder(ruleSetRuleId, ruleSetId)
                         + extractXmlLinkBuilder(ruleSetRuleId) + testLinkBuilder(ruleSetRuleId);
             } else {
                 value +=
@@ -865,7 +864,7 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
         actionLink.a().href("ViewRuleSet?ruleSetId=" + ruleSetId);
         actionLink.append("onMouseDown=\"javascript:setImage('bt_View1','images/bt_View_d.gif');\"");
         actionLink.append("onMouseUp=\"javascript:setImage('bt_View1','images/bt_View.gif');\"").close();
-        actionLink.img().name("bt_View1").src("images/bt_View.gif").border("0").alt("View").title("View").append("hspace=\"2\"").end().aEnd();
+        actionLink.append("<span hspace=\"2\" border=\"0\" title=\"View\" alt=\"View\" class=\"icon icon-search\" name=\"bt_View\"").end().aEnd();
         actionLink.append("&nbsp;&nbsp;&nbsp;");
         return actionLink.toString();
 
@@ -874,13 +873,13 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
     private String executeLinkBuilder(Integer ruleSetId, Integer ruleId , String targetValue) {
         HtmlBuilder actionLink = new HtmlBuilder();
        
-     if  (!(targetValue.startsWith(ExpressionService.STUDY_EVENT_OID_START_KEY)&& (targetValue.endsWith(ExpressionService.STARTDATE)|| targetValue.endsWith(ExpressionService.STATUS))))
-     {   
-        actionLink.a().href("RunRuleSet?ruleSetId=" + ruleSetId + "&ruleId=" + ruleId);
-        actionLink.append("onMouseDown=\"javascript:setImage('bt_Run1','images/bt_ExexuteRules.gif');\"");
-        actionLink.append("onMouseUp=\"javascript:setImage('bt_Run1','images/bt_ExexuteRules.gif');\"").close();
-     }
-        actionLink.img().name("bt_Run1").src("images/bt_ExexuteRules.gif").border("0").alt("Run").title("Run").append("hspace=\"2\"").end().aEnd();
+        if  (!(targetValue.startsWith(ExpressionService.STUDY_EVENT_OID_START_KEY)&& (targetValue.endsWith(ExpressionService.STARTDATE)|| targetValue.endsWith(ExpressionService.STATUS))))
+        {   
+            actionLink.a().href("RunRuleSet?ruleSetId=" + ruleSetId + "&ruleId=" + ruleId);
+            actionLink.append("onMouseDown=\"javascript:setImage('bt_Run1','images/bt_ExexuteRules.gif');\"");
+            actionLink.append("onMouseUp=\"javascript:setImage('bt_Run1','images/bt_ExexuteRules.gif');\"").close();
+        }
+        actionLink.append("<span hspace=\"2\" border=\"0\" title=\"Run\" alt=\"Run\" class=\"icon icon-caret-right-blue\" name=\"bt_Run\"").end().aEnd();
         actionLink.append("&nbsp;&nbsp;&nbsp;");
         
         return actionLink.toString();
@@ -888,38 +887,29 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
     }
 
     private String removeLinkBuilder(Integer ruleSetRuleId, Integer ruleSetId) {
-        HtmlBuilder actionLink = new HtmlBuilder();
-        actionLink.a().href("UpdateRuleSetRule?action=remove&ruleSetRuleId=" + ruleSetRuleId + "&ruleSetId=" + ruleSetId);
-        actionLink.append("onClick='return confirm(\"" + resword.getString("rule_if_you_remove_this") + "\");'");
-        actionLink.append("onMouseDown=\"javascript:setImage('bt_Remove1','images/bt_Remove_d.gif');\"");
-        actionLink.append("onMouseUp=\"javascript:setImage('bt_Remove1','images/bt_Remove.gif');\"").close();
-        actionLink.img().name("bt_Remove1").src("images/bt_Remove.gif").border("0").alt("Remove").title("Remove").append("hspace=\"2\"").end().aEnd();
-        actionLink.append("&nbsp;&nbsp;&nbsp;");
-        return actionLink.toString();
+        HtmlBuilder builder = new HtmlBuilder();
+        builder.append("<a onmouseup=\"javascript:setImage('bt_View1','icon icon-cancel');\" onmousedown=\"javascript:setImage('bt_View1','icon icon-cancel');\" href=\"UpdateRuleSetRule?action=remove&ruleSetRuleId="+ruleSetRuleId+"&ruleSetId="+ruleSetId);
+        builder.append("\"><span hspace=\"2\" border=\"0\" title=\"Remove\" alt=\"View\" class=\"icon icon-cancel\" name=\"bt_Reassign1\"/></a>");
+        builder.append("&nbsp;&nbsp;&nbsp;");
+        return builder.toString();
 
     }
 
     private String restoreLinkBuilder(Integer ruleSetRuleId, Integer ruleSetId) {
-        HtmlBuilder actionLink = new HtmlBuilder();
-        actionLink.a().href("UpdateRuleSetRule?action=restore&ruleSetRuleId=" + ruleSetRuleId + "&ruleSetId=" + ruleSetId);
-        actionLink.append("onClick='return confirm(\"" + resword.getString("rule_if_you_restore_this") + "\");'");
-        actionLink.append("onMouseDown=\"javascript:setImage('bt_Restore3','images/bt_Restore_d.gif');\"");
-        actionLink.append("onMouseUp=\"javascript:setImage('bt_Restore3','images/bt_Restore.gif');\"").close();
-        actionLink.img().name("bt_Restore3").src("images/bt_Restore.gif").border("0").alt("Restore").title("Restore").append("hspace=\"2\"").end().aEnd();
-        actionLink.append("&nbsp;&nbsp;&nbsp;");
-        return actionLink.toString();
+        HtmlBuilder builder = new HtmlBuilder();
+        builder.append("<a onmouseup=\"javascript:setImage('bt_View1','icon icon-ccw');\" onmousedown=\"javascript:setImage('bt_View1','icon icon-ccw');\" href=\"UpdateRuleSetRule?action=restore&ruleSetRuleId="+ruleSetRuleId+"&ruleSetId"+ruleSetId);
+        builder.append("\"><span hspace=\"2\" border=\"0\" title=\"Restore\" alt=\"Restore\" class=\"icon icon-ccw\" name=\"bt_Reassign1\"/></a>");
+        builder.append("&nbsp;&nbsp;&nbsp;");
+        return builder.toString();
 
     }
 
     private String extractXmlLinkBuilder(Integer ruleSetRuleId) {
-        HtmlBuilder actionLink = new HtmlBuilder();
-        actionLink.a().href("DownloadRuleSetXml?ruleSetRuleIds=" + ruleSetRuleId);
-        actionLink.append("onMouseDown=\"javascript:setImage('bt_Download','images/bt_Download_d.gif');\"");
-        actionLink.append("onMouseUp=\"javascript:setImage('bt_Download','images/bt_Download.gif');\"").close();
-        actionLink.img().name("bt_Download").src("images/bt_Download.gif").border("0").alt("Download XML").title("Download XML").append("hspace=\"2\"").end()
-                .aEnd();
-        actionLink.append("&nbsp;&nbsp;&nbsp;");
-        return actionLink.toString();
+        HtmlBuilder builder = new HtmlBuilder();
+        builder.append("<a onmouseup=\"javascript:setImage('bt_View1','icon icon-download');\" onmousedown=\"javascript:setImage('bt_View1','icon icon-download');\" href=\"javascript:openDocWindow('DownloadRuleSetXml?ruleSetRuleIds="+ruleSetRuleId);
+        builder.append("')\"><span hspace=\"2\" border=\"0\" title=\"Download\" alt=\"Download\" class=\"icon icon-download\" name=\"bt_Reassign1\"/></a>");
+        builder.append("&nbsp;&nbsp;&nbsp;");
+        return builder.toString();
 
     }
 
@@ -928,9 +918,8 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
         actionLink.a().href("RunRuleSet?ruleSetId=" + ruleSetId);
         actionLink.append("onMouseDown=\"javascript:setImage('bt_run','images/bt_ExexuteRules.gif');\"");
         actionLink.append("onMouseUp=\"javascript:setImage('bt_run','images/bt_ExexuteRules.gif');\"").close();
-        actionLink.img().name("Run").src("images/bt_ExexuteRules.gif").border("0").alt("Run").title("Run").append("hspace=\"2\"").end().aEnd();
+        actionLink.append("<span hspace=\"2\" border=\"0\" title=\"Run\" alt=\"Run\" class=\"icon icon-plus\" name=\"bt_Run\"").end().aEnd();
         actionLink.append("&nbsp;&nbsp;&nbsp;");
-  
         return actionLink.toString();
 
     }
@@ -940,21 +929,7 @@ public class ViewRuleAssignmentTableFactory extends AbstractTableFactory {
         actionLink.a().href("TestRule?ruleSetRuleId=" + ruleSetRuleId);
         actionLink.append("onMouseDown=\"javascript:setImage('bt_test','images/bt_EnterData_d.gif');\"");
         actionLink.append("onMouseUp=\"javascript:setImage('bt_test','images/bt_Reassign_d.gif');\"").close();
-        actionLink.img().name("bt_test").src("images/bt_Reassign_d.gif").border("0").alt("Test").title("Test").append("hspace=\"2\"").end().aEnd();
-        actionLink.append("&nbsp;&nbsp;&nbsp;");
-        return actionLink.toString();
-
-    }
-
-    private String testEditByDesignerBuilder(String target, String ruleOid, String runTime, String message) {
-        HtmlBuilder actionLink = new HtmlBuilder();
-        // String designerURL = "http://localhost:8080/Designer-0.1.0.BUILD-SNAPSHOT/";
-        setDesignerLink(designerURL  + "&target=" + target + "&ruleOid=" + ruleOid +"&study_oid=" +currentStudy.getOid()+"&provider_user="+getCurrentUser().getName());
-        actionLink.a().href(designerURL  + "&target=" + target + "&ruleOid=" + ruleOid +"&study_oid=" +currentStudy.getOid()+"&provider_user="+getCurrentUser().getName()+"&path=ViewRuleAssignment&runTime="+ runTime +"&msg="+ convertMessage(message));
-        actionLink.append("target=\"_parent\"");
-        actionLink.append("onMouseDown=\"javascript:setImage('bt_test','images/bt_EnterData_d.gif');\"");
-        actionLink.append("onMouseUp=\"javascript:setImage('bt_test','images/bt_EnterData.gif');\"").close();
-        actionLink.img().name("bt_test").src("images/bt_EnterData.gif").border("0").alt("Rule Designer").title("Rule Designer").append("hspace=\"2\"").end().aEnd();
+        actionLink.append("<span hspace=\"2\" border=\"0\" title=\"Test\" alt=\"Test\" class=\"icon icon-icon-reassign3\" name=\"bt_Test\"").end().aEnd();
         actionLink.append("&nbsp;&nbsp;&nbsp;");
         return actionLink.toString();
 

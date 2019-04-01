@@ -10,6 +10,7 @@
 <fmt:setBundle basename="org.akaza.openclinica.i18n.terms" var="resterm"/>
 <fmt:setBundle basename="org.akaza.openclinica.i18n.format" var="resformat"/>
 <c:set var="dteFormat"><fmt:message key="date_format_string" bundle="${resformat}"/></c:set>
+<link rel="stylesheet" href="includes/font-awesome-4.7.0/css/font-awesome.css">
 
 
 <c:choose>
@@ -54,9 +55,9 @@
 <tr id="sidebar_Instructions_open" style="display: none">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${restext}"/></b>
+        <fmt:message key="instructions" bundle="${restext}"/>
 
         <div class="sidebar_tab_content">
         </div>
@@ -67,9 +68,9 @@
 <tr id="sidebar_Instructions_closed" style="display: all">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${restext}"/></b>
+        <fmt:message key="instructions" bundle="${restext}"/>
 
     </td>
 </tr>
@@ -126,14 +127,14 @@
     </td>
         <td align="right">
             <!-- <span style="font-size:11px"><a href="#"><img
-		    src="images/bt_View.gif" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>"></a>View Printable Record</div>-->
+            src="images/bt_View.gif" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>"></a>View Printable Record</div>-->
             </h1>
 
         </td></tr>
 </table>
 <p><fmt:message key="sure_to_sign_subject" bundle="${resword}"/></p>
 
-<p><fmt:message key="sure_to_sign_subject1" bundle="${resword}"/></p>
+<p><fmt:message key="sure_to_sign_subject3" bundle="${resword}"/></p>
 
 <b><fmt:message key="user_full_name" bundle="${resword}"/>: <c:out value="${userBean.firstName}"/>&nbsp;<c:out value="${userBean.lastName}"/>
     <br/>
@@ -145,6 +146,7 @@
 <br><br>
 <form action="SignStudySubject" method="post">
     <input type="hidden" name="id" value="<c:out value="${studySub.id}"/>">
+    <input type="hidden" name="studyId" value="<c:out value="${studySub.studyId}"/>">
     <input type="hidden" name="action" value="confirm">
     <div style="width: 250px">
         <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
@@ -184,7 +186,6 @@
     <%--
         <a href="#events"><fmt:message key="events" bundle="${resword}"/></a> &nbsp; &nbsp; &nbsp;
     --%>
-    <a href="#group"><fmt:message key="group" bundle="${resword}"/></a> &nbsp;&nbsp;&nbsp;
     <a href="#global"><fmt:message key="global_subject_record" bundle="${resword}"/></a> &nbsp;&nbsp;&nbsp;
     <a href="javascript:openDocWindow('ViewStudySubjectAuditLog?id=<c:out value="${studySub.id}"/>')"><fmt:message key="audit_logs" bundle="${resword}"/></a>
 </p>
@@ -420,7 +421,7 @@
         </c:choose>
 
     </c:otherwise>
-</c:choose>	<%--<a name="events"><a href="javascript:leftnavExpand('subjectEvents');javascript:setImage('ExpandGroup2','images/bt_Expand.gif');"><img
+</c:choose> <%--<a name="events"><a href="javascript:leftnavExpand('subjectEvents');javascript:setImage('ExpandGroup2','images/bt_Expand.gif');"><img
   name="ExpandGroup2" src="images/bt_Collapse.gif" border="0"> <fmt:message key="events" bundle="${resword}"/></a></a></div>
 <div id="subjectEvents">
     <c:import url="../include/showTable.jsp"><c:param name="rowURL" value="showStudyEventRow.jsp" /></c:import>
@@ -429,109 +430,333 @@
     </br></br>
 </div>--%>
 <%-- Subject discrepancy note table--%>
-<div id="subjDiscNoteDivTitle" class="subjDiscNoteDivTitle">
-    <a id="discNoteDivParent" href="javascript:void(0)"
-       onclick="showSummaryBox(document.getElementById('subjDiscNoteDiv'),document.getElementById('discNoteDivParent'),'<fmt:message key="show_event_notes" bundle="${resword}"/>','<fmt:message key="hide_event_notes" bundle="${resword}"/>')"><fmt:message key="show_event_notes" bundle="${resword}"/></a>
-</div>
-<div id="subjDiscNoteDiv" class="subjDiscNoteDiv" style="display:none">
-    <table class="subjDiscNoteTable" cellpadding="0" cellspacing="0">
-        <thead>
-            <th class="table_header_row_left">Event Name</th>
-            <th class="table_header_row">CRF Name</th>
-            <th class="table_header_row">New</th>
-            <th class="table_header_row">Updated</th>
-            <th class="table_header_row">Resolution Proposed</th>
-            <th class="table_header_row">Closed</th>
-            <th class="table_header_row">Not Applicable</th>
-            <th class="table_header_row">Actions</th>
-        </thead>
-        <tbody>
-            <c:set var="hasEvents" value="${! (empty displayStudyEvents)}" />
-            <c:set var="hasEventCRFs" value="${false}" />
-            <c:forEach var="displayStudyEventBean" items="${displayStudyEvents}">
-             <c:if test="${! (empty displayStudyEventBean.displayEventCRFs)}">
-                 <c:set var="hasEventCRFs" value="${true}" />
-             </c:if>
-            </c:forEach>
 
+<div style="width: 900px">
+<!-- These DIVs define shaded box borders -->
+<div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
+<div class="tablebox_center">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<c:choose>
+    <c:when test="${empty displayStudyEvents}">
+    
+    </c:when>
+
+    <c:otherwise>
+        <tr>
+            <td class="table_header_row_left"><fmt:message key="events" bundle="${resword}"/></td>
+            <td class="table_header_row"><fmt:message key="start_date" bundle="${resword}"/></td>
+            <td class="table_header_row"><fmt:message key="CRF_name" bundle="${resword}"/></td>
+            <td class="table_header_row"><fmt:message key="version" bundle="${resword}"/></td>
+            <td class="table_header_row"><fmt:message key="status" bundle="${resword}"/></td>
+            <td class="table_header_row"><fmt:message key="initial_data_entry" bundle="${resword}"/></td>
+            <td class="table_header_row"><fmt:message key="view_discrepancy_notes" bundle="${resword}"/></td>
+            <td class="table_header_row"><fmt:message key="actions" bundle="${resword}"/></td>
+        </tr>
+        <c:set var="rowCount" value="${0}" />
+        <c:forEach var="dse" items="${displayStudyEvents}">
+        <c:forEach var="dedc" items="${dse.uncompletedCRFs}">
             <c:choose>
-                <c:when test="${(! hasEvents) || (! hasEventCRFs)}">
-                    <tr>
-                    <td class="table_cell_left"><fmt:message key="there_are_no_rows_because_no_events" bundle="${resword}"/></td>
-                    </tr>
-                </c:when>
-                <c:otherwise>
+            <c:when test="${dedc.status.name=='locked'}">
+            &nbsp;
+            </c:when>
+            <c:otherwise>
+            <c:set var="getQuery" value="action=ide_s&eventDefinitionCRFId=${dedc.edc.id}&studyEventId=${studyEvent.id}&subjectId=${studySubject.subjectId}&eventCRFId=${dedc.eventCRF.id}" />
+                <tr valign="top">
+                            <c:set var="repeat" value="${dse.studyEvent.studyEventDefinition.name}(${dse.studyEvent.sampleOrdinal})" />
+            <c:set var="non_repeat" value="${dse.studyEvent.studyEventDefinition.name}" />            
+            
+                <td class="table_cell"><c:out value="${ dse.studyEvent.studyEventDefinition.repeating ? repeat :non_repeat }" />&nbsp;</td>
+                <td class="table_cell"><fmt:formatDate value="${dse.studyEvent.dateStarted}" pattern="${dteFormat}"/>&nbsp;</td>              
+                
+                    <td class="table_cell_left"><c:out value="${dedc.edc.crf.name}" /></td>
+                  <td class="table_cell">
 
-                    <c:forEach var="displayStudyEventBean" items="${displayStudyEvents}">
-                        <c:forEach var="displayEventCRFBean" items="${displayStudyEventBean.displayEventCRFs}">
-                            <c:set var="discNoteMap" value="${discNoteByEventCRFid[displayEventCRFBean.eventCRF.id]}"/>
+                <c:choose>
+                    <c:when test="${dedc.eventCRF.id > 0}">
+                        <!-- found an event crf id -->
+                        <input type="hidden" name="crfVersionId" value="<c:out value="${dedc.eventCRF.CRFVersionId}"/>">
+                    </c:when>
+                    <c:otherwise>
+                        <!-- did not find an event crf id -->
+                        <input type="hidden" name="crfVersionId" value="<c:out value="${dedc.edc.defaultVersionId}"/>">
+                    </c:otherwise>
+                </c:choose>
 
-                            <tr>
-                                <td class="table_cell_left">
-                                        ${displayStudyEventBean.studyEvent.studyEventDefinition.name}</td>
-                                <td class="table_cell">${displayEventCRFBean.eventCRF.crf.name}</td>
-                                <td class="table_cell">
-                                    <c:set var="discNoteCount" value="${discNoteMap['New']}"/>
-                                    <c:if test="${discNoteCount > 0}">
-                                        <img
-                                          name="icon_Note" src="images/icon_Note.gif" border="0"
-                                          alt="<fmt:message key="Open" bundle="${resterm}"/>" title="<fmt:message key="Open" bundle="${resterm}"/>" align="left"/>
-                                        (${discNoteCount})
-                                        <c:set var="discNoteCount" value="${0}"/>
-                                    </c:if>
-                                </td><%-- new --%>
-                                <td class="table_cell">
-                                    <c:set var="discNoteCount" value="${discNoteMap['Updated']}"/>
-                                    <c:if test="${discNoteCount > 0}">
-                                        <img
-                                          name="icon_Note" src="images/icon_flagYellow.gif" border="0"
-                                          alt="<fmt:message key="Updated" bundle="${resterm}"/>" title="<fmt:message key="Updated" bundle="${resterm}"/>" align="left"/>
-                                        (${discNoteCount})
-                                        <c:set var="discNoteCount" value="${0}"/>
-                                    </c:if>
-                                </td><%-- updated --%>
-                                <td class="table_cell">
-                                    <c:set var="discNoteCount" value="${discNoteMap['Resolution Proposed']}"/>
-                                    <c:if test="${discNoteCount > 0}">
-                                        <img
-                                          name="icon_Note" src="images/icon_flagGreen.gif" border="0"
-                                          alt="<fmt:message key="Resolved" bundle="${resterm}"/>" title="<fmt:message key="Resolved" bundle="${resterm}"/>" align="left"/>
-                                        (${discNoteCount})
-                                        <c:set var="discNoteCount" value="${0}"/>
-                                    </c:if>
-                                </td><%-- Resolution Proposed --%>
-                                <td class="table_cell">
-                                    <c:set var="discNoteCount" value="${discNoteMap['Closed']}"/>
-                                    <c:if test="${discNoteCount > 0}">
-                                        <img
-                                          name="icon_Note" src="images/icon_flagBlack.gif" border="0"
-                                          alt="<fmt:message key="Closed" bundle="${resterm}"/>" title="<fmt:message key="Closed" bundle="${resterm}"/>" align="left"/>
-                                        (${discNoteCount})
-                                        <c:set var="discNoteCount" value="${0}"/>
-                                    </c:if>
-                                </td><%-- closed --%>
-                                <td class="table_cell">
-                                    <c:set var="discNoteCount" value="${discNoteMap['Not Applicable']}"/>
-                                    <c:if test="${discNoteCount > 0}">
-                                        <img
-                                          name="icon_Note" src="images/icon_flagWhite.gif" border="0"
-                                          alt="<fmt:message key="Not_Applicable" bundle="${resterm}"/>" title="<fmt:message key="Not_Applicable" bundle="${resterm}"/>" align="left"/>
-                                        (${discNoteCount})
-                                        <c:set var="discNoteCount" value="${0}"/>
-                                    </c:if>
-                                </td><%-- N/A --%>
-                                <td class="table_cell">
-                                    <a onmouseup="javascript:setImage('bt_View1','images/bt_View.gif');" onmousedown="javascript:setImage('bt_View1','images/bt_View_d.gif');" href="EnterDataForStudyEvent?eventId=${displayStudyEventBean.studyEvent.id}">
-                                        <img hspace="6" border="0" align="left" title="View" alt="View" src="images/bt_View.gif" name="bt_View1"/>
-                                    </a>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                    </c:forEach>
+                    <%--<input type="hidden" name="crfVersionId" value="<c:out value="${dedc.edc.defaultVersionId}"/>">--%>
+                  <c:set var="versionCount" value="0"/>
+                  <c:forEach var="version" items="${dedc.edc.versions}">
+                    <c:set var="versionCount" value="${versionCount+1}"/>
+                  </c:forEach>
+
+                  <c:choose>
+                    <c:when test="${versionCount<=1}">
+                      <c:forEach var="version" items="${dedc.edc.versions}">
+                        <c:out value="${version.name}"/>
+                      </c:forEach>
+                    </c:when>
+
+                    <%--<c:otherwise>--%>
+                    <c:when test="${dedc.eventCRF.id == 0}">
+
+                    <select name="versionId<c:out value="${dedc.edc.crf.id}"/>" onchange="javascript:changeQuery<c:out value="${dedc.edc.crf.id}"/>();">
+
+                      <c:forEach var="version" items="${dedc.edc.versions}">
+
+                       <c:set var="getQuery" value="action=ide_s&eventDefinitionCRFId=${dedc.edc.id}&studyEventId=${currRow.bean.studyEvent.id}&subjectId=${studySub.subjectId}" />
+
+                       <c:choose>
+                         <c:when test="${dedc.edc.defaultVersionId==version.id}">
+                           <option value="<c:out value="${version.id}"/>" selected>
+                            <c:out value="${version.name}"/>
+                            </option>
+                         </c:when>
+                         <c:otherwise>
+                            <option value="<c:out value="${version.id}"/>">
+                                <c:out value="${version.name}"/>
+                            </option>
+                         </c:otherwise>
+                       </c:choose>
+
+                      </c:forEach><%-- end versions --%>
+
+                    </select>
+
+                      <SCRIPT LANGUAGE="JavaScript">
+                        function changeQuery<c:out value="${dedc.edc.crf.id}"/>() {
+                          var qer = document.startForm<c:out value="${dedc.edc.crf.id}"/>.versionId<c:out value="${dedc.edc.crf.id}"/>.value;
+                          document.startForm<c:out value="${dedc.edc.crf.id}"/>.crfVersionId.value=qer;
+
+                        }
+                     </SCRIPT>
+
+                     <%--</c:otherwise>--%>
+                     </c:when>
+
+                     <c:otherwise>
+                        <c:out value="${dedc.eventCRF.crfVersion.name}"/>
+                     </c:otherwise>
+
+                     </c:choose>
+
+                    </td>
+
+                    <c:choose>
+
+                    <c:when test="${studyEvent.subjectEventStatus.name=='locked'}">
+                    <%--<c:when test="${dedc.status.name=='locked'}">--%>
+                        <td class="table_cell" bgcolor="#F5F5F5" align="center">
+                        <span class="icon icon-lock" alt="<fmt:message key="locked" bundle="${resword}"/>" title="<fmt:message key="locked" bundle="${resword}"/>">
+                        </td>
+                    </c:when>
+
+                    <c:when test="${studySubject.status.name != 'removed'&& studySubject.status.name != 'auto-removed'}">
+                        <td class="table_cell" bgcolor="#F5F5F5" align="center"><span class="icon icon-doc" alt="<fmt:message key="not_started" bundle="${resword}"/>" title="<fmt:message key="not_started" bundle="${resword}"/>"></td>
+                    </c:when>
+
+                    <c:otherwise>
+                        <td class="table_cell" bgcolor="#F5F5F5" align="center"><span class="icon icon-file-excel red" alt="<fmt:message key="invalid" bundle="${resword}"/>" title="<fmt:message key="invalid" bundle="${resword}"/>"></td>
+                    </c:otherwise>
+
+                    </c:choose>
+
+                    <td class="table_cell">&nbsp;</td>
+
+                    <td class="table_cell">&nbsp;</td>
+
+                    <td class="table_cell">
+                <table>
+                 <tr>
+                 <c:choose>
+
+                    <c:when test="${studyEvent.subjectEventStatus.name=='locked'}">
+
+                        &nbsp;
+                    </c:when>
+
+                    <c:when test="${studySubject.status.name != 'removed'&& studySubject.status.name != 'auto-removed'}">
+                            <a href="EnketoFormServlet?formLayoutId=<c:out value="${dedc.edc.defaultVersionId}"/>&studyEventId=<c:out value="${dse.studyEvent.id}"/>&eventCrfId=<c:out value="${dedc.eventCRF.id}"/>&originatingPage=<c:out value="${originatingPage}"/>&mode=<c:out value="edit"/>"
+                            onMouseDown="javascript:setImage('bt_EnterData<c:out value="${rowCount}"/>','images/bt_EnterData_d.gif');"
+                            onMouseUp="javascript:setImage('bt_EnterData<c:out value="${rowCount}"/>','images/bt_EnterData.gif');"
+                            ><span name="bt_EnterData<c:out value="${rowCount}"/>" class="icon icon-pencil-squared" border="0" alt="<fmt:message key="enter_data" bundle="${resword}"/>" title="<fmt:message key="enter_data" bundle="${resword}"/>" align="left" hspace="2"></a>&nbsp;
+                    </c:when>
+
+                    <c:otherwise></c:otherwise>
+                    </c:choose>
+                                   <a href="EnketoFormServlet?formLayoutId=<c:out value="${dedc.edc.defaultVersionId}"/>&studyEventId=<c:out value="${dse.studyEvent.id}"/>&eventCrfId=<c:out value="${dedc.eventCRF.id}"/>&originatingPage=<c:out value="${originatingPage}"/>&mode=<c:out value="view"/>"
+                      onMouseDown="javascript:setImage('bt_View1','images/bt_View_d.gif');"
+                      onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"><span
+                      name="bt_View1" align="left" class="icon icon-search" border="0" alt="<fmt:message key="view_default" bundle="${resword}"/>" title="<fmt:message key="view_default" bundle="${resword}"/>" hspace="2"></a>&nbsp;
+                  </tr>
+                    </table>
+
+                </td>
+
+               </tr>
+
+                <c:set var="rowCount" value="${rowCount + 1}" />
                 </c:otherwise>
             </c:choose>
-        </tbody>
-    </table>
+
+        </c:forEach>
+        <%-- end of for each for dedc, uncompleted event crfs --%>
+        <c:forEach var="dec" items="${dse.displayEventCRFs}" varStatus="status">
+            <c:set var="discNoteMap" value="${discNoteByEventCRFid[dec.eventCRF.id]}"/>
+        
+            <tr>
+            <c:set var="repeat" value="${dse.studyEvent.studyEventDefinition.name}(${dse.studyEvent.sampleOrdinal})" />
+            <c:set var="non_repeat" value="${dse.studyEvent.studyEventDefinition.name}" />            
+            
+                <td class="table_cell"><c:out value="${ dse.studyEvent.studyEventDefinition.repeating ? repeat :non_repeat }" />&nbsp;</td>
+                <td class="table_cell"><fmt:formatDate value="${dse.studyEvent.dateStarted}" pattern="${dteFormat}"/>&nbsp;</td>              
+                <td class="table_cell"><c:out value="${dec.eventCRF.crf.name}" />&nbsp;</td>
+                <td class="table_cell"><c:out value="${dec.eventCRF.crfVersion.name}" />&nbsp;</td>
+                <td class="table_cell" bgcolor="#F5F5F5" align="center">
+
+                  <c:choose>
+                   <c:when test="${dec.stage.initialDE}">
+                     <span class="icon icon-icon-dataEntryCompleted orange" alt="<fmt:message key="initial_data_entry" bundle="${resword}"/>" title="<fmt:message key="initial_data_entry" bundle="${resword}"/>">
+                   </c:when>
+                   <c:when test="${dec.stage.initialDE_Complete}">
+                     <span class="icon icon-ok" alt="<fmt:message key="initial_data_entry_complete" bundle="${resword}"/>" title="<fmt:message key="initial_data_entry_complete" bundle="${resword}"/>">
+                   </c:when>
+                   <c:when test="${dec.stage.doubleDE}">
+                     <span class="icon icon-icon-doubleDataEntry orange" alt="<fmt:message key="double_data_entry" bundle="${resword}"/>" title="<fmt:message key="double_data_entry" bundle="${resword}"/>">
+                   </c:when>
+                   <c:when test="${dec.stage.doubleDE_Complete}">
+                     <span class="icon icon-checkbox-checked green" alt="<fmt:message key="data_entry_complete" bundle="${resword}"/>" title="<fmt:message key="data_entry_complete" bundle="${resword}"/>">
+                   </c:when>
+
+                   <c:when test="${dec.stage.admin_Editing}">
+                     <span class="icon icon-pencil" alt="<fmt:message key="administrative_editing" bundle="${resword}"/>" title="<fmt:message key="administrative_editing" bundle="${resword}"/>">
+                   </c:when>
+
+                   <c:when test="${dec.stage.locked}">
+                     <span class="icon icon-lock" alt="<fmt:message key="locked" bundle="${resword}"/>" title="<fmt:message key="locked" bundle="${resword}"/>">
+                   </c:when>
+
+                   <c:otherwise>
+                     <span class="icon icon-file-excel red" alt="<fmt:message key="invalid" bundle="${resword}"/>" title="<fmt:message key="invalid" bundle="${resword}"/>">
+                   </c:otherwise>
+                  </c:choose>
+                </td>
+                <td class="table_cell"><c:out value="${dec.eventCRF.owner.name}" />&nbsp;</td>
+                
+                
+                <td class="table_cell"> 
+                
+                <table>
+                                <tr><td>
+                                        <span class="fa fa-bubble-red"  border="0"
+                                          alt="<fmt:message key="Open" bundle="${resterm}"/>" title="<fmt:message key="Open" bundle="${resterm}"/>" align="left"/>
+                                        ${discNoteMap['New']}
+                                         &nbsp;New
+                                </td></tr>
+                                <tr><td>
+                                        <span class="fa fa-bubble-orange" border="0"
+                                          alt="<fmt:message key="Updated" bundle="${resterm}"/>" title="<fmt:message key="Updated" bundle="${resterm}"/>" align="left"/>
+                                        ${discNoteMap['Updated']}
+                                        &nbsp;Updated
+                                </td></tr>
+                                <tr><td>
+                                        <span class="fa fa-bubble-black" border="0"
+                                          alt="<fmt:message key="Closed" bundle="${resterm}"/>" title="<fmt:message key="Closed" bundle="${resterm}"/>" align="left"/>
+                                        ${discNoteMap['Closed']}
+                                        &nbsp;Closed
+                                </td></tr>
+                                
+                                <tr><td>
+                                        <span class="fa fa-bubble-black" border="0"
+                                          alt="<fmt:message key="Closed_Modified" bundle="${resterm}"/>" title="<fmt:message key="Closed_Modified" bundle="${resterm}"/>" align="left"/>
+                                        ${discNoteMap['Closed-Modified']}
+                                       &nbsp;Closed-Modified
+                                </td></tr>
+                    </table>
+                    &nbsp;
+                 </td>
+                
+                
+                
+                <td class="table_cell">
+                    <c:set var="actionQuery" value="" />
+
+                    <c:if test="${dec.continueInitialDataEntryPermitted}">
+                        <c:set var="actionQuery" value="EnketoFormServlet?formLayoutId=${dec.eventCRF.formLayoutId}&studyEventId=${dse.studyEvent.id}&eventCrfId=${dec.eventCRF.id}&originatingPage=${originatingPage}&mode=edit"/>
+                    </c:if>
+
+                    <c:if test="${dec.startDoubleDataEntryPermitted}">
+                        <c:set var="actionQuery" value="EnketoFormServlet?formLayoutId=${dec.eventCRF.formLayoutId}&studyEventId=${dse.studyEvent.id}&eventCrfId=${dec.eventCRF.id}&originatingPage=${originatingPage}&mode=edit"/>
+                    </c:if>
+                    <c:if test="${dec.continueDoubleDataEntryPermitted}">
+                        <c:set var="actionQuery" value="EnketoFormServlet?formLayoutId=${dec.eventCRF.formLayoutId}&studyEventId=${dse.studyEvent.id}&eventCrfId=${dec.eventCRF.id}&originatingPage=${originatingPage}&mode=edit"/>
+                    </c:if>
+
+
+                    <c:if test="${dec.performAdministrativeEditingPermitted}">
+                        <c:set var="actionQuery" value="EnketoFormServlet?formLayoutId=${dec.eventCRF.formLayoutId}&studyEventId=${dse.studyEvent.id}&eventCrfId=${dec.eventCRF.id}&originatingPage=${originatingPage}&mode=edit"/>
+                    </c:if>
+
+<%--
+                    <c:if test="${dec.locked}">
+                        locked
+                    </c:if>
+
+--%>
+
+                    <c:choose>
+                        <c:when test='${actionQuery == "" && dec.stage.name =="invalid" }'>
+                                   <a href="EnketoFormServlet?formLayoutId=<c:out value="${dec.eventCRF.formLayoutId}"/>&studyEventId=<c:out value="${dse.studyEvent.id}"/>&eventCrfId=<c:out value="${dec.eventCRF.id}"/>&originatingPage=<c:out value="${originatingPage}"/>&mode=<c:out value="view"/>"
+                                onMouseDown="javascript:setImage('bt_View<c:out value="${rowCount}"/>','images/bt_View.gif');"
+                                onMouseUp="javascript:setImage('bt_View<c:out value="${rowCount}"/>','images/bt_View.gif');"
+                                ><span name="bt_View<c:out value="${rowCount}"/>" class="icon icon-search" border="0" alt="<fmt:message key="view_data" bundle="${resword}"/>" title="<fmt:message key="view_data" bundle="${resword}"/>" align="left" hspace="2"></a>&nbsp;
+<!--
+                            -->
+                                &nbsp;
+
+                        </c:when>
+
+                        <c:when test='${actionQuery == ""}'>
+                                   <a href="EnketoFormServlet?formLayoutId=<c:out value="${dec.eventCRF.formLayoutId}"/>&studyEventId=<c:out value="${dse.studyEvent.id}"/>&eventCrfId=<c:out value="${dec.eventCRF.id}"/>&originatingPage=<c:out value="${originatingPage}"/>&mode=<c:out value="view"/>"
+                                onMouseDown="javascript:setImage('bt_View1','images/bt_View_d.gif');"
+                                onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"
+                                ><span name="bt_View1" class="icon icon-search" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="2"></a>
+<!--
+                            <a href="javascript:openDocWindow('PrintDataEntry?ecId=<c:out value="${dec.eventCRF.id}"/>')"
+                            -->
+                                &nbsp;
+                            <%-- added above 112007, tbh --%>
+                        </c:when>
+                        <c:otherwise>
+                            <c:if test="${studySubject.status.name != 'removed'&& studySubject.status.name != 'auto-removed'}">
+                            <a href="<c:out value="${actionQuery}"/>"
+                                onMouseDown="javascript:setImage('bt_EnterData<c:out value="${rowCount}"/>','images/bt_EnterData_d.gif');"
+                                onMouseUp="javascript:setImage('bt_EnterData<c:out value="${rowCount}"/>','images/bt_EnterData.gif');"
+                                ><span name="bt_EnterData<c:out value="${rowCount}"/>" class="icon icon-pencil-squared" border="0" alt="<fmt:message key="enter_data" bundle="${resword}"/>" title="<fmt:message key="enter_data" bundle="${resword}"/>" align="left" hspace="2"></a>&nbsp;
+                            </c:if>
+                                   <a href="EnketoFormServlet?formLayoutId=<c:out value="${dec.eventCRF.formLayoutId}"/>&studyEventId=<c:out value="${dse.studyEvent.id}"/>&eventCrfId=<c:out value="${dec.eventCRF.id}"/>&originatingPage=<c:out value="${originatingPage}"/>&mode=<c:out value="view"/>"
+                                onMouseDown="javascript:setImage('bt_View<c:out value="${rowCount}"/>','images/bt_View.gif');"
+                                onMouseUp="javascript:setImage('bt_View<c:out value="${rowCount}"/>','images/bt_View.gif');"
+                                ><span name="bt_View<c:out value="${rowCount}"/>" class="icon icon-search" border="0" alt="<fmt:message key="view_data" bundle="${resword}"/>" title="<fmt:message key="view_data" bundle="${resword}"/>"  hspace="2"></a>&nbsp;
+<!--
+         <a href="javascript:openDocWindow('PrintDataEntry?ecId=<c:out value="${dec.eventCRF.id}"/>')"
+   -->                         
+
+
+
+                            <c:if test="${doRuleSetsExist[status.index]}" >
+                            <a href="ExecuteCrossEditCheck?eventCrfId=<c:out value='${dec.eventCRF.id}'/>">execute Rule</a>
+                            </c:if>
+                    </c:otherwise>
+                    </c:choose>
+                </td>
+            </tr>
+            <c:set var="rowCount" value="${rowCount + 1}" />
+        </c:forEach>
+        </c:forEach>
+    </c:otherwise>
+</c:choose>
+</table>
+</div>
+</div></div></div></div></div></div></div></div>
 </div>
 
 <div style="width: 250px">
@@ -552,80 +777,8 @@
     </c:choose>
 
     </c:otherwise>
-    </c:choose><a name="group"><a href="javascript:leftnavExpand('groups');javascript:setImage('ExpandGroup3','images/bt_Collapse.gif');"><img
-  name="ExpandGroup3" src="images/bt_Expand.gif" border="0"> <fmt:message key="group" bundle="${resword}"/></a></a></div>
-<div id="groups" style="display:none">
-    <div style="width: 600px">
-        <!-- These DIVs define shaded box borders -->
-        <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
-
-            <div class="tablebox_center">
-
-                <table border="0" cellpadding="0" cellspacing="0" width="100%">
-
-                    <!-- Table Actions row (pagination, search, tools) -->
-
-                    <tr>
-
-                        <!-- Table Tools/Actions cell -->
-
-                        <td align="right" valign="top" class="table_actions">
-                            <table border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td class="table_tools"><a href="UpdateStudySubject?id=<c:out value="${studySub.id}"/>&action=show"><fmt:message key="assign_subject_to_group" bundle="${resworkflow}"/></a></td>
-                                </tr>
-                            </table>
-                        </td>
-
-                        <!-- End Table Tools/Actions cell -->
-                    </tr>
-
-                    <!-- end Table Actions row (pagination, search, tools) -->
-
-                    <tr>
-                        <td valign="top">
-
-                            <!-- Table Contents -->
-
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                <tr>
-                                    <td class="table_header_row_left"><fmt:message key="subject_group_class" bundle="${resword}"/></td>
-                                    <td class="table_header_row"><fmt:message key="study_group" bundle="${resword}"/></td>
-                                    <td class="table_header_row"><fmt:message key="notes" bundle="${resword}"/></td>
-                                </tr>
-                                <c:choose>
-                                    <c:when test="${!empty groups}">
-                                        <c:forEach var="group" items="${groups}">
-                                            <tr>
-                                                <td class="table_cell_left"><c:out value="${group.groupClassName}"/></td>
-                                                <td class="table_cell"><c:out value="${group.studyGroupName}"/></td>
-                                                <td class="table_cell"><c:out value="${group.notes}"/>&nbsp;</td>
-                                            </tr>
-                                        </c:forEach>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <tr>
-                                            <td class="table_cell" colspan="2"><fmt:message key="currently_no_groups" bundle="${resword}"/></td>
-                                        </tr>
-                                    </c:otherwise>
-                                </c:choose>
-                            </table>
-
-                            <!-- End Table Contents -->
-
-                        </td>
-                    </tr>
-                </table>
-
-
-            </div>
-
-        </div></div></div></div></div></div></div></div>
-
-    </div>
-
-    <br><br>
-</div>
+    </c:choose>
+    
 
 <div style="width: 250px">
 
@@ -663,7 +816,7 @@
     </c:choose>
 
     </c:otherwise>
-    </c:choose>	<a name="global"><a href="javascript:leftnavExpand('globalRecord');javascript:setImage('ExpandGroup5','images/bt_Collapse.gif');"><img
+    </c:choose> <a name="global"><a href="javascript:leftnavExpand('globalRecord');javascript:setImage('ExpandGroup5','images/bt_Collapse.gif');"><img
   name="ExpandGroup5" src="images/bt_Expand.gif" border="0"> <fmt:message key="global_subject_record" bundle="${resword}"/></a></a></div>
 
 <div id="globalRecord" style="display:none">
@@ -806,10 +959,5 @@
 
 
 <!-- End Main Content Area -->
-
-
-<c:import url="../include/workflow.jsp">
-    <c:param name="module" value="manage"/>
-</c:import>
 
 <jsp:include page="../include/footer.jsp"/>

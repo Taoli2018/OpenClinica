@@ -1,8 +1,8 @@
 package org.akaza.openclinica.bean.admin;
 
-import org.akaza.openclinica.bean.core.EntityBean;
-
 import java.util.Date;
+
+import org.akaza.openclinica.bean.core.EntityBean;
 
 /*
  *
@@ -26,68 +26,67 @@ public class AuditBean extends EntityBean {
     private String userName;
     private String auditEventTypeName;
     private int studyEventId;
-    
+
     private int itemDataTypeId;
     private int ordinal;
     private int eventCrfVersionId;
     private String crfName;
     private String crfVersionName;
+    private String formLayoutName;
     private Date dateInterviewed;
     private String interviewerName;
     private int itemDataRepeatKey;
+    private String details;
 
-    
-	
     public int getItemDataRepeatKey() {
-		return itemDataRepeatKey;
-	}
+        return itemDataRepeatKey;
+    }
 
-	public void setItemDataRepeatKey(int itemDataRepeatKey) {
-		this.itemDataRepeatKey = itemDataRepeatKey;
-	}
+    public void setItemDataRepeatKey(int itemDataRepeatKey) {
+        this.itemDataRepeatKey = itemDataRepeatKey;
+    }
 
-	public Date getDateInterviewed() {
-		return dateInterviewed;
-	}
-    
+    public Date getDateInterviewed() {
+        return dateInterviewed;
+    }
+
     public void setInterviewerName(String interviewerName) {
-		this.interviewerName = interviewerName;
-	}
-    
-	
-	public String getInterviewerName() {
-		return interviewerName;
-	}
+        this.interviewerName = interviewerName;
+    }
 
-	public void setDateInterviewed(Date dateInterviewed) {
-		this.dateInterviewed = dateInterviewed;
-	}
+    public String getInterviewerName() {
+        return interviewerName;
+    }
 
-	public String getCrfName() {
-		return crfName;
-	}
+    public void setDateInterviewed(Date dateInterviewed) {
+        this.dateInterviewed = dateInterviewed;
+    }
 
-	public void setCrfName(String crfName) {
-		this.crfName = crfName;
-	}
+    public String getCrfName() {
+        return crfName;
+    }
 
-	public String getCrfVersionName() {
-		return crfVersionName;
-	}
+    public void setCrfName(String crfName) {
+        this.crfName = crfName;
+    }
 
-	public void setCrfVersionName(String crfVersionName) {
-		this.crfVersionName = crfVersionName;
-	}
+    public String getCrfVersionName() {
+        return crfVersionName;
+    }
 
-	public int getEventCrfVersionId() {
-		return eventCrfVersionId;
-	}
+    public void setCrfVersionName(String crfVersionName) {
+        this.crfVersionName = crfVersionName;
+    }
 
-	public void setEventCrfVersionId(int eventCrfVersionId) {
-		this.eventCrfVersionId = eventCrfVersionId;
-	}
+    public int getEventCrfVersionId() {
+        return eventCrfVersionId;
+    }
 
-	public int getItemDataTypeId() {
+    public void setEventCrfVersionId(int eventCrfVersionId) {
+        this.eventCrfVersionId = eventCrfVersionId;
+    }
+
+    public int getItemDataTypeId() {
         return this.itemDataTypeId;
     }
 
@@ -236,6 +235,22 @@ public class AuditBean extends EntityBean {
         if (id != other.id)
             return false;
         return true;
+    }
+
+    public String getFormLayoutName() {
+        return formLayoutName;
+    }
+
+    public void setFormLayoutName(String formLayoutName) {
+        this.formLayoutName = formLayoutName;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
     }
 
 }

@@ -7,16 +7,6 @@
  */
 package org.akaza.openclinica.control.managestudy;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.akaza.openclinica.bean.admin.AuditEventBean;
 import org.akaza.openclinica.bean.admin.CRFBean;
 import org.akaza.openclinica.bean.admin.StudyEventAuditBean;
@@ -26,54 +16,43 @@ import org.akaza.openclinica.bean.core.Status;
 import org.akaza.openclinica.bean.core.SubjectEventStatus;
 import org.akaza.openclinica.bean.login.StudyUserRoleBean;
 import org.akaza.openclinica.bean.login.UserAccountBean;
-import org.akaza.openclinica.bean.managestudy.DiscrepancyNoteBean;
-import org.akaza.openclinica.bean.managestudy.DisplayEventDefinitionCRFBean;
-import org.akaza.openclinica.bean.managestudy.DisplayStudyEventBean;
-import org.akaza.openclinica.bean.managestudy.EventDefinitionCRFBean;
-import org.akaza.openclinica.bean.managestudy.StudyBean;
-import org.akaza.openclinica.bean.managestudy.StudyEventBean;
-import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
-import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
-import org.akaza.openclinica.bean.submit.CRFVersionBean;
-import org.akaza.openclinica.bean.submit.DisplayEventCRFBean;
-import org.akaza.openclinica.bean.submit.EventCRFBean;
-import org.akaza.openclinica.bean.submit.SubjectBean;
+import org.akaza.openclinica.bean.managestudy.*;
+import org.akaza.openclinica.bean.service.*;
+import org.akaza.openclinica.bean.submit.*;
+import org.akaza.openclinica.control.SpringServletAccess;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.control.submit.CreateNewStudyEventServlet;
 import org.akaza.openclinica.control.submit.SubmitDataServlet;
-import org.akaza.openclinica.core.form.StringUtil;
 import org.akaza.openclinica.dao.admin.AuditEventDAO;
 import org.akaza.openclinica.dao.admin.CRFDAO;
+import org.akaza.openclinica.dao.hibernate.StudyParameterValueDao;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
-import org.akaza.openclinica.dao.managestudy.DiscrepancyNoteDAO;
-import org.akaza.openclinica.dao.managestudy.EventDefinitionCRFDAO;
-import org.akaza.openclinica.dao.managestudy.StudyDAO;
-import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
-import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
-import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
+import org.akaza.openclinica.dao.managestudy.*;
 import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
-import org.akaza.openclinica.dao.submit.CRFVersionDAO;
-import org.akaza.openclinica.dao.submit.EventCRFDAO;
-import org.akaza.openclinica.dao.submit.ItemDataDAO;
-import org.akaza.openclinica.dao.submit.SubjectDAO;
-import org.akaza.openclinica.dao.submit.SubjectGroupMapDAO;
+import org.akaza.openclinica.dao.submit.*;
+import org.akaza.openclinica.domain.datamap.StudyParameterValue;
 import org.akaza.openclinica.service.crfdata.HideCRFManager;
 import org.akaza.openclinica.service.managestudy.StudySubjectService;
 import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
 import org.akaza.openclinica.web.bean.DisplayStudyEventRow;
 import org.akaza.openclinica.web.bean.EntityBeanTable;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import javax.sql.DataSource;
+import java.net.URLEncoder;
+import java.util.*;
 
 /**
  * @author jxu
  *
- * Processes 'view subject' request
+ *         Processes 'view subject' request
  */
 public class ViewStudySubjectServlet extends SecureController {
     // The study subject has an existing discrepancy note related to their
-    // unique identifier; this
+    // person id; this
     // value will be saved as a request attribute
     public final static String HAS_UNIQUE_ID_NOTE = "hasUniqueIDNote";
     // The study subject has an existing discrepancy note related to their date
@@ -96,6 +75,7 @@ public class ViewStudySubjectServlet extends SecureController {
     public final static String GENDER_NOTE = "genderNote";
     // request attribute for a discrepancy note
     public final static String ENROLLMENT_NOTE = "enrollmentNote";
+    public final static String COMMON = "common";
 
     /**
      * Checks whether the user has the right permission to proceed function
@@ -104,8 +84,8 @@ public class ViewStudySubjectServlet extends SecureController {
     public void mayProceed() throws InsufficientPermissionException {
         // YW 10-18-2007, if a study subject with passing parameter does not
         // belong to user's studies, it can not be viewed
-//        mayAccess();
-        getCrfLocker().unlockAllForUser(ub.getId());
+        // mayAccess();
+        getEventCrfLocker().unlockAllForUser(ub.getId());
         if (ub.isSysAdmin()) {
             return;
         }
@@ -152,7 +132,9 @@ public class ViewStudySubjectServlet extends SecureController {
 
             de.setMaximumSampleOrdinal(sedao.getMaxSampleOrdinal(sed, studySubject));
 
-            displayEvents.add(de);
+            Status status = de.getStudyEvent().getStatus();
+            if (status == Status.AVAILABLE || status == Status.AUTO_DELETED)
+                displayEvents.add(de);
             // event.setEventCRFs(createAllEventCRFs(eventCRFs,
             // eventDefinitionCRFs));
 
@@ -165,24 +147,30 @@ public class ViewStudySubjectServlet extends SecureController {
     public void processRequest() throws Exception {
         SubjectDAO sdao = new SubjectDAO(sm.getDataSource());
         StudySubjectDAO subdao = new StudySubjectDAO(sm.getDataSource());
+        CRFVersionDAO cvdao = new CRFVersionDAO(sm.getDataSource());
         FormProcessor fp = new FormProcessor(request);
         int studySubId = fp.getInt("id", true);// studySubjectId
         String from = fp.getString("from");
 
+        int parentStudyId = currentStudy.getParentStudyId() > 0 ? currentStudy.getParentStudyId() : currentStudy.getId();
+        StudyParameterValueDao studyParameterValueDao = (StudyParameterValueDao) SpringServletAccess.getApplicationContext(context).getBean("studyParameterValueDao");
+        StudyParameterValue parentSPV = studyParameterValueDao.findByStudyIdParameter(parentStudyId, "subjectIdGeneration");
+        currentStudy.getStudyParameterConfig().setSubjectIdGeneration(parentSPV.getValue());
+
         String module = fp.getString(MODULE);
         request.setAttribute(MODULE, module);
 
-		       // if coming from change crf version -> display message
+        // if coming from change crf version -> display message
         String crfVersionChangeMsg = fp.getString("isFromCRFVersionChange");
-        if ( crfVersionChangeMsg!= null && !crfVersionChangeMsg.equals("")){
-        	addPageMessage(crfVersionChangeMsg);
+        if (crfVersionChangeMsg != null && !crfVersionChangeMsg.equals("")) {
+            addPageMessage(crfVersionChangeMsg);
 
-       }
+        }
         if (studySubId == 0) {
             addPageMessage(respage.getString("please_choose_a_subject_to_view"));
             forwardPage(Page.LIST_STUDY_SUBJECTS);
         } else {
-            if (!StringUtil.isBlank(from)) {
+            if (!StringUtils.isBlank(from)) {
                 request.setAttribute("from", from); // form ListSubject or
                 // ListStudySubject
             } else {
@@ -191,15 +179,16 @@ public class ViewStudySubjectServlet extends SecureController {
             StudySubjectBean studySub = (StudySubjectBean) subdao.findByPK(studySubId);
 
             request.setAttribute("studySub", studySub);
+            request.setAttribute("originatingPage", URLEncoder.encode("ViewStudySubject?id=" + studySub.getId(), "UTF-8"));
 
             int studyId = studySub.getStudyId();
             int subjectId = studySub.getSubjectId();
 
             StudyDAO studydao = new StudyDAO(sm.getDataSource());
             StudyBean study = (StudyBean) studydao.findByPK(studyId);
-            //Check if this StudySubject would be accessed from the Current Study
-            if(studySub.getStudyId() != currentStudy.getId()){
-                if(currentStudy.getParentStudyId() > 0){
+            // Check if this StudySubject would be accessed from the Current Study
+            if (studySub.getStudyId() != currentStudy.getId()) {
+                if (currentStudy.getParentStudyId() > 0) {
                     addPageMessage(respage.getString("no_have_correct_privilege_current_study") + " " + respage.getString("change_active_study_or_contact"));
                     forwardPage(Page.MENU_SERVLET);
                     return;
@@ -207,15 +196,13 @@ public class ViewStudySubjectServlet extends SecureController {
                     // The SubjectStudy is not belong to currentstudy and current study is not a site.
                     Collection sites = studydao.findOlnySiteIdsByStudy(currentStudy);
                     if (!sites.contains(study.getId())) {
-                        addPageMessage(respage.getString("no_have_correct_privilege_current_study") + " " + respage.getString("change_active_study_or_contact"));
+                        addPageMessage(
+                                respage.getString("no_have_correct_privilege_current_study") + " " + respage.getString("change_active_study_or_contact"));
                         forwardPage(Page.MENU_SERVLET);
                         return;
                     }
                 }
             }
-
-
-
             // If the study subject derives from a site, and is being viewed
             // from a parent study,
             // then the study IDs will be different. However, since each note is
@@ -237,15 +224,11 @@ public class ViewStudySubjectServlet extends SecureController {
                 if (!isParentStudy) {
                     StudyBean stParent = (StudyBean) studydao.findByPK(study.getParentStudyId());
                     allNotesforSubject = discrepancyNoteDAO.findAllSubjectByStudiesAndSubjectId(stParent, study, subjectId);
-
                     allNotesforSubject.addAll(discrepancyNoteDAO.findAllStudySubjectByStudiesAndStudySubjectId(stParent, study, studySubId));
-
                 } else {
                     allNotesforSubject = discrepancyNoteDAO.findAllSubjectByStudiesAndSubjectId(currentStudy, study, subjectId);
-
                     allNotesforSubject.addAll(discrepancyNoteDAO.findAllStudySubjectByStudiesAndStudySubjectId(currentStudy, study, studySubId));
                 }
-
             }
 
             if (!allNotesforSubject.isEmpty()) {
@@ -267,14 +250,18 @@ public class ViewStudySubjectServlet extends SecureController {
 
             request.setAttribute("subject", subject);
 
-
             /*
              * StudyDAO studydao = new StudyDAO(sm.getDataSource()); StudyBean
              * study = (StudyBean) studydao.findByPK(studyId);
              */
             // YW 11-26-2007 <<
             StudyParameterValueDAO spvdao = new StudyParameterValueDAO(sm.getDataSource());
-            study.getStudyParameterConfig().setCollectDob(spvdao.findByHandleAndStudy(studyId, "collectDob").getValue());
+            if (isParentStudy) {
+                study.getStudyParameterConfig().setCollectDob(spvdao.findByHandleAndStudy(studyId, "collectDob").getValue());
+            } else {
+                study.getStudyParameterConfig().setCollectDob(spvdao.findByHandleAndStudy(study.getParentStudyId(), "collectDob").getValue());
+            }
+
             // YW >>
             request.setAttribute("subjectStudy", study);
 
@@ -286,59 +273,52 @@ public class ViewStudySubjectServlet extends SecureController {
             }
 
             ArrayList children = (ArrayList) sdao.findAllChildrenByPK(subjectId);
-
             request.setAttribute("children", children);
 
             // find study events
             StudyEventDAO sedao = new StudyEventDAO(sm.getDataSource());
             StudyEventDefinitionDAO seddao = new StudyEventDefinitionDAO(sm.getDataSource());
 
-            StudySubjectService studySubjectService = (StudySubjectService)
-                    WebApplicationContextUtils.getWebApplicationContext(getServletContext()).getBean("studySubjectService");
-            List<DisplayStudyEventBean> displayEvents =
-                    studySubjectService.getDisplayStudyEventsForStudySubject(studySub, ub, currentRole);
-            //ArrayList<DisplayStudyEventBean> displayEvents = getDisplayStudyEventsForStudySubject(studySub, sm.getDataSource(), ub, currentRole);
-            //A. Hamid.
-            // Mantis Issue 5048: Preventing Investigators from Unlocking Events
-            for(int i = 0; i < displayEvents.size(); i++){
-                DisplayStudyEventBean decb = displayEvents.get(i);
-                    if(!(currentRole.isDirector() || currentRole.isCoordinator()) && decb.getStudyEvent().getSubjectEventStatus().isLocked()){
-                         decb.getStudyEvent().setEditable(false);
-                    }
+            StudySubjectService studySubjectService = (StudySubjectService) WebApplicationContextUtils.getWebApplicationContext(getServletContext())
+                    .getBean("studySubjectService");
+            List<DisplayStudyEventBean> displayEvents = studySubjectService.getDisplayStudyEventsForStudySubject(studySub, ub, currentRole);
+            List<DisplayStudyEventBean> tempList = new ArrayList<>();
+            for (DisplayStudyEventBean displayEvent : displayEvents) {
+                if (!displayEvent.getStudyEvent().getStudyEventDefinition().getType().equals(COMMON)) {
+                    tempList.add(displayEvent);
+                }
             }
+            displayEvents = new ArrayList(tempList);
 
-
-            // BWP 3212; remove event CRFs that are supposed to be "hidden" >>
+            for (int i = 0; i < displayEvents.size(); i++) {
+                DisplayStudyEventBean decb = displayEvents.get(i);
+                if (!(currentRole.isDirector() || currentRole.isCoordinator()) && decb.getStudyEvent().getSubjectEventStatus().isLocked()) {
+                    decb.getStudyEvent().setEditable(false);
+                }
+            }
             if (currentStudy.getParentStudyId() > 0) {
                 HideCRFManager hideCRFManager = HideCRFManager.createHideCRFManager();
-
                 for (DisplayStudyEventBean displayStudyEventBean : displayEvents) {
-
                     hideCRFManager.removeHiddenEventCRF(displayStudyEventBean);
-
                 }
-
             }
-            // >>
+
             EntityBeanTable table = fp.getEntityBeanTable();
             table.setSortingIfNotExplicitlySet(1, false);// sort by start
             // date, desc
             ArrayList allEventRows = DisplayStudyEventRow.generateRowsFromBeans(displayEvents);
 
-            String[] columns =
-                { resword.getString("event") + " (" + resword.getString("occurrence_number") + ")", resword.getString("start_date1"),
-                    resword.getString("location"), resword.getString("status"), resword.getString("actions"), resword.getString("CRFs_atrib") };
+            String[] columns = { resword.getString("event") + " (" + resword.getString("occurrence_number") + ")", resword.getString("start_date1"),
+                    resword.getString("status"), resword.getString("event_actions"), resword.getString("CRFs") };
             table.setColumns(new ArrayList(Arrays.asList(columns)));
             table.hideColumnLink(4);
             table.hideColumnLink(5);
-            // YW 11-08-2007 <<
             if (!"removed".equalsIgnoreCase(studySub.getStatus().getName()) && !"auto-removed".equalsIgnoreCase(studySub.getStatus().getName())) {
                 if (currentStudy.getStatus().isAvailable() && !currentRole.getRole().equals(Role.MONITOR)) {
-                    table.addLink(resword.getString("add_new_event"), "CreateNewStudyEvent?"
-                        + CreateNewStudyEventServlet.INPUT_STUDY_SUBJECT_ID_FROM_VIEWSUBJECT + "=" + studySub.getId());
+                    table.addLink(resword.getString("add_new"),
+                            "CreateNewStudyEvent?" + CreateNewStudyEventServlet.INPUT_STUDY_SUBJECT_ID_FROM_VIEWSUBJECT + "=" + studySub.getId());
                 }
             }
-            // YW >>
             HashMap args = new HashMap();
             args.put("id", new Integer(studySubId).toString());
             table.setQuery("ViewStudySubject", args);
@@ -346,9 +326,6 @@ public class ViewStudySubjectServlet extends SecureController {
             table.computeDisplay();
 
             request.setAttribute("table", table);
-            // request.setAttribute("displayEvents", displayEvents);
-
-            // find group info
             SubjectGroupMapDAO sgmdao = new SubjectGroupMapDAO(sm.getDataSource());
             ArrayList groupMaps = (ArrayList) sgmdao.findAllByStudySubject(studySubId);
             request.setAttribute("groups", groupMaps);
@@ -369,31 +346,29 @@ public class ViewStudySubjectServlet extends SecureController {
                 sea.setDefinition(sed);
                 String old = avb.getOldValue().trim();
                 try {
-                    if (!StringUtil.isBlank(old)) {
+                    if (!StringUtils.isBlank(old)) {
                         SubjectEventStatus oldStatus = SubjectEventStatus.get(new Integer(old).intValue());
                         sea.setOldSubjectEventStatus(oldStatus);
                     }
                     String newValue = avb.getNewValue().trim();
-                    if (!StringUtil.isBlank(newValue)) {
+                    if (!StringUtils.isBlank(newValue)) {
                         SubjectEventStatus newStatus = SubjectEventStatus.get(new Integer(newValue).intValue());
                         sea.setNewSubjectEventStatus(newStatus);
                     }
                 } catch (NumberFormatException e) {
-
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
-                    // logger.warning("^^^ caught NFE");
                 }
                 UserAccountBean updater = (UserAccountBean) udao.findByPK(avb.getUserId());
                 sea.setUpdater(updater);
                 eventLogs.add(sea);
-
             }
-            // logger.warning("^^^ finished iteration");
             request.setAttribute("eventLogs", eventLogs);
+            String errorData = request.getParameter("errorData");
+            if (StringUtils.isNotEmpty(errorData))
+                request.setAttribute("errorData", errorData);
 
+            request.setAttribute("participateStatus", getParticipateStatus(parentStudyId).toLowerCase());
             forwardPage(Page.VIEW_STUDY_SUBJECT);
-
         }
     }
 
@@ -423,6 +398,7 @@ public class ViewStudySubjectServlet extends SecureController {
         StudyEventDAO sedao = new StudyEventDAO(ds);
         CRFDAO cdao = new CRFDAO(ds);
         CRFVersionDAO cvdao = new CRFVersionDAO(ds);
+        FormLayoutDAO fldao = new FormLayoutDAO(ds);
         ItemDataDAO iddao = new ItemDataDAO(ds);
         EventDefinitionCRFDAO edcdao = new EventDefinitionCRFDAO(ds);
 
@@ -431,11 +407,14 @@ public class ViewStudySubjectServlet extends SecureController {
 
             // populate the event CRF with its crf bean
             int crfVersionId = ecb.getCRFVersionId();
-            CRFBean cb = cdao.findByVersionId(crfVersionId);
+            int formLayoutId = ecb.getFormLayoutId();
+            CRFBean cb = cdao.findByLayoutId(formLayoutId);
             ecb.setCrf(cb);
 
             CRFVersionBean cvb = (CRFVersionBean) cvdao.findByPK(crfVersionId);
             ecb.setCrfVersion(cvb);
+            FormLayoutBean flb = (FormLayoutBean) fldao.findByPK(formLayoutId);
+            ecb.setFormLayout(flb);
 
             // then get the definition so we can call
             // DisplayEventCRFBean.setFlags
@@ -451,7 +430,7 @@ public class ViewStudySubjectServlet extends SecureController {
             EventDefinitionCRFBean edc = edcdao.findByStudyEventDefinitionIdAndCRFId(study, studyEventDefinitionId, cb.getId());
             // below added 092007 tbh
             // rules updated 112007 tbh
-            if (status.equals(SubjectEventStatus.LOCKED) || status.equals(SubjectEventStatus.SKIPPED) || status.equals(SubjectEventStatus.STOPPED)) {
+            if (status.equals(SubjectEventStatus.LOCKED) || status.equals(SubjectEventStatus.SKIPPED ) || status.equals(SubjectEventStatus.STOPPED )) {
                 ecb.setStage(DataEntryStage.LOCKED);
 
                 // we need to set a SED-wide flag here, because other edcs
@@ -536,7 +515,7 @@ public class ViewStudySubjectServlet extends SecureController {
             if (!idata.isEmpty()) {// this crf has data already
                 completed.put(new Integer(crfId), Boolean.TRUE);
             } else {// event crf got created, but no data entered
-               // System.out.println("added one into startedButIncompleted" + ecrf.getId());
+                // System.out.println("added one into startedButIncompleted" + ecrf.getId());
                 startedButIncompleted.put(new Integer(crfId), ecrf);
             }
         }
@@ -545,11 +524,6 @@ public class ViewStudySubjectServlet extends SecureController {
         for (i = 0; i < eventDefinitionCRFs.size(); i++) {
             DisplayEventDefinitionCRFBean dedc = new DisplayEventDefinitionCRFBean();
             EventDefinitionCRFBean edcrf = (EventDefinitionCRFBean) eventDefinitionCRFs.get(i);
-
-            // System.out.println("created dedc with edcrf
-            // "+edcrf.getCrfName()+" default version "+
-            // edcrf.getDefaultVersionName()+", id
-            // "+edcrf.getDefaultVersionId());
 
             dedc.setEdc(edcrf);
             // below added tbh, 112007 to fix bug 1943
@@ -560,26 +534,11 @@ public class ViewStudySubjectServlet extends SecureController {
             EventCRFBean ev = (EventCRFBean) startedButIncompleted.get(new Integer(edcrf.getCrfId()));
             if (b == null || !b.booleanValue()) {
 
-                // System.out.println("entered boolean loop with ev
-                // "+ev.getId()+" crf version id "+
-                // ev.getCRFVersionId());
-
                 dedc.setEventCRF(ev);
                 answer.add(dedc);
 
-                // System.out.println("just added dedc to answer");
-                // removed, tbh, since this is proving nothing, 11-2007
-
-                /*
-                 * if (dedc.getEdc().getDefaultVersionId() !=
-                 * dedc.getEventCRF().getId()) { System.out.println("ID
-                 * MISMATCH: edc name "+dedc.getEdc().getName()+ ", default
-                 * version id "+dedc.getEdc().getDefaultVersionId()+ " event crf
-                 * id "+dedc.getEventCRF().getId()); }
-                 */
             }
         }
-        // System.out.println("size of answer" + answer.size());
         return answer;
     }
 

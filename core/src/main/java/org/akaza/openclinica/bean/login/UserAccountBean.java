@@ -7,16 +7,15 @@
  */
 package org.akaza.openclinica.bean.login;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 import org.akaza.openclinica.bean.core.AuditableEntityBean;
 import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.core.Status;
 import org.akaza.openclinica.bean.core.UserType;
 import org.akaza.openclinica.bean.managestudy.StudyBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author thickerson
@@ -30,6 +29,8 @@ public class UserAccountBean extends AuditableEntityBean {
     /**
      * LDAP/Active Directory users are identified by having this password stored in the database
      */
+    protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
+
     public static final String LDAP_PASSWORD = "*";
 
     private String passwd;
@@ -50,11 +51,16 @@ public class UserAccountBean extends AuditableEntityBean {
     private String time_zone;
     private boolean enableApiKey;
     private String apiKey;
+    private String userUuid;
 
-    /**
-     * Counts the number of times the user visited Main Menu servlet.
-     */
-    private int numVisitsToMainMenu;
+    public String getUserUuid() {
+        return userUuid;
+    }
+
+    public void setUserUuid(String userUuid) {
+        this.userUuid = userUuid;
+    }
+
 
     private int activeStudyId;
     // private Study activeStudy;
@@ -89,11 +95,11 @@ public class UserAccountBean extends AuditableEntityBean {
     //
 
     // elements are StudyUserRoleBeans
-    private ArrayList roles = new ArrayList();
+    private ArrayList<StudyUserRoleBean> roles = new ArrayList<StudyUserRoleBean>();
 
     // key is Integer whose intValue is a studyId, value is StudyUserRoleBean
     // for that study
-    private final HashMap rolesByStudy = new HashMap();
+    private final HashMap <Integer, Integer> rolesByStudy = new HashMap();
 
     private String notes; // not in the DB, only for showing some notes for
 
@@ -117,7 +123,6 @@ public class UserAccountBean extends AuditableEntityBean {
 
         userTypes = new ArrayList();
         status = Status.AVAILABLE;
-        numVisitsToMainMenu = 0;
         notes = "";
         enabled = true;
         accountNonLocked = true;
@@ -451,7 +456,7 @@ public class UserAccountBean extends AuditableEntityBean {
     /**
      * @return Returns the roles.
      */
-    public ArrayList getRoles() {
+    public ArrayList<StudyUserRoleBean> getRoles() {
         return roles;
     }
 
@@ -459,8 +464,8 @@ public class UserAccountBean extends AuditableEntityBean {
      * @param roles
      *            The roles to set.
      */
-    public void setRoles(ArrayList roles) {
-        this.roles = new ArrayList();
+    public void setRoles(ArrayList<StudyUserRoleBean> roles) {
+        this.roles = new ArrayList<StudyUserRoleBean>();
         rolesByStudy.clear();
 
         for (int i = 0; i < roles.size(); i++) {
@@ -484,25 +489,6 @@ public class UserAccountBean extends AuditableEntityBean {
             return false;
         }
         return id == ub.getId();
-    }
-
-    /**
-     * @return Returns the numVisitsToMainMenu.
-     */
-    public int getNumVisitsToMainMenu() {
-        return numVisitsToMainMenu;
-    }
-
-    /**
-     * @param numVisitsToMainMenu
-     *            The numVisitsToMainMenu to set.
-     */
-    public void setNumVisitsToMainMenu(int numVisitsToMainMenu) {
-        this.numVisitsToMainMenu = numVisitsToMainMenu;
-    }
-
-    public void incNumVisitsToMainMenu() {
-        numVisitsToMainMenu++;
     }
 
     /**

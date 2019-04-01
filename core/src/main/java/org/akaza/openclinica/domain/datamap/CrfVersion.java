@@ -22,6 +22,7 @@ import javax.persistence.UniqueConstraint;
 import org.akaza.openclinica.domain.DataMapDomainObject;
 import org.akaza.openclinica.domain.Status;
 import org.akaza.openclinica.domain.user.UserAccount;
+import org.apache.commons.fileupload.FileItem;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
@@ -33,8 +34,7 @@ import org.hibernate.annotations.Type;
  */
 @Entity
 @Table(name = "crf_version", uniqueConstraints = @UniqueConstraint(columnNames = "oc_oid"))
-@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence", value = "crf_version_crf_version_id_seq") })
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence_name", value = "crf_version_crf_version_id_seq") })
 public class CrfVersion extends DataMapDomainObject {
 
     private int crfVersionId;
@@ -50,13 +50,14 @@ public class CrfVersion extends DataMapDomainObject {
     private String ocOid;
     private String xform;
     private String xformName;
+    private String url;
     private Set filterCrfVersionMaps = new HashSet(0);
     private List<VersioningMap> versioningMaps;
     private List<EventCrf> eventCrfs;
     private List<Section> sections;
-    private List<EventDefinitionCrf> eventDefinitionCrfs;
     private Set decisionConditions = new HashSet(0);
-    private Set<ItemGroupMetadata> itemGroupMetadatas;;
+    private Set<ItemGroupMetadata> itemGroupMetadatas;
+    private List<FileItem> fileItems;
 
     public CrfVersion() {
     }
@@ -69,7 +70,7 @@ public class CrfVersion extends DataMapDomainObject {
 
     public CrfVersion(int crfVersionId, UserAccount userAccount, Status status, CrfBean crf, String name, String description, String revisionNotes,
             Date dateCreated, Date dateUpdated, Integer updateId, String ocOid, String xform, String xformName, Set filterCrfVersionMaps,
-            List<VersioningMap> versioningMaps, List<EventCrf> eventCrfs, List<Section> sections, List<EventDefinitionCrf> eventDefinitionCrfs,
+            List<VersioningMap> versioningMaps, List<EventCrf> eventCrfs, List<Section> sections,
             Set decisionConditions, Set<ItemGroupMetadata> itemGroupMetadatas) {
         this.crfVersionId = crfVersionId;
         this.userAccount = userAccount;
@@ -88,7 +89,6 @@ public class CrfVersion extends DataMapDomainObject {
         this.versioningMaps = versioningMaps;
         this.eventCrfs = eventCrfs;
         this.sections = sections;
-        this.eventDefinitionCrfs = eventDefinitionCrfs;
         this.decisionConditions = decisionConditions;
         this.itemGroupMetadatas = itemGroupMetadatas;
     }
@@ -124,7 +124,7 @@ public class CrfVersion extends DataMapDomainObject {
         this.status = status;
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "crf_id", nullable = false)
     public CrfBean getCrf() {
         return this.crf;
@@ -223,7 +223,7 @@ public class CrfVersion extends DataMapDomainObject {
     /*
      * @OneToMany(fetch = FetchType.LAZY, mappedBy = "crfVersion") public Set getFilterCrfVersionMaps() { return
      * this.filterCrfVersionMaps; }
-     * 
+     *
      * public void setFilterCrfVersionMaps(Set filterCrfVersionMaps) { this.filterCrfVersionMaps = filterCrfVersionMaps;
      * }
      */
@@ -255,19 +255,13 @@ public class CrfVersion extends DataMapDomainObject {
         this.sections = sections;
     }
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "crfVersion")
-    public List<EventDefinitionCrf> getEventDefinitionCrfs() {
-        return this.eventDefinitionCrfs;
-    }
 
-    public void setEventDefinitionCrfs(List<EventDefinitionCrf> eventDefinitionCrfs) {
-        this.eventDefinitionCrfs = eventDefinitionCrfs;
-    }
+
 
     /*
      * @OneToMany(fetch = FetchType.LAZY, mappedBy = "crfVersion") public Set getDecisionConditions() { return
      * this.decisionConditions; }
-     * 
+     *
      * public void setDecisionConditions(Set decisionConditions) { this.decisionConditions = decisionConditions; }
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "crfVersion")
@@ -277,6 +271,24 @@ public class CrfVersion extends DataMapDomainObject {
 
     public void setItemGroupMetadatas(Set<ItemGroupMetadata> itemGroupMetadatas) {
         this.itemGroupMetadatas = itemGroupMetadatas;
+    }
+
+    @Column(name = "url")
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    @javax.persistence.Transient
+    public List<FileItem> getFileItems() {
+        return fileItems;
+    }
+
+    public void setFileItems(List<FileItem> fileItems) {
+        this.fileItems = fileItems;
     }
 
 }

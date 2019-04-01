@@ -1,5 +1,6 @@
 package org.akaza.openclinica.controller;
 
+import io.swagger.annotations.Api;
 import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.core.Status;
 import org.akaza.openclinica.bean.core.UserType;
@@ -37,7 +38,7 @@ import org.akaza.openclinica.domain.user.AuthoritiesBean;
 import org.akaza.openclinica.domain.user.UserAccount;
 import org.akaza.openclinica.i18n.util.ResourceBundleProvider;
 import org.akaza.openclinica.service.pmanage.ParticipantPortalRegistrar;
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.fop.area.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +69,7 @@ import java.util.UUID;
 @Controller
 @RequestMapping(value = "auth/api/itemdata")
 @ResponseStatus(value = org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+@Api(value = "Item Data", tags = { "Item Data" }, description = "REST API for Item Data")
 public class IdtViewController {
     @Autowired
     @Qualifier("dataSource")
@@ -75,9 +77,6 @@ public class IdtViewController {
 
     @Autowired
     ServletContext context;
-
-    @Autowired
-    AuthenticationManager authenticationManager;
 
     @Autowired
     IdtViewDao idtViewDao;

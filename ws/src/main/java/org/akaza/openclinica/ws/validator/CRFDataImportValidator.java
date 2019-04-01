@@ -3,7 +3,6 @@ package org.akaza.openclinica.ws.validator;
 
 import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.core.Status;
-import org.akaza.openclinica.bean.login.StudyUserRoleBean;
 import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
@@ -13,12 +12,7 @@ import org.springframework.validation.Validator;
 
 import javax.sql.DataSource;
 
-public class CRFDataImportValidator implements Validator {
-
-    DataSource dataSource;
-    StudyDAO studyDAO;
-    UserAccountDAO userAccountDAO;
-    BaseVSValidatorImplementation helper;
+public class CRFDataImportValidator extends AbstractValidator implements Validator {
 
     public CRFDataImportValidator(DataSource dataSource) {
         this.dataSource = dataSource;

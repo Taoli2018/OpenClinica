@@ -3,7 +3,6 @@ package org.akaza.openclinica.control.submit;
 import static java.util.Arrays.sort;
 
 import java.util.Comparator;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.akaza.openclinica.control.DefaultToolbar;
@@ -38,12 +37,13 @@ public class ListNotesTableToolbar extends DefaultToolbar {
     private SortSet sortSet;
 
     public void setFilterSet(FilterSet filterSet) {
-		this.filterSet = filterSet;
-	}
+        this.filterSet = filterSet;
+    }
+
     public void setSortSet(SortSet sortSet) {
-		this.sortSet = sortSet;
-	}
-    
+        this.sortSet = sortSet;
+    }
+
     @Override
     protected void addToolbarItems() {
         addToolbarItem(ToolbarItemType.SEPARATOR);
@@ -52,8 +52,8 @@ public class ListNotesTableToolbar extends DefaultToolbar {
             addToolbarItem(createDownloadLinkItem());
             addToolbarItem(createNotePopupLinkItem());
         }
-//        addToolbarItem(ToolbarItemType.SEPARATOR);
-//        addToolbarItem(createBackToNotesMatrixListItem());
+        // addToolbarItem(ToolbarItemType.SEPARATOR);
+        // addToolbarItem(createBackToNotesMatrixListItem());
         addToolbarItem(createCustomItem(new NewHiddenItem()));
 
     }
@@ -92,7 +92,6 @@ public class ListNotesTableToolbar extends DefaultToolbar {
         renderer.setOnInvokeAction("onInvokeAction");
         item.setToolbarItemRenderer(renderer);
 
-        
         return item;
     }
 
@@ -107,40 +106,45 @@ public class ListNotesTableToolbar extends DefaultToolbar {
         @Override
         public String enabled() {
             HtmlBuilder html = new HtmlBuilder();
-            if(showMoreLink){
-                           html.a().id("showMore").href("javascript:hideCols('listNotes',[" + getIndexes() + "],true);").close();
-            html.div().close().nbsp().append(reswords.getString("show_more")).nbsp().divEnd().aEnd();
-            html.a().id("hide").style("display: none;").href("javascript:hideCols('listNotes',[" + getIndexes() + "],false);").close();
-            html.div().close().nbsp().append(reswords.getString("hide")).nbsp().divEnd().aEnd();
-
-                html.script().type("text/javascript").close().append(
-                        "$j = jQuery.noConflict(); $j(document).ready(function(){ " + "hideCols('listNotes',[" + getIndexes() + "],false);});").scriptEnd();
-            }else{
-                html.a().id("showMore").style("display:none;").href("javascript:hideCols('listNotes',[" + getIndexes() + "],true);").close();
+            if (showMoreLink) {
+                html.a().id("showMore").style("text-decoration: none;").href("javascript:hideCols('listNotes',[" + getIndexes() + "],true);").close();
                 html.div().close().nbsp().append(reswords.getString("show_more")).nbsp().divEnd().aEnd();
-                html.a().id("hide").href("javascript:hideCols('listNotes',[" + getIndexes() + "],false);").close();
+                html.a().id("hide").style("display: none;text-decoration:none;").href("javascript:hideCols('listNotes',[" + getIndexes() + "],false);").close();
                 html.div().close().nbsp().append(reswords.getString("hide")).nbsp().divEnd().aEnd();
 
-                html.script().type("text/javascript").close().append(
-                        "$j = jQuery.noConflict(); $j(document).ready(function(){ " + "hideCols('listNotes',[" + getIndexes() + "],true);});").scriptEnd();
+                html.script().type("text/javascript").close()
+                        .append("$j = jQuery.noConflict(); $j(document).ready(function(){ " + "hideCols('listNotes',[" + getIndexes() + "],false);});")
+                        .scriptEnd();
+            } else {
+                html.a().id("showMore").style("display:none;").style("text-decoration: none;")
+                        .href("javascript:hideCols('listNotes',[" + getIndexes() + "],true);").close();
+                html.div().close().nbsp().append(reswords.getString("show_more")).nbsp().divEnd().aEnd();
+                html.a().id("hide").style("text-decoration: none;").href("javascript:hideCols('listNotes',[" + getIndexes() + "],false);").close();
+                html.div().close().nbsp().append(reswords.getString("hide")).nbsp().divEnd().aEnd();
+
+                html.script().type("text/javascript").close()
+                        .append("$j = jQuery.noConflict(); $j(document).ready(function(){ " + "hideCols('listNotes',[" + getIndexes() + "],true);});")
+                        .scriptEnd();
             }
 
             return html.toString();
         }
 
         /**
-         * @return Dynamically generate the indexes of studyGroupClasses. It
-         *         starts from 4 because there are 4 columns before study group
-         *         columns that will require to be hidden.
-         * @see ListStudySubjectTableFactory#configureColumns(org.jmesa.facade.TableFacade,
+         * @return These indexes represent the 0-based column indexes on the Notes page.
+         *         Columns in this list are hidden by default and can be revealed by clicking
+         *         a link in the table..
+         * 
+         * @see ListNotesTableFactory#configureColumns(org.jmesa.facade.TableFacade,
          *      java.util.Locale)
          */
         String getIndexes() {
-            String result = "4, 5, 9, 11, 14, 16, 17, 19";
+            String result = "4, 5, 9, 11, 14, 16";
             return result;
         }
 
     }
+
     private class ShowLinkToNotesMatrix extends AbstractItem {
         @Override
         public String disabled() {
@@ -182,34 +186,32 @@ public class ListNotesTableToolbar extends DefaultToolbar {
         @Override
         public String enabled() {
             HtmlBuilder html = new HtmlBuilder();
-            String js = "javascript:openDocWindow('ChooseDownloadFormat" +
-            		"?resolutionStatus=" + resolutionStatus
-            		+ "&discNoteType=" + discNoteType
-            		+ "&module=" + module;
-            
-            for (Filter f: filterSet.getFilters()) {
-            	js += "&" + f.getProperty() + "=" + f.getValue();
+            String js = "javascript:openDocWindow('ChooseDownloadFormat" + "?resolutionStatus=" + resolutionStatus + "&discNoteType=" + discNoteType
+                    + "&module=" + module;
+
+            for (Filter f : filterSet.getFilters()) {
+                js += "&" + f.getProperty() + "=" + f.getValue();
             }
 
             Sort sorts[] = sortSet.getSorts().toArray(new Sort[0]);
             sort(sorts, new Comparator<Sort>() {
-				@Override
-				public int compare(Sort s1, Sort s2) {
-					return s1.getPosition() - s2.getPosition();
-				}
+                @Override
+                public int compare(Sort s1, Sort s2) {
+                    return s1.getPosition() - s2.getPosition();
+                }
             });
-            for (Sort s: sorts) {
-            	js += "&" + "sort." + s.getProperty() + "=" + s.getOrder().name();
+            for (Sort s : sorts) {
+                js += "&" + "sort." + s.getProperty() + "=" + s.getOrder().name();
             }
-            
+
             js += "')";
 
             html.a().href(js);
             html.quote();
             html.append(getAction());
             html.quote().close();
-            html.img().name("bt_View1").src("images/bt_Download.gif").border("0").alt(resword.getString("download_all_discrepancy_notes")).title(
-                    resword.getString("download_all_discrepancy_notes")).append("class=\"downloadAllDNotes\" width=\"24 \" height=\"15\"").end().aEnd();
+            html.append(
+                    "<span title=\"Download queries for all subjects\" border=\"0\" align=\"left\" class=\"icon icon-download\" hspace=\"6\" width=\"24 \" height=\"15\"/>");
             return html.toString();
         }
     }
@@ -223,18 +225,15 @@ public class ListNotesTableToolbar extends DefaultToolbar {
         @Override
         public String enabled() {
             HtmlBuilder html = new HtmlBuilder();
-            html.a().href("#");
+            html.a().href("javascript:void(0)");
             html.onclick("javascript:openPopup()");
             html.quote();
             html.append(getAction());
             html.quote().close();
-            html.img().name("bt_View1").src("images/bt_Print.gif").border("0").alt(resword.getString("print")).title(
-                    resword.getString("print")).append("class=\"downloadAllDNotes\" width=\"24 \" height=\"15\"").end().aEnd();
+            html.append("<span title=\"Print\" border=\"0\" align=\"left\" class=\"icon icon-print\" hspace=\"6\" width=\"24 \" height=\"15\"/>");
             return html.toString();
         }
     }
-
-    
 
     public String getModule() {
         return module;

@@ -20,4 +20,10 @@ public class EventDefinitionCrfTagDao extends AbstractDomainDao<EventDefinitionC
 
     }
 
+    public EventDefinitionCrfTag findByCrfPathAndTagId(int tagId, String path) {
+        String query = "from " + getDomainClassName() + " where path = '" + path + "' and tagId=" + tagId;
+        org.hibernate.Query q = getCurrentSession().createQuery(query);
+        return (EventDefinitionCrfTag) q.uniqueResult();
+
+    }
 }

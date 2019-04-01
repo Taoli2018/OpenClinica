@@ -27,9 +27,9 @@
 
         <a href="javascript:leftnavExpand('sidebar_Instructions_open');
         leftnavExpand('sidebar_Instructions_closed');">
-            <img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+            <span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${resword}"/></b>
+        <fmt:message key="instructions" bundle="${resword}"/>
 
         <div class="sidebar_tab_content">
           <b><fmt:message key="create_CRF" bundle="${resword}"/> : </b>
@@ -54,9 +54,9 @@
 
         <a href="javascript:leftnavExpand('sidebar_Instructions_open');
         leftnavExpand('sidebar_Instructions_closed');">
-            <img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+            <span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${resword}"/></b>
+        <fmt:message key="instructions" bundle="${resword}"/>
 
         </td>
   </tr>
@@ -102,7 +102,7 @@
 
 <form>
 
-<div style="width: 400px">
+<div style="width: 500px">
 <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
 
 
@@ -126,13 +126,15 @@
     <thead>
      <tr>
       <td><b><fmt:message key="crf_validation_error_identifier" bundle="${resword}"/>:</b></td>
-      <td><b><fmt:message key="crf_validation_error_reason" bundle="${resword}"/>:</b></td>
+      <td>   </td>
+      <td><b><fmt:message key="crf_validation_error_reason" bundle="${resword}"/></b></td>
      </tr>
     </thead>
     <tbody>
      <c:forEach items="${errorList}" var="error">
       <tr>
        <td><c:out value="${error.defaultMessage}"/></td>  
+      <td>   </td>
        <td><fmt:message key="${error.code}" bundle="${resword}"/></td>  
       </tr>
      </c:forEach>
@@ -164,18 +166,5 @@
 
 <br clear="all">
 </form>
-
-<c:choose>
-  <c:when test="${userBean.sysAdmin && module=='admin'}">
-  <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="admin"/>
-  </c:import>
- </c:when>
-  <c:otherwise>
-   <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/>
-  </c:import>
-  </c:otherwise>
- </c:choose>
 
 <jsp:include page="../include/footer.jsp"/>

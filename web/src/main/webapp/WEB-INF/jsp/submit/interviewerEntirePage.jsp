@@ -6,6 +6,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <fmt:setBundle basename="org.akaza.openclinica.i18n.words" var="resword"/>
 <fmt:setBundle basename="org.akaza.openclinica.i18n.format" var="resformat"/>
+
+<link rel="stylesheet" href="includes/font-awesome-4.7.0/css/font-awesome.css">
+
 <head><title>OpenClinica interview</title>
    <%-- <fmt:message key="view_data_entry" bundle="${resword}"/>--%>
     <link rel="stylesheet" href="includes/styles.css" type="text/css" media="screen">
@@ -115,7 +118,7 @@
                      title="<fmt:message key="double_data_entry" bundle="${resword}"/>">
             </c:when>
             <c:when test="${eventCRF.stage.doubleDE_Complete}">
-                <img src="images/icon_DEcomplete.gif" alt="<fmt:message key="data_entry_complete" bundle="${resword}"/>"
+                <span class="icon icon-checkbox-checked green" alt="<fmt:message key="data_entry_complete" bundle="${resword}"/>"
                      title="<fmt:message key="data_entry_complete" bundle="${resword}"/>">
             </c:when>
             <c:when test="${eventCRF.stage.admin_Editing}">
@@ -335,10 +338,10 @@ form element in red <c:out value="FORMMESSAGES: ${formMessages} "/><br/>--%>
                         <a href="#" onClick="openDSNoteWindow('CreateDiscrepancyNote?viewData=y&id=<c:out value="${toc.eventCRF.id}"/>&name=eventCrf&field=interviewer&column=interviewer_name','spanAlert-interviewer'); return false;">
                             <c:choose>
                                 <c:when test="${hasNameNote eq 'yes'}">
-                                    <img id="flag_interviewer" name="flag_interviewer" src="images/icon_Note.gif" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>">
+                                    <span id="flag_interviewer" name="flag_interviewer" class="fa fa-bubble-red" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>">
                                 </c:when>
                                 <c:otherwise>
-                                    <img id="flag_interviewer" name="flag_interviewer" src="images/icon_noNote.gif" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>">
+                                    <span id="flag_interviewer" name="flag_interviewer" class="fa fa-bubble-white" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>">
                                 </c:otherwise>
                             </c:choose>
                         </a>
@@ -421,10 +424,10 @@ form element in red <c:out value="FORMMESSAGES: ${formMessages} "/><br/>--%>
                         <a href="#" onClick="openDNoteWindow('CreateDiscrepancyNote?id=<c:out value="${toc.eventCRF.id}"/>&name=eventCrf&field=interviewDate&column=date_interviewed','spanAlert-interviewDate'); return false;">
                             <c:choose>
                                 <c:when test="${hasDateNote eq 'yes'}">
-                                    <img id="flag_interviewDate" name="flag_interviewDate" src="images/icon_Note.gif" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>" >
+                                    <span id="flag_interviewDate" name="flag_interviewDate" class="fa fa-bubble-red" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>" >
                                 </c:when>
                                 <c:otherwise>
-                                    <img id="flag_interviewDate" name="flag_interviewDate" src="images/icon_noNote.gif" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>" >
+                                    <span id="flag_interviewDate" name="flag_interviewDate" class="fa fa-bubble-white" border="0" alt="<fmt:message key="discrepancy_note" bundle="${resword}"/>" title="<fmt:message key="discrepancy_note" bundle="${resword}"/>" >
                                 </c:otherwise>
                             </c:choose>
                         </a>

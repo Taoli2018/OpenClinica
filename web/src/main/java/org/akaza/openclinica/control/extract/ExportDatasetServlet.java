@@ -12,11 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -36,8 +32,11 @@ import org.akaza.openclinica.core.form.StringUtil;
 import org.akaza.openclinica.dao.core.CoreResources;
 import org.akaza.openclinica.dao.extract.ArchivedDatasetFileDAO;
 import org.akaza.openclinica.dao.extract.DatasetDAO;
+import org.akaza.openclinica.dao.hibernate.ArchivedDatasetFilePermissionTagDao;
 import org.akaza.openclinica.dao.hibernate.RuleSetRuleDao;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
+import org.akaza.openclinica.domain.datamap.ArchivedDatasetFilePermissionTag;
+import org.akaza.openclinica.service.PermissionService;
 import org.akaza.openclinica.service.extract.GenerateExtractFileService;
 import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
@@ -48,7 +47,7 @@ import org.akaza.openclinica.web.job.XalanTriggerService;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
 import org.quartz.impl.StdScheduler;
-import org.springframework.scheduling.quartz.JobDetailBean;
+import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 
 /**
  * Take a dataset and show it in different formats,<BR/> Detect whether or not
@@ -86,13 +85,22 @@ public class ExportDatasetServlet extends SecureController {
     public String CSVFilePath;
     public ArrayList fileList;
 
+    public StudyBean getPublicStudy(String uniqueId) {
+        StudyDAO studyDAO = new StudyDAO(sm.getDataSource());
+        String studySchema = CoreResources.getRequestSchema();
+        CoreResources.setRequestSchema("public");
+        StudyBean study = studyDAO.findByUniqueIdentifier(uniqueId);
+        CoreResources.setRequestSchema(studySchema);
+        return study;
+    }
+
     @Override
     public void processRequest() throws Exception {
         DatasetDAO dsdao = new DatasetDAO(sm.getDataSource());
         ArchivedDatasetFileDAO asdfdao = new ArchivedDatasetFileDAO(sm.getDataSource());
         FormProcessor fp = new FormProcessor(request);
 
-        GenerateExtractFileService generateFileService = new GenerateExtractFileService(sm.getDataSource(),
+        GenerateExtractFileService generateFileService = new GenerateExtractFileService(sm.getDataSource(),request,
                 (CoreResources) SpringServletAccess.getApplicationContext(context).getBean("coreResources"),
                 (RuleSetRuleDao) SpringServletAccess.getApplicationContext(context).getBean("ruleSetRuleDao"));
         String action = fp.getString("action");
@@ -110,9 +118,9 @@ public class ExportDatasetServlet extends SecureController {
             }
         }
         DatasetBean db = (DatasetBean) dsdao.findByPK(datasetId);
-       StudyDAO sdao = new StudyDAO(sm.getDataSource());
+        StudyDAO sdao = new StudyDAO(sm.getDataSource());
         StudyBean study = (StudyBean)sdao.findByPK(db.getStudyId());
-        checkRoleByUserAndStudy(ub, study.getParentStudyId(), study.getId());
+        checkRoleByUserAndStudy(ub, study, sdao);
 
         //Checks if the study is current study or child of current study
         if (study.getId() != currentStudy.getId() && study.getParentStudyId() != currentStudy.getId()) {
@@ -152,14 +160,20 @@ public class ExportDatasetServlet extends SecureController {
             forwardPage(Page.EXPORT_DATASETS);
         } else if ("delete".equalsIgnoreCase(action) && adfId > 0) {
             boolean success = false;
+
             ArchivedDatasetFileBean adfBean = (ArchivedDatasetFileBean) asdfdao.findByPK(adfId);
+            boolean permissionToDeletedAllowed=checkPermissionsBeforeDeleteArchivedDataset(adfBean);
+            if(!permissionToDeletedAllowed){
+                return;
+            }
+
             File file = new File(adfBean.getFileReference());
             if (!file.canWrite()) {
                 addPageMessage(respage.getString("write_protected"));
             } else {
                 success = file.delete();
                 if (success) {
-                    asdfdao.deleteArchiveDataset(adfBean);
+                    deleteArchivedDataset(asdfdao,adfBean);
                     addPageMessage(respage.getString("file_removed"));
                 } else {
                     addPageMessage(respage.getString("error_removing_file"));
@@ -237,16 +251,16 @@ public class ExportDatasetServlet extends SecureController {
                             generalFileDir + "output.sql", db.getId());
                     scheduler = getScheduler();
 
-                    JobDetailBean jobDetailBean = new JobDetailBean();
-                    jobDetailBean.setGroup(xts.TRIGGER_GROUP_NAME);
-                    jobDetailBean.setName(simpleTrigger.getName());
-                    jobDetailBean.setJobClass(org.akaza.openclinica.web.job.XalanStatefulJob.class);
-                    jobDetailBean.setJobDataMap(simpleTrigger.getJobDataMap());
-                    jobDetailBean.setDurability(true); // need durability?
-                    jobDetailBean.setVolatility(false);
+                    JobDetailFactoryBean JobDetailFactoryBean = new JobDetailFactoryBean();
+                    JobDetailFactoryBean.setGroup(xts.TRIGGER_GROUP_NAME);
+                    JobDetailFactoryBean.setName(simpleTrigger.getKey().getName());
+                    JobDetailFactoryBean.setJobClass(org.akaza.openclinica.web.job.XalanStatefulJob.class);
+                    JobDetailFactoryBean.setJobDataMap(simpleTrigger.getJobDataMap());
+                    JobDetailFactoryBean.setDurability(true); // need durability?
+
 
                     try {
-                        Date dateStart = scheduler.scheduleJob(jobDetailBean, simpleTrigger);
+                        Date dateStart = scheduler.scheduleJob(JobDetailFactoryBean.getObject(), simpleTrigger);
                         logger.info("== found job date: " + dateStart.toString());
                     } catch (SchedulerException se) {
                         se.printStackTrace();
@@ -606,4 +620,30 @@ public class ExportDatasetServlet extends SecureController {
       in.close();
       out.close();
     }
+
+    private void deleteArchivedDataset(ArchivedDatasetFileDAO asdfdao, ArchivedDatasetFileBean adfBean) {
+        getArchivedDatasetFilePermissionTagDao().delete(adfBean.getId());
+        asdfdao.deleteArchiveDataset(adfBean);
+    }
+
+    private boolean checkPermissionsBeforeDeleteArchivedDataset(ArchivedDatasetFileBean adfBean) {
+        List<ArchivedDatasetFilePermissionTag> adfTags = getArchivedDatasetFilePermissionTagDao().findAllByArchivedDatasetFileId(adfBean.getId());
+        List<String> permissionTagsList = getPermissionTagsList();
+
+        for (ArchivedDatasetFilePermissionTag adfTag : adfTags) {
+            if (!permissionTagsList.contains(adfTag.getPermissionTagId())) {
+                String originatingPage = "ExportDataset?datasetId=" + adfBean.getDatasetId();
+                request.setAttribute("originatingPage", originatingPage);
+                forwardPage(Page.NO_ACCESS);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private ArchivedDatasetFilePermissionTagDao getArchivedDatasetFilePermissionTagDao() {
+        ArchivedDatasetFilePermissionTagDao adfDao = (ArchivedDatasetFilePermissionTagDao) SpringServletAccess.getApplicationContext(context).getBean("archivedDatasetFilePermissionTagDao");
+        return adfDao;
+    }
+
 }

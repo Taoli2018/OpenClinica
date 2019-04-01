@@ -13,41 +13,41 @@
 <jsp:include page="../include/sideAlert.jsp"/>
 <!-- then instructions-->
 <tr id="sidebar_Instructions_open" style="display: none">
-		<td class="sidebar_tab">
+    <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+    <fmt:message key="instructions" bundle="${resword}"/>
 
-		<div class="sidebar_tab_content">
+    <div class="sidebar_tab_content">
 
-		</div>
+    </div>
 
-		</td>
+    </td>
 
-	</tr>
-	<tr id="sidebar_Instructions_closed" style="display: all">
-		<td class="sidebar_tab">
+  </tr>
+  <tr id="sidebar_Instructions_closed" style="display: all">
+    <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+    <fmt:message key="instructions" bundle="${resword}"/>
 
-		</td>
+    </td>
   </tr>
 <jsp:include page="../include/sideInfo.jsp"/>
 
 <jsp:useBean scope="request" id="studies" class="java.util.ArrayList"/>
-<jsp:useBean scope="session" id="study" class="org.akaza.openclinica.bean.managestudy.StudyBean"/>
+<jsp:useBean scope="session" id="publicStudy" class="org.akaza.openclinica.bean.managestudy.StudyBean"/>
 
-<h1><span class="title_manage"><fmt:message key="change_your_current_study" bundle="${restext}"/> <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/working-openclinica')"><img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></a></span></h1>
+<h1><span class="title_manage"><fmt:message key="change_your_current_study" bundle="${restext}"/> <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/working-openclinica')"><span class=""></span></a></span></h1>
 
 <c:choose>
- <c:when test="${study != null && study.id>0}">
-  <p><fmt:message key="your_current_active_study_is" bundle="${restext}"/> <c:out value="${study.name}"/>,
+ <c:when test="${publicStudy != null && publicStudy.id>0}">
+  <p><fmt:message key="your_current_active_study_is" bundle="${restext}"/> <c:out value="${publicStudy.name}"/>,
    <c:choose>
     <c:when test="${!userRole.invalid}">
-     <fmt:message key="with_a_role_of" bundle="${restext}"/> <c:out value="${userRole.role.description}"/>.
+     <fmt:message key="with_a_role_of" bundle="${restext}"/> <c:out value="${sessionScope.customUserRole}"/>.
     </c:when>
     <c:otherwise>
      <fmt:message key="but_no_role" bundle="${restext}"/>
@@ -72,7 +72,7 @@
        <c:forEach var="studyRole" items="${studies}">
            <c:set var="statusId" value="${studyRole.status.id}"/>
         <c:choose>
-         <c:when test="${study.id == studyRole.studyId}">
+         <c:when test="${publicStudy.id == studyRole.studyId}">
 
            <c:choose>
             <c:when test="${studyRole.parentStudyId > 0}">
@@ -80,9 +80,11 @@
                  <tr>
                    <td class="table_cell">&nbsp;&nbsp;<img src="images/bullet.gif">
                    <input type="radio" checked name="studyId" value="<c:out value="${studyRole.studyId}"/>" <c:if test="${statusId==4}">disabled="true"</c:if>>
-                   <c:out value="${studyRole.studyName}"/>
+                       <c:out value="${studyRole.studyName}"/> 
+                       <c:if test="${studyRole.envType == 'TEST'}">(<c:out value="Test"/>)</c:if>
+                       <c:if test="${studyRole.envType == 'PROD'}">(<c:out value="Production"/>)</c:if>
                        <c:if test="${statusId==4}">(Design)&nbsp;</c:if>
-                       (<fmt:message key="${siteRoleMap[studyRole.role.id] }" bundle="${resterm}"></fmt:message>) </td>
+                       (<c:out value="${siteRoleMap[studyRole.studyId] }"/>) </td>
                  </tr>
                </c:if>
             </c:when>
@@ -91,11 +93,13 @@
                  <tr>
                  <td class="table_cell">
                      <input type="radio" checked name="studyId" value="<c:out value="${studyRole.studyId}"/>">
-                 <b><c:out value="${studyRole.studyName}"/> (<fmt:message key="${studyRoleMap[studyRole.role.id] }" bundle="${resterm}"></fmt:message>)</b></td>
+                     <b><c:out value="${studyRole.studyName}"/> 
+                     <c:if test="${studyRole.envType == 'TEST'}">(<c:out value="Test"/>)</c:if>
+                     <c:if test="${studyRole.envType == 'PROD'}">(<c:out value="Production"/>)</c:if> (<c:out value="${studyRoleMap[studyRole.studyId] }"/>)</b></td>
                  </tr>
                </c:if>
                 <c:if test="${studyRole.invalid}">
-                 <tr><td class="table_cell"><b>&nbsp;<c:out value="${studyRole.studyName}"/></b></td></tr>
+                    <tr><td class="table_cell"><b>&nbsp;<c:out value="${studyRole.studyName}"/></b></td></tr>
                </c:if>
             </c:otherwise>
            </c:choose>
@@ -106,13 +110,17 @@
           <c:choose>
             <c:when test="${studyRole.parentStudyId > 0}">
                <c:if test="${!studyRole.invalid}">
+                <c:if test="${studyRole.status.name != 'Design'}">
                  <tr>
                   <td class="table_cell">&nbsp;&nbsp;<img src="images/bullet.gif">
                       <input type="radio" name="studyId" value="<c:out value="${studyRole.studyId}"/>" <c:if test="${statusId==4}">disabled="true"</c:if>>
                       <c:out value="${studyRole.studyName}"/>
                       <c:if test="${statusId==4}">(Design)&nbsp;</c:if>
-                      (<fmt:message key="${siteRoleMap[studyRole.role.id] }" bundle="${resterm}"></fmt:message>)</td>
+                      <c:if test="${studyRole.envType == 'TEST'}">(<c:out value="Test"/>)</c:if>
+                      <c:if test="${studyRole.envType == 'PROD'}">(<c:out value="Production"/>)</c:if>
+                      (<c:out value="${siteRoleMap[studyRole.studyId] }"/>)</td>
                  </tr>
+                </c:if>
                </c:if>
             </c:when>
             <c:otherwise>
@@ -120,7 +128,9 @@
                  <tr>
                   <td class="table_cell">
                       <input type="radio" name="studyId" value="<c:out value="${studyRole.studyId}"/>">
-                  <b><c:out value="${studyRole.studyName}"/> (<fmt:message key="${studyRoleMap[studyRole.role.id] }" bundle="${resterm}"></fmt:message>)</b></td>
+                      <b><c:out value="${studyRole.studyName}"/> 
+                      <c:if test="${studyRole.envType == 'TEST'}">(<c:out value="Test"/>)</c:if>
+                      <c:if test="${studyRole.envType == 'PROD'}">(<c:out value="Production"/>)</c:if> (<c:out value="${studyRoleMap[studyRole.studyId] }"/>)</b></td>
                  </tr>
                </c:if>
                 <c:if test="${studyRole.invalid}">
@@ -136,11 +146,11 @@
     <jsp:include page="../showMessage.jsp"><jsp:param name="key" value="studyId"/></jsp:include>
    </table>
    <br>
-	</div>
-	</div></div></div></div></div></div></div></div>
+  </div>
+  </div></div></div></div></div></div></div></div>
   <br>
   <p>
-      <input type="submit" name="Submit" value="<fmt:message key="change_study" bundle="${resword}"/>" class="button_long">
+      <input type="submit" name="Submit" value="Change" class="button_long">
       <input type="button" onclick="confirmCancel('MainMenu');"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/>
 
   </p>
@@ -152,4 +162,3 @@
   <p><i><fmt:message key="no_other_studies_and_roles_available" bundle="${restext}"/></i> <a href="MainMenu"><fmt:message key="go_back" bundle="${restext}"/></a></p>
 </c:otherwise>
 </c:choose>
-<jsp:include page="../include/footer.jsp"/>

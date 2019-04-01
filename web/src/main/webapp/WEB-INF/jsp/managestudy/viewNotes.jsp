@@ -15,10 +15,12 @@
 </c:choose>
 
 <link rel="stylesheet" href="includes/jmesa/jmesa.css" type="text/css">
+<link rel="stylesheet" href="includes/font-awesome-4.7.0/css/font-awesome.css">
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.min.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.jmesa.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa.js"></script>
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.1.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery.blockUI.js"></script>
+<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.4.1.js"></script>
 <script type="text/javascript">
     function onInvokeAction(id,action) {
         if(id.indexOf('listNotes') == -1)  {
@@ -33,6 +35,10 @@
     function openPopup() {
         openDocWindow(window.location.href +'&print=yes')
     }
+    jQuery('body').addClass('query-page');
+    jQuery(window).resize(function() {
+      recalculateDropDownPos();
+    });
 </script>
 
 
@@ -40,27 +46,27 @@
 <jsp:include page="../include/sideAlert.jsp"/>
 <!-- then instructions-->
 <tr id="sidebar_Instructions_open">
-		<td class="sidebar_tab">
+        <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+        <fmt:message key="instructions" bundle="${resword}"/>
 
-		<div class="sidebar_tab_content">
-			<fmt:message key="this_section_allows_a_study_manager_to_view_and_resolve" bundle="${restext}"/>
-		</div>
+        <div class="sidebar_tab_content">
+            <fmt:message key="this_section_allows_a_study_manager_to_view_and_resolve" bundle="${restext}"/>
+        </div>
 
-		</td>
+        </td>
 
-	</tr>
-	<tr id="sidebar_Instructions_closed" style="display: none">
-		<td class="sidebar_tab">
+    </tr>
+    <tr id="sidebar_Instructions_closed" style="display: none">
+        <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+        <fmt:message key="instructions" bundle="${resword}"/>
 
-		</td>
+        </td>
   </tr>
 <jsp:include page="../include/sideInfo.jsp"/>
 
@@ -72,17 +78,17 @@
         <c:when test="${module eq 'manage'}"><span class="title_manage"></c:when>
         <c:otherwise><span class="title_manage"></c:otherwise>
         </c:choose>
-	<fmt:message key="view_discrepancy_notes" bundle="${resword}"/>
+    <fmt:message key="queries" bundle="${resword}"/>
     <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/monitor-and-manage-data/notes-and-discrepancies')">
         <c:choose>
-        <c:when test="${module eq 'manage'}"><img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></c:when>
-        <c:otherwise><img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></c:otherwise></c:choose></a>
+        <c:when test="${module eq 'manage'}"><span class=""></span></c:when>
+        <c:otherwise><span class=""></span></c:otherwise></c:choose></a>
  <%--<a href="javascript:openDocWindow('ViewNotes?print=yes')"--%>
 <%--<a href="javascript:onInvokeAction('listNotes','filter')"--%>
-	<%--onMouseDown="javascript:setImage('bt_Print0','images/bt_Print_d.gif');"--%>
-	<%--onMouseUp="javascript:setImage('bt_Print0','images/bt_Print.gif');">--%>
-	<%--<img name="bt_Print0" src="images/bt_Print.gif" border="0" alt="<fmt:message key="print" bundle="${resword}"/>"></a>--%>
-</span></h1>
+    <%--onMouseDown="javascript:setImage('bt_Print0','images/bt_Print_d.gif');"--%>
+    <%--onMouseUp="javascript:setImage('bt_Print0','images/bt_Print.gif');">--%>
+    <%--<img name="bt_Print0" src="images/bt_Print.gif" border="0" alt="<fmt:message key="print" bundle="${resword}"/>"></a>--%>
+</span></h1><br/>
 <%--
 <div class="dnKey"><strong><fmt:message key="Filter_by_status" bundle="${resword}"/>
 :</strong>
@@ -125,43 +131,34 @@
 <%--<c:set var="module" value="${module}" scope="request"/>--%>
 <%--
 <c:import url="showNotesTable.jsp">
-	<c:param name="rowURL" value="showDiscrepancyNoteRow.jsp" />
+    <c:param name="rowURL" value="showDiscrepancyNoteRow.jsp" />
 </c:import>
 <br><br>
 --%>
 
-<div><a id="sumBoxParent" href="javascript:void(0)"
-        onclick="showSummaryBox('sumBox',document.getElementById('sumBoxParent'),
-        '<fmt:message key="show_summary_statistics" bundle="${resword}"/>',
-        '<fmt:message key="hide_summary_statistics" bundle="${resword}"/>')">
-    <img name="ExpandGroup1" src="images/bt_Collapse.gif" border="0">
-    <fmt:message key="hide_summary_statistics" bundle="${resword}"/></a>
+<div>
+    <fmt:message key="Summary_count_by_status" bundle="${resword}"/>
 </div>
-<div id="sumBox" style="display:block; width:600px;">
+<div id="topTable" style="display:block; width:600px;">
     <%--<h3>Summary statistics</h3>--%>
     <c:if test="${empty summaryMap}"><fmt:message key="There_are_no_discrepancy_notes" bundle="${resword}"/></c:if>
     <!-- NEW Summary-->
-    <table cellspacing="0" class="summaryTable" style="width:600px;">
-        <tr><td>&nbsp;</td>
-            <c:forEach var="typeName"  items="${typeNames}">
-                <td align="center"><strong>${typeName}</strong></td>
-            </c:forEach>
-            <td align="center"><strong>Total</strong></td>
-        </tr>
-            <c:forEach var="status" items="${mapKeys}">
+    <table border="0" cellspacing="0" class="summaryTable" style="width:600px;">
+        <c:forEach var="status" items="${mapKeys}">
+            <c:if test="${(status.name != 'Resolution Proposed')}">
                 <tr>
-                    <td><strong>${status.name}</strong><img src="${status.iconFilePath}" border="0" align="right"></td>
-                    <c:forEach var="typeName" items="${typeNames}">
-                        <td align="center">${summaryMap[status.name][typeName]}</td>
-                    </c:forEach>
-                    <td align="center"> ${summaryMap[status.name]['Total']}</td>
-                </tr>
-            </c:forEach>
-        <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-        <tr><td><strong>Total</strong></td>
-            <c:forEach var="typeName"  items="${typeNames}">
-                <td align="center">${typeKeys[typeName]}</td>
-            </c:forEach>
+                    <td><b>${status.name}</b></td>
+                    <td><span class="${status.iconFilePath}" border="0"></span></td>
+                    <td align="center">${summaryMap[status.name]['Total']}</td>    
+                </tr>  
+            </c:if>  
+        </c:forEach>
+        <tr>
+            <td>&nbsp;</td><td></td><td></td>
+        </tr>
+        <tr>
+            <td><b>Total</b></td>
+            <td></td>
             <td align="center">${grandTotal}</td>
         </tr>
     </table>
@@ -172,91 +169,5 @@
         <input type="hidden" name="module" value="submit">
         ${viewNotesHtml}
     </form>
-<!-- EXPANDING WORKFLOW BOX -->
 
-<div style="clear:left">
-<table border="0" cellpadding="0" cellspacing="0" style="position: relative; left: -14px;">
-	<tr>
-		<td id="sidebar_Workflow_closed" style="display: none">
-		<a href="javascript:leftnavExpand('sidebar_Workflow_closed'); leftnavExpand('sidebar_Workflow_open');"><img src="images/<fmt:message key="image_dir" bundle="${resformat}"/>/tab_Workflow_closed.gif" border="0"></a>
-	</td>
-	<td id="sidebar_Workflow_open">
-	<table border="0" cellpadding="0" cellspacing="0" class="workflowBox">
-		<tr>
-			<td class="workflowBox_T" valign="top">
-			<table border="0" cellpadding="0" cellspacing="0">
-				<tr>
-					<td class="workflow_tab">
-					<a href="javascript:leftnavExpand('sidebar_Workflow_closed'); leftnavExpand('sidebar_Workflow_open');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
-
-					<b><fmt:message key="workflow" bundle="${resword}"/></b>
-
-					</td>
-				</tr>
-			</table>
-			</td>
-			<td class="workflowBox_T" align="right" valign="top"><img src="images/workflowBox_TR.gif"></td>
-		</tr>
-		<tr>
-			<td colspan="2" class="workflowbox_B">
-			<div class="box_R"><div class="box_B"><div class="box_BR">
-				<div class="workflowBox_center">
-
-
-		<!-- Workflow items -->
-
-				<table border="0" cellpadding="0" cellspacing="0">
-					<tr>
-						<td>
-
-				<!-- These DIVs define shaded box borders -->
-						<div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
-
-							<div class="textbox_center" align="center">
-
-							 <span class="title_manage">
-                               <fmt:message key="manage_study" bundle="${resword}"/>
-
-							</span>
-
-							</div>
-						</div></div></div></div></div></div></div></div>
-
-						</td>
-						<td><img src="images/arrow.gif"></td>
-						<td>
-
-				<!-- These DIVs define shaded box borders -->
-						<div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
-
-							<div class="textbox_center" align="center">
-
-                             <span class="title_manage">
-
-							<b><fmt:message key="view_discrepancy_notes" bundle="${resword}"/></b>
-
-
-							</span>
-
-							</div>
-						</div></div></div></div></div></div></div></div>
-
-						</td>
-					</tr>
-				</table>
-
-
-		<!-- end Workflow items -->
-
-				</div>
-			</div></div></div>
-			</td>
-		</tr>
-	</table>
-	</td>
-   </tr>
-</table>
-</div>
-
-<!-- END WORKFLOW BOX -->
 <jsp:include page="../include/footer.jsp"/>

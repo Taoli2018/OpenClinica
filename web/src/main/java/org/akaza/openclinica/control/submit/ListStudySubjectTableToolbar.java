@@ -1,5 +1,6 @@
 package org.akaza.openclinica.control.submit;
 
+import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
 import org.akaza.openclinica.bean.managestudy.StudyGroupClassBean;
 import org.akaza.openclinica.control.DefaultToolbar;
@@ -22,14 +23,17 @@ public class ListStudySubjectTableToolbar extends DefaultToolbar {
     private final ArrayList<StudyGroupClassBean> studyGroupClasses;
     private final boolean addSubjectLinkShow;
     private ResourceBundle reswords = ResourceBundleProvider.getWordsBundle();
+    private String participateModuleStatus;
+    private final String ENABLED = "enabled";
 
     public ListStudySubjectTableToolbar(ArrayList<StudyEventDefinitionBean> studyEventDefinitions, ArrayList<StudyGroupClassBean> studyGroupClasses,
-            boolean addSubjectLinkShow, boolean showMoreLink) {
+            boolean addSubjectLinkShow, boolean showMoreLink , String participateModuleStatus) {
         super();
         this.studyEventDefinitions = studyEventDefinitions;
         this.studyGroupClasses = studyGroupClasses;
         this.addSubjectLinkShow = addSubjectLinkShow;
         this.showMoreLink = showMoreLink;
+        this.participateModuleStatus=participateModuleStatus;
     }
 
     @Override
@@ -77,17 +81,17 @@ public class ListStudySubjectTableToolbar extends DefaultToolbar {
         public String enabled() {
             HtmlBuilder html = new HtmlBuilder();
             if(showMoreLink){
-                          html.a().id("showMore").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],true);").close();
+                          html.a().id("showMore").style("text-decoration: none").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],true);").close();
             html.div().close().nbsp().append(reswords.getString("show_more")).nbsp().divEnd().aEnd();
-            html.a().id("hide").style("display: none;").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],false);").close();
+            html.a().id("hide").style("display: none;text-decoration: none;").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],false);").close();
             html.div().close().nbsp().append(reswords.getString("hide")).nbsp().divEnd().aEnd();
 
                 html.script().type("text/javascript").close().append(
                         "$j = jQuery.noConflict(); $j(document).ready(function(){ " + "hideCols('findSubjects',[" + getIndexes() + "],false);});").scriptEnd();
             }else{
-                html.a().id("hide").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],false);").close();
+                html.a().id("hide").style("text-decoration: none").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],false);").close();
                 html.div().close().nbsp().append(reswords.getString("hide")).nbsp().divEnd().aEnd();
-                html.a().id("showMore").style("display: none;").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],true);").close();
+                html.a().id("showMore").style("display: none;").style("text-decoration: none;").href("javascript:hideCols('findSubjects',[" + getIndexes() + "],true);").close();
                 html.div().close().nbsp().append(reswords.getString("show_more")).nbsp().divEnd().aEnd();
             }
             return html.toString();
@@ -101,9 +105,12 @@ public class ListStudySubjectTableToolbar extends DefaultToolbar {
          *      java.util.Locale)
          */
         String getIndexes() {
-            String result = "1,2,3,4,5";
+            String result = "1,2,3";
+            if(participateModuleStatus.equals(ENABLED))
+                 result = "1,2,3,4";
+
             for (int i = 0; i < studyGroupClasses.size(); i++) {
-                result += "," + (5 + i + 1);
+                result += "," + (4 + i + 1);
             }
             return result;
         }
@@ -146,15 +153,11 @@ public class ListStudySubjectTableToolbar extends DefaultToolbar {
         @Override
         public String enabled() {
             HtmlBuilder html = new HtmlBuilder();
-            //@pgawade 25-June-2012: fix for issue 14427 
-            //html.a().href("#").id("addSubject");// onclick(
-            html.a().href("javascript:;").id("addSubject");
-            // "initmb();sm('box', 730,100);"
-            // );
+            //html.a().href("AddNewSubject");
+            html.a().style("text-decoration: none").href("javascript:;").id("addSubject");
             html.quote();
             html.quote().close();
             html.nbsp().append(reswords.getString("add_new_subject")).nbsp().aEnd();
-
             return html.toString();
         }
 

@@ -7,7 +7,7 @@
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.min.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.jmesa.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa.js"></script>
-<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.1.1.js"></script> 
+<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.4.1.js"></script>
 
 
 <script type="text/javascript">
@@ -36,7 +36,7 @@
 <tr id="sidebar_Instructions_open" style="display: none">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
         <b><fmt:message key="instructions" bundle="${resword}"/></b>
 
@@ -50,7 +50,7 @@
 <tr id="sidebar_Instructions_closed" style="display: all">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
 
         <b><fmt:message key="instructions" bundle="${resword}"/></b>
 
@@ -76,16 +76,4 @@
 <br>
 <input type="button" onclick="confirmExit('ListUserAccounts');"  name="exit" value="<fmt:message key="exit" bundle="${resword}"/>   " class="button_medium"/>
 
-<c:choose>
-    <c:when test="${userBean.sysAdmin && module=='admin'}">
-        <c:import url="../include/workflow.jsp">
-            <c:param name="module" value="admin"/>
-        </c:import>
-    </c:when>
-    <c:otherwise>
-        <c:import url="../include/workflow.jsp">
-            <c:param name="module" value="manage"/>
-        </c:import>
-    </c:otherwise>
-</c:choose>
 <jsp:include page="../include/footer.jsp"/>

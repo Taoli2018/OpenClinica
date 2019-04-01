@@ -11,7 +11,7 @@
   <title>OpenClinica</title>
   <link type="text/css" rel="stylesheet" href="<c:url value="/style.css"/>"/>
   <script type="text/JavaScript" language="JavaScript" src="../includes/jmesa/jquery.min.js"></script>
-  <script type="text/javascript" language="JavaScript" src="../includes/jmesa/jquery-migrate-1.1.1.js"></script>
+  <script type="text/javascript" language="JavaScript" src="../includes/jmesa/jquery-migrate-1.4.1.js"></script>
   <script type="text/javascript">
       $(document).ready( function() {
           $('#confirmationForm').submit();
@@ -24,15 +24,6 @@
 
   <div id="content">
 
-    <!-- 
-    <c:if test="${!empty sessionScope.SPRING_SECURITY_LAST_EXCEPTION}">
-      <div class="error">
-        <h2>Woops!</h2>
-
-        <p>Access could not be granted. (<%= ((AuthenticationException) session.getAttribute(AbstractAuthenticationProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</p>
-      </div>
-    </c:if>
-     -->
     <c:remove scope="session" var="SPRING_SECURITY_LAST_EXCEPTION"/>
 
     <authz:authorize ifAllGranted="ROLE_USER">

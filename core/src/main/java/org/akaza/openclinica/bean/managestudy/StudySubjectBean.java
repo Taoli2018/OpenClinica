@@ -10,6 +10,7 @@ package org.akaza.openclinica.bean.managestudy;
 import org.akaza.openclinica.bean.core.AuditableEntityBean;
 import org.akaza.openclinica.bean.oid.OidGenerator;
 import org.akaza.openclinica.bean.oid.StudySubjectOidGenerator;
+import org.akaza.openclinica.service.UserStatus;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,6 +62,9 @@ public class StudySubjectBean extends AuditableEntityBean {
      * The OID, used for export and import of data.
      */
     private String oid;
+    private int userId;
+    private UserStatus userStatus;
+
 
     private OidGenerator oidGenerator = new StudySubjectOidGenerator();
     private String time_zone;
@@ -281,6 +285,20 @@ public class StudySubjectBean extends AuditableEntityBean {
 	public void setTime_zone(String time_zone) {
 		this.time_zone = time_zone;
 	}
-    
 
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public UserStatus getUserStatus() {
+        return userStatus;
+    }
+
+    public void setUserStatus(UserStatus userStatus) {
+        this.userStatus = userStatus;
+    }
 }

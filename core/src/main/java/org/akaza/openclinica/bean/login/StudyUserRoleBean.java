@@ -34,7 +34,17 @@ public class StudyUserRoleBean extends AuditableEntityBean {
 
     private Role role;
 
+    public String getEnvType() {
+        return envType;
+    }
+
+    public void setEnvType(String envType) {
+        this.envType = envType;
+    }
+
     private int studyId;
+
+    private String envType;
 
     // not in the database, and not guaranteed to correspond to studyId; studyId
     // is authoritative
@@ -63,6 +73,9 @@ public class StudyUserRoleBean extends AuditableEntityBean {
     private int userAccountId = 0;
 
     private boolean canMonitor;
+
+    private String studyEnvUuid;
+    private String siteUuid;
 
     public StudyUserRoleBean() {
         role = Role.INVALID;
@@ -261,5 +274,21 @@ public class StudyUserRoleBean extends AuditableEntityBean {
 
     public boolean isDirector() {
         return this.role == Role.STUDYDIRECTOR;
+    }
+
+    public String getStudyEnvUuid() {
+        return studyEnvUuid;
+    }
+
+    public void setStudyEnvUuid(String studyEnvUuid) {
+        this.studyEnvUuid = studyEnvUuid;
+    }
+
+    public String getSiteUuid() {
+        return siteUuid;
+    }
+
+    public void setSiteUuid(String siteUuid) {
+        this.siteUuid = siteUuid;
     }
 }

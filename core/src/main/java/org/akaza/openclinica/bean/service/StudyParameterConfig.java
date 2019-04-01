@@ -7,6 +7,8 @@
  */
 package org.akaza.openclinica.bean.service;
 
+import java.io.Serializable;
+
 /**
  * This is a help class for each study, it saves all the parameter
  * configurations
@@ -14,7 +16,7 @@ package org.akaza.openclinica.bean.service;
  * @author jxu
  *
  */
-public class StudyParameterConfig {
+public class StudyParameterConfig implements Serializable{
     private String collectDob;
 
     private String discrepancyManagement;
@@ -51,8 +53,14 @@ public class StudyParameterConfig {
     
     private String participantPortal;
 
-    private String randomization;                       
-    
+    private String randomization;
+
+    private String participantIdTemplate;
+
+    private String enforceEnrollmentCap;
+
+    private String contactsModule;
+
     public String getRandomization() {
         return randomization;
     }
@@ -91,6 +99,8 @@ public class StudyParameterConfig {
         eventLocationRequired = "not_used";
         participantPortal="disabled";
         randomization="disabled";
+        enforceEnrollmentCap = "false";
+        participantIdTemplate="";
     }
 
 	
@@ -314,5 +324,51 @@ public class StudyParameterConfig {
         this.eventLocationRequired = eventLocationRequired;
     }
 
+    public String getEnforceEnrollmentCap() {
+        return enforceEnrollmentCap;
+    }
+    public String getParticipantIdTemplate() {
+        return participantIdTemplate;
+    }
 
+    public void setEnforceEnrollmentCap(String enforceEnrollmentCap) {
+        this.enforceEnrollmentCap = enforceEnrollmentCap;
+    }
+    public void setParticipantIdTemplate(String participantIdTemplate) {
+        this.participantIdTemplate = participantIdTemplate;
+    }
+
+    public String getContactsModule() {
+        return contactsModule;
+    }
+
+    public void setContactsModule(String contactsModule) {
+        this.contactsModule = contactsModule;
+    }
+
+    @Override
+    public String toString() {
+        return "StudyParameterConfig{" +
+                "collectDob='" + collectDob + '\'' +
+                ", discrepancyManagement='" + discrepancyManagement + '\'' +
+                ", genderRequired='" + genderRequired + '\'' +
+                ", subjectPersonIdRequired='" + subjectPersonIdRequired + '\'' +
+                ", interviewerNameRequired='" + interviewerNameRequired + '\'' +
+                ", interviewerNameDefault='" + interviewerNameDefault + '\'' +
+                ", interviewerNameEditable='" + interviewerNameEditable + '\'' +
+                ", interviewDateRequired='" + interviewDateRequired + '\'' +
+                ", interviewDateDefault='" + interviewDateDefault + '\'' +
+                ", interviewDateEditable='" + interviewDateEditable + '\'' +
+                ", subjectIdGeneration='" + subjectIdGeneration + '\'' +
+                ", subjectIdPrefixSuffix='" + subjectIdPrefixSuffix + '\'' +
+                ", personIdShownOnCRF='" + personIdShownOnCRF + '\'' +
+                ", secondaryLabelViewable='" + secondaryLabelViewable + '\'' +
+                ", adminForcedReasonForChange='" + adminForcedReasonForChange + '\'' +
+                ", eventLocationRequired='" + eventLocationRequired + '\'' +
+                ", participantPortal='" + participantPortal + '\'' +
+                ", randomization='" + randomization + '\'' +
+                ", participantIdTemplate='" + participantIdTemplate + '\'' +
+                ", enforceEnrollmentCap='" + enforceEnrollmentCap + '\'' +
+                '}';
+    }
 }

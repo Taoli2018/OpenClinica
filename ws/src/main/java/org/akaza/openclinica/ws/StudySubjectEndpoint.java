@@ -10,11 +10,7 @@ package org.akaza.openclinica.ws;
 import org.akaza.openclinica.bean.core.Status;
 import org.akaza.openclinica.bean.login.StudyUserRoleBean;
 import org.akaza.openclinica.bean.login.UserAccountBean;
-import org.akaza.openclinica.bean.managestudy.StudyBean;
-import org.akaza.openclinica.bean.managestudy.StudyEventBean;
-import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
-import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
-import org.akaza.openclinica.bean.managestudy.SubjectTransferBean;
+import org.akaza.openclinica.bean.managestudy.*;
 import org.akaza.openclinica.bean.submit.SubjectBean;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
@@ -27,14 +23,6 @@ import org.akaza.openclinica.i18n.util.ResourceBundleProvider;
 import org.akaza.openclinica.service.subject.SubjectServiceInterface;
 import org.akaza.openclinica.ws.bean.SubjectStudyDefinitionBean;
 import org.akaza.openclinica.ws.validator.SubjectTransferValidator;
-import org.openclinica.ws.beans.EventType;
-import org.openclinica.ws.beans.EventsType;
-import org.openclinica.ws.beans.GenderType;
-import org.openclinica.ws.beans.ListStudySubjectsInStudyType;
-import org.openclinica.ws.beans.StudyRefType;
-import org.openclinica.ws.beans.StudySubjectWithEventsType;
-import org.openclinica.ws.beans.StudySubjectsType;
-import org.openclinica.ws.beans.SubjectType;
 import org.openclinica.ws.studysubject.v1.ListAllByStudyResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,15 +40,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Locale;
-
 import javax.sql.DataSource;
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConstants;
@@ -70,6 +49,22 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import org.openclinica.ws.beans.EventType;
+import org.openclinica.ws.beans.EventsType;
+import org.openclinica.ws.beans.GenderType;
+import org.openclinica.ws.beans.ListStudySubjectsInStudyType;
+import org.openclinica.ws.beans.StudyRefType;
+import org.openclinica.ws.beans.StudySubjectWithEventsType;
+import org.openclinica.ws.beans.StudySubjectsType;
+import org.openclinica.ws.beans.SubjectType;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Krikor Krumlian
@@ -299,7 +294,7 @@ public class StudySubjectEndpoint {
             throw new OpenClinicaSystemException("studySubjectEndpoint.provide_valid_study_site", "Provide a valid study/site.");
         }
         if (studyIdentifier != null && siteIdentifier == null) {
-            StudyBean study = getStudyDao().findByUniqueIdentifier(studyIdentifier);
+            StudyBean study = getStudyDao().findByOid(studyIdentifier);
             if (study == null) {
                 throw new OpenClinicaSystemException("studySubjectEndpoint.invalid_study_identifier", "The study identifier you provided is not valid.");
             }
@@ -311,8 +306,8 @@ public class StudySubjectEndpoint {
             return study;
         }
         if (studyIdentifier != null && siteIdentifier != null) {
-            StudyBean study = getStudyDao().findByUniqueIdentifier(studyIdentifier);
-            StudyBean site = getStudyDao().findByUniqueIdentifier(siteIdentifier);
+            StudyBean study = getStudyDao().findByOid(studyIdentifier);
+            StudyBean site = getStudyDao().findByOid(siteIdentifier);
             if (study == null || site == null || site.getParentStudyId() != study.getId()) {
                 throw new OpenClinicaSystemException("studySubjectEndpoint.invalid_study_site_identifier",
                         "The study/site identifier you provided is not valid.");
@@ -433,7 +428,7 @@ public class StudySubjectEndpoint {
         // TODO: Implement this
         StudySubjectDAO ssdao = new StudySubjectDAO(dataSource);
         StudyDAO studyDao = new StudyDAO(dataSource);
-        StudyBean studyBean = studyDao.findByUniqueIdentifier(subjectTransferBean.getStudy().getIdentifier());
+        StudyBean studyBean = studyDao.findByOid(subjectTransferBean.getStudy().getOid());
         StudySubjectBean ssbean = ssdao.findByLabelAndStudy(subjectTransferBean.getStudySubjectId(), studyBean);
         return ssbean.getId() > 0 ? true : false;
     }

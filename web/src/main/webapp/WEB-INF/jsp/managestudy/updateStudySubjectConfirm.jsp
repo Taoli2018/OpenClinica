@@ -54,14 +54,13 @@
 <form action="UpdateStudySubject" method="post">
 <input type="hidden" name="action" value="submit">
 <input type="hidden" name="id" value="<c:out value="${studySub.id}"/>">
+<input type="hidden" name="localBirthDateToSave" value="<c:out value="${localBirthDateToSave}"/>">
  <div style="width: 600px">
 <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
 
 <div class="tablebox_center">
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
   <tr valign="bottom"><td class="table_header_column"><fmt:message key="study_subject_ID" bundle="${resword}"/>:</td><td class="table_cell"><c:out value="${studySub.label}"/></td></tr>
-  <tr valign="bottom"><td class="table_header_column"><fmt:message key="secondary_ID" bundle="${resword}"/>:</td><td class="table_cell"><c:out value="${studySub.secondaryLabel}"/>&nbsp;
-  </td></tr>
   <tr valign="bottom"><td class="table_header_column"><fmt:message key="enrollment_date" bundle="${resword}"/>:</td>
   <td class="table_cell"><fmt:formatDate value="${studySub.enrollmentDate}" pattern="${dteFormat}"/></td></tr>
   <tr valign="top"><td class="table_header_column"><fmt:message key="created_by" bundle="${resword}"/>:</td><td class="table_cell"><c:out value="${studySub.owner.name}"/></td></tr>
@@ -71,6 +70,7 @@
   </td></tr>
   <tr valign="top"><td class="table_header_column"><fmt:message key="date_updated" bundle="${resword}"/>:</td><td class="table_cell"><fmt:formatDate value="${studySub.updatedDate}" pattern="${dteFormat}"/>&nbsp;
   </td></tr>
+
 
 </table>
 </div>

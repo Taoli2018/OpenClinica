@@ -17,11 +17,8 @@ import javax.sql.DataSource;
 
 import org.akaza.openclinica.bean.core.DataEntryStage;
 import org.akaza.openclinica.bean.core.DiscrepancyNoteType;
-import org.akaza.openclinica.bean.core.ItemDataType;
 import org.akaza.openclinica.bean.core.ResolutionStatus;
 import org.akaza.openclinica.bean.core.Role;
-import org.akaza.openclinica.bean.core.Status;
-import org.akaza.openclinica.bean.core.Utils;
 import org.akaza.openclinica.bean.login.UserAccountBean;
 import org.akaza.openclinica.bean.managestudy.DiscrepancyNoteBean;
 import org.akaza.openclinica.bean.managestudy.StudyBean;
@@ -49,6 +46,7 @@ import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
 import org.akaza.openclinica.web.job.CrfBusinessLogicHelper;
 import org.akaza.openclinica.web.job.ImportSpringJob;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * View the uploaded data and verify what is going to be saved into the system and what is not.
@@ -151,6 +149,15 @@ public class VerifyImportedCRFDataServlet extends SecureController {
         if ("confirm".equalsIgnoreCase(action)) {
             List<DisplayItemBeanWrapper> displayItemBeanWrappers = (List<DisplayItemBeanWrapper>) session.getAttribute("importedData");
             logger.info("Size of displayItemBeanWrappers : " + displayItemBeanWrappers.size());
+            ImportCRFInfoContainer importCrfInfo = (ImportCRFInfoContainer) session.getAttribute("importCrfInfo");
+            for (DisplayItemBeanWrapper wrapper : displayItemBeanWrappers) {
+                boolean resetSDV = false;
+                EventCRFBean eventCrfBean = wrapper.getEventCrfBean();
+                if (!findCRFInfo(importCrfInfo, eventCrfBean)) {
+                    wrapper.setOverwrite(false);
+                    continue;
+                }
+            }
             forwardPage(Page.VERIFY_IMPORT_CRF_DATA);
         }
 
@@ -163,12 +170,28 @@ public class VerifyImportedCRFDataServlet extends SecureController {
             List<DisplayItemBeanWrapper> displayItemBeanWrappers = (List<DisplayItemBeanWrapper>) session.getAttribute("importedData");
             // System.out.println("Size of displayItemBeanWrappers : " +
             // displayItemBeanWrappers.size());
-            HashMap<Integer, String> importedCRFStatuses = (HashMap<Integer, String>) session.getAttribute("importedCRFStatuses");
-
+            HashMap<String, String> importedCRFStatuses = (HashMap<String, String>) session.getAttribute("importedCRFStatuses");
+            ImportCRFInfoContainer importCrfInfo = (ImportCRFInfoContainer) session.getAttribute("importCrfInfo");
+            int skippedCRFCount = 0;
             for (DisplayItemBeanWrapper wrapper : displayItemBeanWrappers) {
                 boolean resetSDV = false;
-                int eventCrfBeanId = -1;
-                EventCRFBean eventCrfBean = new EventCRFBean();
+                EventCRFBean eventCrfBean = wrapper.getEventCrfBean();
+                if (!findCRFInfo(importCrfInfo, eventCrfBean)) {
+                    ++skippedCRFCount;
+                    continue;
+                }
+                String eventCRFStatus = importedCRFStatuses
+                        .get(eventCrfBean.getStudySubjectId() + "-" + eventCrfBean.getStudyEventId() + "-" + eventCrfBean.getFormLayoutId());
+                if (eventCRFStatus != null &&
+                        !eventCRFStatus.equals(DataEntryStage.INITIAL_DATA_ENTRY.getName()) &&
+                        !eventCRFStatus.equals(DataEntryStage.COMPLETE.getName()) &&
+                        !eventCRFStatus.equals(DataEntryStage.INITIAL_DATA_ENTRY_COMPLETE.getName())) {
+                    continue;
+                }
+
+                if (eventCrfBean.getId() == 0) {
+                    eventCrfDao.create(eventCrfBean);
+                }
 
                 // TODO : tom , the wrapper object has all the necessary data -
                 // as you see we check the
@@ -191,8 +214,8 @@ public class VerifyImportedCRFDataServlet extends SecureController {
                     // System.out.println("wrapper problems found : " +
                     // wrapper.getValidationErrors().toString());
                     for (DisplayItemBean displayItemBean : wrapper.getDisplayItemBeans()) {
-                        eventCrfBeanId = displayItemBean.getData().getEventCRFId();
-                        eventCrfBean = (EventCRFBean) eventCrfDao.findByPK(eventCrfBeanId);
+                        displayItemBean.getData().setEventCRFId(eventCrfBean.getId());
+
                         logger.info("found value here: " + displayItemBean.getData().getValue());
                         logger.info("found status here: " + eventCrfBean.getStatus().getName());
                         // System.out.println("found event crf bean name here: "
@@ -204,8 +227,8 @@ public class VerifyImportedCRFDataServlet extends SecureController {
                         // we get around this by checking the bean first, to
                         // make sure it's not null
                         ItemDataBean itemDataBean = new ItemDataBean();
-                        itemDataBean = itemDataDao.findByItemIdAndEventCRFIdAndOrdinal(displayItemBean.getItem().getId(), eventCrfBean.getId(), displayItemBean
-                                .getData().getOrdinal());
+                        itemDataBean = itemDataDao.findByItemIdAndEventCRFIdAndOrdinal(displayItemBean.getItem().getId(), eventCrfBean.getId(),
+                                displayItemBean.getData().getOrdinal());
                         if (wrapper.isOverwrite() && itemDataBean.getStatus() != null) {
                             // ItemDataBean itemDataBean = new ItemDataBean();
                             // itemDataBean =
@@ -285,17 +308,14 @@ public class VerifyImportedCRFDataServlet extends SecureController {
                         }
                         // logger.info("created:
                         // "+displayItemBean.getDbData().getName());
-                        if (!eventCrfInts.contains(new Integer(eventCrfBean.getId()))) {
 
-                            String eventCRFStatus = importedCRFStatuses.get(new Integer(eventCrfBean.getId()));
-                            if (eventCRFStatus != null && eventCRFStatus.equals(DataEntryStage.INITIAL_DATA_ENTRY.getName())
-                                    && eventCrfBean.getStatus().isAvailable()) {
-                                crfBusinessLogicHelper.markCRFStarted(eventCrfBean, ub);
-                            } else {
-                                crfBusinessLogicHelper.markCRFComplete(eventCrfBean, ub);
-                            }
-                            eventCrfInts.add(new Integer(eventCrfBean.getId()));
+                        if (eventCRFStatus != null && eventCRFStatus.equals(DataEntryStage.INITIAL_DATA_ENTRY.getName())
+                                && eventCrfBean.getStatus().isAvailable()) {
+                            crfBusinessLogicHelper.markCRFStarted(eventCrfBean, ub);
+                        } else {
+                            crfBusinessLogicHelper.markCRFComplete(eventCrfBean, ub);
                         }
+
                     }
                     // Reset the SDV status if item data has been changed or added
                     if (eventCrfBean != null && resetSDV)
@@ -313,7 +333,10 @@ public class VerifyImportedCRFDataServlet extends SecureController {
 
             }
 
-            addPageMessage(respage.getString("data_has_been_successfully_import"));
+            if (CollectionUtils.size(displayItemBeanWrappers) == skippedCRFCount)
+                addPageMessage(respage.getString("no_data_has_been_imported"));
+            else
+                addPageMessage(respage.getString("data_has_been_successfully_import"));
 
             addPageMessage(this.ruleActionWarnings(this.runRules(currentStudy, ub, containers, ruleSetService, ExecutionMode.SAVE)));
 
@@ -323,6 +346,18 @@ public class VerifyImportedCRFDataServlet extends SecureController {
         }
     }
 
+    private boolean findCRFInfo(ImportCRFInfoContainer importCrfInfoContainer, EventCRFBean eventCrfBean) {
+        if (importCrfInfoContainer == null)
+            return true;
+        for (ImportCRFInfo importCRFInfo: importCrfInfoContainer.getImportCRFList()) {
+            // this record still needs to be inserted
+            if (importCRFInfo.getEventCRFID() == null)
+                return true;
+            if (importCRFInfo.getEventCRFID() == eventCrfBean.getId())
+                return importCRFInfo.isProcessImport();
+        }
+        return false;
+    }
     private List<ImportDataRuleRunnerContainer> ruleRunSetup(DataSource dataSource, StudyBean studyBean, UserAccountBean userBean,
             RuleSetServiceInterface ruleSetService) {
         List<ImportDataRuleRunnerContainer> containers = new ArrayList<ImportDataRuleRunnerContainer>();

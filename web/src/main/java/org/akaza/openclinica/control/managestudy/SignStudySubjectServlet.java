@@ -30,14 +30,13 @@ import org.akaza.openclinica.bean.submit.CRFVersionBean;
 import org.akaza.openclinica.bean.submit.DisplayEventCRFBean;
 import org.akaza.openclinica.bean.submit.EventCRFBean;
 import org.akaza.openclinica.bean.submit.SubjectBean;
-import org.akaza.openclinica.control.SpringServletAccess;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.control.submit.CreateNewStudyEventServlet;
-import org.akaza.openclinica.core.SecurityManager;
 import org.akaza.openclinica.core.form.StringUtil;
 import org.akaza.openclinica.dao.admin.AuditEventDAO;
 import org.akaza.openclinica.dao.admin.CRFDAO;
+import org.akaza.openclinica.dao.core.CoreResources;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.akaza.openclinica.dao.managestudy.DiscrepancyNoteDAO;
 import org.akaza.openclinica.dao.managestudy.EventDefinitionCRFDAO;
@@ -51,17 +50,24 @@ import org.akaza.openclinica.dao.submit.EventCRFDAO;
 import org.akaza.openclinica.dao.submit.ItemDataDAO;
 import org.akaza.openclinica.dao.submit.SubjectDAO;
 import org.akaza.openclinica.dao.submit.SubjectGroupMapDAO;
+import org.akaza.openclinica.service.KeycloakUserService;
 import org.akaza.openclinica.service.DiscrepancyNoteUtil;
+import org.akaza.openclinica.service.KeycloakUserServiceImpl;
 import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
 import org.akaza.openclinica.web.bean.DisplayStudyEventRow;
 import org.akaza.openclinica.web.bean.EntityBeanTable;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  * Created by IntelliJ IDEA. User: bads Date: Jun 10, 2008 Time: 5:28:46 PM To
  * change this template use File | Settings | File Templates.
  */
 public class SignStudySubjectServlet extends SecureController {
+    private WebApplicationContext ctx = null;
+    public static final String ORIGINATING_PAGE = "originatingPage";
+
     /**
      * Checks whether the user has the right permission to proceed function
      */
@@ -69,14 +75,12 @@ public class SignStudySubjectServlet extends SecureController {
     public void mayProceed() throws InsufficientPermissionException {
 
         checkStudyLocked(Page.LIST_STUDY_SUBJECTS, respage.getString("current_study_locked"));
-        mayAccess();
 
         if (ub.isSysAdmin()) {
             return;
         }
 
-        if (currentRole.getRole().equals(Role.STUDYDIRECTOR) || currentRole.getRole().equals(Role.COORDINATOR)
-            || currentRole.getRole().equals(Role.INVESTIGATOR)) {
+        if (currentRole.getRole().equals(Role.INVESTIGATOR)) {
             return;
         }
 
@@ -146,10 +150,10 @@ public class SignStudySubjectServlet extends SecureController {
                 // DiscrepancyNoteBean discBean = (DiscrepancyNoteBean)
                 // discList.get(j);
                 // if
-                //(discBean.getResStatus().equals(org.akaza.openclinica.bean.core
+                // (discBean.getResStatus().equals(org.akaza.openclinica.bean.core
                 // .ResolutionStatus.OPEN)
                 // ||
-                //discBean.getResStatus().equals(org.akaza.openclinica.bean.core
+                // discBean.getResStatus().equals(org.akaza.openclinica.bean.core
                 // .ResolutionStatus.UPDATED))
                 // {
                 // sign = false;
@@ -157,8 +161,8 @@ public class SignStudySubjectServlet extends SecureController {
                 // }
                 // }
                 EventDefinitionCRFBean edcBean = edcdao.findByStudyEventIdAndCRFVersionId(studyBean, studyEvent.getId(), ecrf.getCRFVersionId());
-                if (ecrf.getStage().equals(DataEntryStage.INITIAL_DATA_ENTRY) || ecrf.getStage().equals(DataEntryStage.INITIAL_DATA_ENTRY_COMPLETE)
-                    && edcBean.isDoubleEntry() == true) {
+                if (ecrf.getStage().equals(DataEntryStage.INITIAL_DATA_ENTRY)
+                        || ecrf.getStage().equals(DataEntryStage.INITIAL_DATA_ENTRY_COMPLETE) && edcBean.isDoubleEntry() == true) {
                     sign = false;
                     break;
                 }
@@ -181,8 +185,11 @@ public class SignStudySubjectServlet extends SecureController {
             try {
                 StudyEventBean studyEvent = (StudyEventBean) studyEvents.get(l);
                 studyEvent.setUpdater(ub);
-                studyEvent.setUpdatedDate(new Date());
+                Date date = new Date();
+                studyEvent.setUpdatedDate(date);
                 studyEvent.setSubjectEventStatus(SubjectEventStatus.SIGNED);
+                studyEvent.setAttestation("The eCRFs that are part of this event were signed by " + ub.getFirstName() + " " + ub.getLastName() + " (" + ub.getName()
+                        + ") " + "on Date Time " + date + " under the following attestation:\n\n" + resword.getString("sure_to_sign_subject3"));
                 sedao.update(studyEvent);
             } catch (Exception ex) {
                 updated = false;
@@ -193,6 +200,7 @@ public class SignStudySubjectServlet extends SecureController {
 
     @Override
     public void processRequest() throws Exception {
+        ctx = WebApplicationContextUtils.getWebApplicationContext(context);
         SubjectDAO sdao = new SubjectDAO(sm.getDataSource());
         StudySubjectDAO subdao = new StudySubjectDAO(sm.getDataSource());
         FormProcessor fp = new FormProcessor(request);
@@ -201,13 +209,14 @@ public class SignStudySubjectServlet extends SecureController {
 
         String module = fp.getString(MODULE);
         request.setAttribute(MODULE, module);
-
         if (studySubId == 0) {
             addPageMessage(respage.getString("please_choose_a_subject_to_view"));
             forwardPage(Page.LIST_STUDY_SUBJECTS);
             return;
         }
+        CoreResources.setRequestSchema(request, currentPublicStudy.getSchemaName());
         StudySubjectBean studySub = (StudySubjectBean) subdao.findByPK(studySubId);
+        request.setAttribute("studySub", studySub);
 
         if (!permitSign(studySub, sm.getDataSource())) {
             addPageMessage(respage.getString("subject_event_cannot_signed"));
@@ -220,12 +229,14 @@ public class SignStudySubjectServlet extends SecureController {
         if (action.equalsIgnoreCase("confirm")) {
             String username = request.getParameter("j_user");
             String password = request.getParameter("j_pass");
-            SecurityManager securityManager = ((SecurityManager) SpringServletAccess.getApplicationContext(context).getBean("securityManager"));
             // String encodedUserPass =
             // org.akaza.openclinica.core.SecurityManager
             // .getInstance().encrytPassword(password);
             UserAccountBean ub = (UserAccountBean) session.getAttribute("userBean");
-            if (securityManager.verifyPassword(password, getUserDetails()) && ub.getName().equals(username)) {
+            KeycloakUserService keycloakUserService = ctx.getBean("keycloakUserService", KeycloakUserServiceImpl.class);
+            boolean isAuthenticated = keycloakUserService.authenticateKeycloakUser(username, password);
+
+            if (isAuthenticated && ub.getName().equalsIgnoreCase(username)) {
                 if (signSubjectEvents(studySub, sm.getDataSource(), ub)) {
                     // Making the StudySubject signed as all the events have
                     // become signed.
@@ -243,14 +254,43 @@ public class SignStudySubjectServlet extends SecureController {
                     return;
                 }
             } else {
+
+                int studyId = studySub.getStudyId();
+                StudyDAO studydao = new StudyDAO(sm.getDataSource());
+                StudyBean study = (StudyBean) studydao.findByPK(studyId);
+
+                StudyEventDAO sedao = new StudyEventDAO(sm.getDataSource());
+                StudyEventDefinitionDAO seddao = new StudyEventDefinitionDAO(sm.getDataSource());
+                EventDefinitionCRFDAO edcdao = new EventDefinitionCRFDAO(sm.getDataSource());
+
+                // find all eventcrfs for each event
+                EventCRFDAO ecdao = new EventCRFDAO(sm.getDataSource());
+                ArrayList<DisplayStudyEventBean> displayEvents = getDisplayStudyEventsForStudySubject(study, studySub, sm.getDataSource(), ub, currentRole);
+
+                for (DisplayStudyEventBean displayEvent : displayEvents) {
+                    StudyEventBean studyEvent = displayEvent.getStudyEvent();
+                    ArrayList eventCRFs = ecdao.findAllByStudyEvent(displayEvent.getStudyEvent());
+                    ArrayList eventDefinitionCRFs = (ArrayList) edcdao.findAllActiveByEventDefinitionId(study, studyEvent.getStudyEventDefinitionId());
+                    ArrayList displayEventCRFs = ViewStudySubjectServlet.getDisplayEventCRFs(sm.getDataSource(), eventCRFs, eventDefinitionCRFs, ub,
+                            currentRole, studyEvent.getSubjectEventStatus(), study);
+                    displayEvent.setDisplayEventCRFs(displayEventCRFs);
+                }
+
+                DiscrepancyNoteUtil discNoteUtil = new DiscrepancyNoteUtil();
+                discNoteUtil.injectParentDiscNotesIntoDisplayStudyEvents(displayEvents, new HashSet(), sm.getDataSource(), 0);
+
+                Map discNoteByEventCRFid = discNoteUtil.createDiscNoteMapByEventCRF(displayEvents);
+                String originationUrl = "SignStudySubject?id=" + studySub.getId();
+
+                request.setAttribute("discNoteByEventCRFid", discNoteByEventCRFid);
+                request.setAttribute("displayStudyEvents", displayEvents);
+                request.setAttribute(ORIGINATING_PAGE, originationUrl);
                 request.setAttribute("id", new Integer(studySubId).toString());
                 addPageMessage(restext.getString("password_match"));
-                forwardPage(Page.LIST_STUDY_SUBJECTS);
+                forwardPage(Page.SIGN_STUDY_SUBJECT);
                 return;
             }
         }
-
-        request.setAttribute("studySub", studySub);
 
         int studyId = studySub.getStudyId();
         int subjectId = studySub.getSubjectId();
@@ -270,13 +310,12 @@ public class SignStudySubjectServlet extends SecureController {
 
         request.setAttribute("subject", subject);
 
-
         StudyDAO studydao = new StudyDAO(sm.getDataSource());
         StudyBean study = (StudyBean) studydao.findByPK(studyId);
 
         StudyParameterValueDAO spvdao = new StudyParameterValueDAO(sm.getDataSource());
         study.getStudyParameterConfig().setCollectDob(spvdao.findByHandleAndStudy(studyId, "collectDob").getValue());
-        //request.setAttribute("study", study);
+        // request.setAttribute("study", study);
 
         if (study.getParentStudyId() > 0) {// this is a site,find parent
             StudyBean parentStudy = (StudyBean) studydao.findByPK(study.getParentStudyId());
@@ -299,36 +338,48 @@ public class SignStudySubjectServlet extends SecureController {
 
         ArrayList<DisplayStudyEventBean> displayEvents = getDisplayStudyEventsForStudySubject(study, studySub, sm.getDataSource(), ub, currentRole);
 
+        for (DisplayStudyEventBean displayEvent : displayEvents) {
+            StudyEventBean studyEvent = displayEvent.getStudyEvent();
+            ArrayList eventCRFs = ecdao.findAllByStudyEvent(displayEvent.getStudyEvent());
+            ArrayList eventDefinitionCRFs = (ArrayList) edcdao.findAllActiveByEventDefinitionId(study, studyEvent.getStudyEventDefinitionId());
+            ArrayList displayEventCRFs = ViewStudySubjectServlet.getDisplayEventCRFs(sm.getDataSource(), eventCRFs, eventDefinitionCRFs, ub, currentRole,
+                    studyEvent.getSubjectEventStatus(), study);
+            displayEvent.setDisplayEventCRFs(displayEventCRFs);
+        }
+
         DiscrepancyNoteUtil discNoteUtil = new DiscrepancyNoteUtil();
         // Don't filter for now; disc note beans are returned with eventCRFId
         // set
         discNoteUtil.injectParentDiscNotesIntoDisplayStudyEvents(displayEvents, new HashSet(), sm.getDataSource(), 0);
         // All the displaystudyevents for one subject
-        request.setAttribute("displayStudyEvents", displayEvents);
 
         // Set up a Map for the JSP view, mapping the eventCRFId to another Map:
         // the
         // inner Map maps the resolution status name to the number of notes for
         // that
         // eventCRF id, as in New --> 2
+
         Map discNoteByEventCRFid = discNoteUtil.createDiscNoteMapByEventCRF(displayEvents);
+        String originationUrl = "SignStudySubject?id=" + studySub.getId();
+
         request.setAttribute("discNoteByEventCRFid", discNoteByEventCRFid);
+        request.setAttribute("displayStudyEvents", displayEvents);
+        request.setAttribute(ORIGINATING_PAGE, originationUrl);
 
         EntityBeanTable table = fp.getEntityBeanTable();
         table.setSortingIfNotExplicitlySet(1, false);// sort by start date,
         // desc
         ArrayList allEventRows = DisplayStudyEventRow.generateRowsFromBeans(displayEvents);
 
-        String[] columns =
-            { resword.getString("event") + " (" + resword.getString("occurrence_number") + ")", resword.getString("start_date1"),
+        String[] columns = { resword.getString("event") + " (" + resword.getString("occurrence_number") + ")", resword.getString("start_date1"),
                 resword.getString("location"), resword.getString("status"), resword.getString("actions"), resword.getString("CRFs_atrib") };
         table.setColumns(new ArrayList(Arrays.asList(columns)));
         table.hideColumnLink(4);
         table.hideColumnLink(5);
 
         if (!"removed".equalsIgnoreCase(studySub.getStatus().getName()) && !"auto-removed".equalsIgnoreCase(studySub.getStatus().getName())) {
-            table.addLink(resword.getString("add_new_event"), "CreateNewStudyEvent?" + CreateNewStudyEventServlet.INPUT_STUDY_SUBJECT_ID_FROM_VIEWSUBJECT + "="
-                + studySub.getId());
+            table.addLink(resword.getString("add_new"),
+                    "CreateNewStudyEvent?" + CreateNewStudyEventServlet.INPUT_STUDY_SUBJECT_ID_FROM_VIEWSUBJECT + "=" + studySub.getId());
         }
 
         HashMap args = new HashMap();
@@ -455,9 +506,9 @@ public class SignStudySubjectServlet extends SecureController {
                 // System.out.println("edc.isDoubleEntry()" +
                 // edc.isDoubleEntry() + ecb.getId());
                 dec.setFlags(ecb, ub, currentRole, edc.isDoubleEntry());
-//                if (dec.isLocked()) {
-//                    System.out.println("*** found a locked DEC: " + edc.getCrfName());
-//                }
+                // if (dec.isLocked()) {
+                // System.out.println("*** found a locked DEC: " + edc.getCrfName());
+                // }
                 ArrayList idata = iddao.findAllByEventCRFId(ecb.getId());
                 if (!idata.isEmpty()) {
                     // consider an event crf started only if item data get

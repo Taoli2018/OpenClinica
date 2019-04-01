@@ -33,8 +33,7 @@ import org.hibernate.annotations.Type;
  */
 @Entity
 @Table(name = "item", uniqueConstraints = @UniqueConstraint(columnNames = "oc_oid"))
-@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence", value = "item_item_id_seq") })
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence_name", value = "item_item_id_seq") })
 public class Item  extends DataMapDomainObject{
 
 	private int itemId;
@@ -50,7 +49,7 @@ public class Item  extends DataMapDomainObject{
 	private Date dateUpdated;
 	private Integer updateId;
 	private String ocOid;
-	private List<ItemFormMetadata> itemFormMetadatas;
+	private Set<ItemFormMetadata> itemFormMetadatas;
 	private List<ItemData> itemDatas;
 	//private Set dcSummaryItemMaps = new HashSet(0);
 	private List<VersioningMap> versioningMaps ;
@@ -72,7 +71,7 @@ public class Item  extends DataMapDomainObject{
 			ItemDataType itemDataType, String name, String description,
 			String units, Boolean phiStatus, Date dateCreated,
 			Date dateUpdated, Integer updateId, String ocOid,
-			List<ItemFormMetadata> itemFormMetadatas, List<ItemData>  itemDatas, /*Set dcSummaryItemMaps,*/
+			Set<ItemFormMetadata> itemFormMetadatas, List<ItemData>  itemDatas, /*Set dcSummaryItemMaps,*/
 //			List<VersioningMap>  versioningMaps, Set dcSubstitutionEvents,
 			 List<ItemGroupMetadata> itemGroupMetadatas/*, Set dcPrimitivesForItemId,
 			Set dcPrimitivesForDynamicValueItemId*/) {
@@ -232,11 +231,11 @@ public class Item  extends DataMapDomainObject{
 	}
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "item")
-	public List<ItemFormMetadata>  getItemFormMetadatas() {
+	public Set<ItemFormMetadata>  getItemFormMetadatas() {
 		return this.itemFormMetadatas;
 	}
 
-	public void setItemFormMetadatas(List<ItemFormMetadata>  itemFormMetadatas) {
+	public void setItemFormMetadatas(Set<ItemFormMetadata>  itemFormMetadatas) {
 		this.itemFormMetadatas = itemFormMetadatas;
 	}
 

@@ -7,25 +7,6 @@
  */
 package org.akaza.openclinica.dao.managestudy;
 
-/**
- * <P>
- * StudyDAO.java, the data access object that users will access the database for
- * study objects, tbh.
- * 
- * @author thickerson
- * 
- * 
- */
-import org.akaza.openclinica.bean.core.EntityBean;
-import org.akaza.openclinica.bean.core.Status;
-import org.akaza.openclinica.bean.managestudy.StudyBean;
-import org.akaza.openclinica.bean.managestudy.StudyType;
-import org.akaza.openclinica.dao.core.AuditableEntityDAO;
-import org.akaza.openclinica.dao.core.CoreResources;
-import org.akaza.openclinica.dao.core.DAODigester;
-import org.akaza.openclinica.dao.core.SQLFactory;
-import org.akaza.openclinica.dao.core.TypeNames;
-
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,10 +17,31 @@ import java.util.Locale;
 
 import javax.sql.DataSource;
 
-public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEntityDAO {
+/**
+ * <P>
+ * StudyDAO.java, the data access object that users will access the database for
+ * study objects, tbh.
+ * 
+ * @author thickerson
+ * 
+ * 
+ */
+
+import org.akaza.openclinica.bean.core.EntityBean;
+import org.akaza.openclinica.bean.core.Status;
+import org.akaza.openclinica.bean.managestudy.StudyBean;
+import org.akaza.openclinica.bean.managestudy.StudyType;
+import org.akaza.openclinica.dao.core.AuditableEntityDAO;
+import org.akaza.openclinica.dao.core.CoreResources;
+import org.akaza.openclinica.dao.core.DAODigester;
+import org.akaza.openclinica.dao.core.SQLFactory;
+import org.akaza.openclinica.dao.core.TypeNames;
+import org.akaza.openclinica.domain.datamap.StudyEnvEnum;
+import org.apache.commons.lang.StringUtils;
+
+public class StudyDAO<K extends String, V extends ArrayList> extends AuditableEntityDAO {
     // private DataSource ds;
     // private DAODigester digester;
-
     public StudyDAO(DataSource ds) {
         super(ds);
     }
@@ -64,61 +66,6 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
 
     @Override
     public void setTypesExpected() {
-        // 1 study_id serial NOT NULL,
-        // 2 parent_study_id numeric,
-        // 3 unique_identifier varchar(30),
-        // 4 secondary_identifier varchar(255),
-        // 5 name varchar(60),
-        // 6 summary varchar(255),
-        // 7 date_planned_start date,
-        // 8 date_planned_end date,
-        // 9 date_created date,
-        // 10 date_updated date,
-        // 11 owner_id numeric,
-        // 12 update_id numeric,
-        // 13 type_id numeric,
-        // 14 status_id numeric,
-        // 15 principal_investigator varchar(255),
-        // 16 facility_name varchar(255),
-        // 17 facility_city varchar(255),
-        // 18 facility_state varchar(20),
-        // 19 facility_zip varchar(64),
-        // 20 facility_country varchar(64),
-        // 21 facility_recruitment_status varchar(60),
-        // 22 facility_contact_name varchar(255),
-        // 23 facility_contact_degree varchar(255),
-        // 24 facility_contact_phone varchar(255),
-        // 25 facility_contact_email varchar(255),
-        // 26 protocol_type varchar(30),
-        // 27 protocol_description varchar(1000),
-        // 28 protocol_date_verification date,
-        // 29 phase varchar(30),
-        // 30 expected_total_enrollment numeric,
-        // 31 sponsor varchar(255),
-        // 32 collaborators varchar(1000),
-        // 33 medline_identifier varchar(255),
-        // 34 url varchar(255),
-        // 35 url_description varchar(255),
-        // 36 conditions varchar(500),
-        // 37 keywords varchar(255),
-        // 38 eligibility varchar(500),
-        // 39 gender varchar(30),
-        // 40 age_max varchar(3),
-        // 41 age_min varchar(3),
-        // 42 healthy_volunteer_accepted bool,
-        // 43 purpose varchar(64),
-        // 44 allocation varchar(64),
-        // 45 masking varchar(30),
-        // 46 control varchar(30),
-        // 47 "assignment" varchar(30),
-        // 48 endpoint varchar(64),
-        // 49 interventions varchar(1000),
-        // 50 duration varchar(30),
-        // 51 selection varchar(30),
-        // 52 timing varchar(30),
-        // 53 official_title varchar(50)
-        // 54 results_reference boolean
-
         this.unsetTypeExpected();
         this.setTypeExpected(1, TypeNames.INT);// sid
         this.setTypeExpected(2, TypeNames.INT);// parent id
@@ -150,7 +97,6 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         this.setTypeExpected(28, TypeNames.DATE);// pdateverif
         this.setTypeExpected(29, TypeNames.STRING);// phase
         this.setTypeExpected(30, TypeNames.INT);// expectotenroll
-        // this.setTypeExpected(31, TypeNames.BOOL);//genetic
         this.setTypeExpected(31, TypeNames.STRING);// sponsor
         this.setTypeExpected(32, TypeNames.STRING);// collab
         this.setTypeExpected(33, TypeNames.STRING);// medline
@@ -176,8 +122,15 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         this.setTypeExpected(53, TypeNames.STRING);// official_title
         this.setTypeExpected(54, TypeNames.BOOL);// results_reference
         this.setTypeExpected(55, TypeNames.STRING);// oc oid
-        // this.setTypeExpected(56, TypeNames.BOOL);//discrepancy_management
-        this.setTypeExpected(56, TypeNames.INT);
+        this.setTypeExpected(56, TypeNames.INT); //old status id
+        this.setTypeExpected(57, TypeNames.STRING);// study env uuid
+        this.setTypeExpected(58, TypeNames.STRING);// studyEnvSiteUuid
+        this.setTypeExpected(59, TypeNames.STRING);// env type
+        this.setTypeExpected(60, TypeNames.STRING);// schema name
+        this.setTypeExpected(61, TypeNames.BOOL);// published
+        this.setTypeExpected(62, TypeNames.INT);// file path
+        this.setTypeExpected(63, TypeNames.INT);// subject count
+        this.setTypeExpected(64, TypeNames.STRING);// study_uuid
     }
 
     /**
@@ -254,7 +207,12 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         // variables.put(new Integer(19), sb.getCreatedDate());
         variables.put(new Integer(21), new Integer(sb.getUpdaterId()));// owner
         // id
-        variables.put(new Integer(22), sb.getUpdatedDate());// date updated
+        if (sb.getUpdatedDate() == null) {
+            nullVars.put(new Integer(22), new Integer(Types.DATE));
+            variables.put(new Integer(22), null);
+        } else {
+            variables.put(new Integer(22), sb.getUpdatedDate());
+        }
         variables.put(new Integer(23), new Integer(sb.getOldStatus().getId()));// study id
         // variables.put(new Integer(22), new Integer(1));
         // stop gap measure for owner and updater id
@@ -368,6 +326,7 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         variables.put(new Integer(22), new java.util.Date());
         variables.put(new Integer(23), new Integer(sb.getOwnerId()));
         variables.put(new Integer(24), getValidOid(sb));
+        variables.put(new Integer(25), sb.getEnvType().toString());
         // replace this with the owner id
         this.execute(digester.getQuery("createStepOne"), variables, nullVars);
         return sb;
@@ -417,6 +376,44 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
 
     }
 
+    public StudyBean findByPublicOid(String oid) {
+        StudyBean sb = null;
+        this.unsetTypeExpected();
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), oid);
+        ArrayList alist = this.select(digester.getQuery("findByPublicOid"), variables);
+        Iterator it = alist.iterator();
+
+        if (it.hasNext()) {
+            sb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+            return sb;
+        } else {
+            logger.info("returning null from find by oid...");
+            return null;
+        }
+
+    }
+
+    public StudyBean findByPublicPK(int id) {
+        StudyBean sb = null;
+        this.unsetTypeExpected();
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), id);
+        ArrayList alist = this.select(digester.getQuery("findByPublicPK"), variables);
+        Iterator it = alist.iterator();
+
+        if (it.hasNext()) {
+            sb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+            return sb;
+        } else {
+            logger.info("returning null from find by oid...");
+            return null;
+        }
+
+    }
+
     public StudyBean findByUniqueIdentifier(String oid) {
         StudyBean sb = null;
         this.unsetTypeExpected();
@@ -431,6 +428,25 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
             return sb;
         } else {
             logger.info("returning null from find by Unique Identifier...");
+            return null;
+        }
+    }
+
+    public StudyBean findByStudyEnvUuid(String uuid) {
+        StudyBean sb = null;
+        this.unsetTypeExpected();
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), uuid);
+        variables.put(new Integer(2), uuid);
+        ArrayList alist = this.select(digester.getQuery("findByStudyEnvUuid"), variables);
+        Iterator it = alist.iterator();
+
+        if (it.hasNext()) {
+            sb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+            return sb;
+        } else {
+            logger.info("returning null from find by Study Env Uuid...");
             return null;
         }
     }
@@ -454,6 +470,42 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         }
     }
 
+    public StudyBean findSiteByOid(String parentOid, String siteOid) {
+        StudyBean sb = null;
+        this.unsetTypeExpected();
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), parentOid);
+        variables.put(new Integer(2), siteOid);
+        ArrayList alist = this.select(digester.getQuery("findSiteByOid"), variables);
+        Iterator it = alist.iterator();
+
+        if (it.hasNext()) {
+            sb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+            return sb;
+        } else {
+            logger.info("returning null from find by study  or site OID...");
+            return null;
+        }
+    }
+    
+    public StudyBean findStudyByOid(String studyOid) {
+        StudyBean sb = null;
+        this.unsetTypeExpected();
+        this.setTypesExpected();
+        HashMap variables = new HashMap();        
+        variables.put(new Integer(1), studyOid);
+        ArrayList alist = this.select(digester.getQuery("findStudyByOid"), variables);
+        Iterator it = alist.iterator();
+
+        if (it.hasNext()) {
+            sb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+            return sb;
+        } else {
+            logger.info("returning null from find by study OID...");
+            return null;
+        }
+    }
     public StudyBean createStepTwo(StudyBean sb) {
         // UPDATE STUDY SET TYPE_ID=?, PROTOCOL_TYPE=?,PROTOCOL_DESCRIPTION=?,
         // PROTOCOL_DATE_VERIFICATION=?, PHASE=?, EXPECTED_TOTAL_ENROLLMENT=?,
@@ -490,10 +542,19 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         variables.put(new Integer(17), sb.getAgeMax());
         variables.put(new Integer(18), sb.getAgeMin());
         variables.put(new Integer(19), new Boolean(sb.getHealthyVolunteerAccepted()));
-        // variables.put(new Integer(20), new Boolean(sb.isUsingDOB()));
-        // variables.put(new Integer(21), new
-        // Boolean(sb.isDiscrepancyManagement()));
-        variables.put(new Integer(20), new Integer(sb.getId()));
+        variables.put(new Integer(20), sb.getSchemaName());
+        if (sb.getStudyEnvUuid() == null) {
+            nullVars.put(new Integer(21), new Integer(TypeNames.STRING));
+            variables.put(new Integer(21), null);
+        } else {
+            variables.put(new Integer(21), sb.getStudyEnvUuid());
+        }
+        variables.put(new Integer(22), sb.getStudyEnvSiteUuid());
+        variables.put(new Integer(23), sb.isPublished());
+        variables.put(new Integer(24), sb.getFilePath());
+        variables.put(new Integer(25), sb.getSubjectCount());
+        variables.put(new Integer(26), (sb.getStudyUuid() == null ? "" : sb.getStudyUuid()));
+        variables.put(new Integer(27), new Integer(sb.getId()));
         this.execute(digester.getQuery("createStepTwo"), variables, nullVars);
         return sb;
     }
@@ -587,7 +648,7 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         eb.setHealthyVolunteerAccepted(((Boolean) hm.get("healthy_volunteer_accepted")).booleanValue());
         eb.setResultsReference(((Boolean) hm.get("results_reference")).booleanValue());
         // eb.setUsingDOB(((Boolean)hm.get("collect_dob")).booleanValue());
-        //eb.setDiscrepancyManagement(((Boolean)hm.get("discrepancy_management")
+        // eb.setDiscrepancyManagement(((Boolean)hm.get("discrepancy_management")
         // ).booleanValue());
         // next set all the ints/dates
 
@@ -625,6 +686,16 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         eb.setOid((String) hm.get("oc_oid"));
         Integer oldStatusId = (Integer) hm.get("old_status_id");
         eb.setOldStatus(Status.get(oldStatusId));
+        eb.setSchemaName((String) hm.get("schema_name"));
+        String envTypeStr = (String) hm.get("env_type");
+        if (StringUtils.isNotEmpty(envTypeStr))
+            eb.setEnvType(StudyEnvEnum.valueOf(envTypeStr.toUpperCase()));
+        eb.setStudyEnvSiteUuid((String) hm.get("study_env_site_uuid"));
+        eb.setStudyEnvUuid((String) hm.get("study_env_uuid"));
+        eb.setPublished(((Boolean) hm.get("published")).booleanValue());
+        eb.setFilePath((Integer) hm.get("file_path"));
+        eb.setSubjectCount((Integer) hm.get("subject_count"));
+        eb.setStudyUuid((String) hm.get("study_uuid"));
         return eb;
     }
 
@@ -957,8 +1028,6 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         variables.put(new Integer(1), sb.getStatus().getId());
         variables.put(new Integer(2), sb.getOldStatus().getId());
         variables.put(new Integer(3), sb.getId());
-
-
         this.execute(digester.getQuery("updateStudyStatus"), variables, nullVars);
         return sb;
     }
@@ -1001,6 +1070,11 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         }
         return al;
 
+    }
+
+    public StudyBean getPublicStudy(String ocId) {
+        StudyBean study = findByPublicOid(ocId);
+        return study;
     }
 
 }

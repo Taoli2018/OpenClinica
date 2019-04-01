@@ -7,6 +7,8 @@
  */
 package org.akaza.openclinica.bean.oid;
 
+import java.io.Serializable;
+
 /**
  * Assumes we are getting the unique protocol id from a study, and truncating to
  * eight chars.
@@ -14,7 +16,7 @@ package org.akaza.openclinica.bean.oid;
  * @author thickerson
  *
  */
-public class StudyOidGenerator extends OidGenerator {
+public class StudyOidGenerator extends OidGenerator implements Serializable {
 
     public int getArgumentLength() {
 		return argumentLength;
@@ -34,7 +36,6 @@ public class StudyOidGenerator extends OidGenerator {
     	String oid = "S_";
         String uniqueProtocolID = keys[0];
         uniqueProtocolID = truncateTo8Chars(capitalize(stripNonAlphaNumeric(uniqueProtocolID)));
-
         if (uniqueProtocolID.length() == 0) {
             uniqueProtocolID = randomizeOid("");
         }

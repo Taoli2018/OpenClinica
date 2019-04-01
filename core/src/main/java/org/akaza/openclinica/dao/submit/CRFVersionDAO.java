@@ -399,8 +399,6 @@ public class CRFVersionDAO<K extends String, V extends ArrayList> extends Audita
 
         sql = digester.getQuery("deleteResponseSetByVersion") + versionId;
         sqls.add(sql);
-        sql = digester.getQuery("deleteCrfVersionMediaByVersion") + versionId;
-        sqls.add(sql);
         sql = digester.getQuery("delete") + versionId;
         sqls.add(sql);
         return sqls;
@@ -535,5 +533,12 @@ public class CRFVersionDAO<K extends String, V extends ArrayList> extends Audita
 
         return result;
     }
+
+	public ArrayList<CRFVersionBean> findAllByFormOid(String oid) {
+		 HashMap variables = new HashMap();
+	        variables.put(new Integer(1), oid);
+
+	        return executeFindAllQuery("findAllByFormOid", variables);
+	}
 
 }

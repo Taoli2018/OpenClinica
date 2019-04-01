@@ -12,6 +12,7 @@
 <jsp:useBean scope='session' id='boxDNMap'  class="java.util.HashMap"/>
 <jsp:useBean scope='session' id='boxToShow'  class="java.lang.String"/>
 
+<link rel="stylesheet" href="includes/font-awesome-4.7.0/css/font-awesome.css">
 
 <script language="JavaScript" src="includes/global_functions_javascript.js"></script>
 <script language="JavaScript">
@@ -26,7 +27,10 @@ function showOnly(strLeftNavRowElementName){
     }
 }
 
-function boxShowWithDefault(id, index, defaultId, defaultValue){
+function boxShowWithDefault(id, index, defaultId, defaultValue, instructions){
+    var msgDiv = document.getElementById('instructionsbox'+id);
+    msgDiv.innerHTML = instructions;
+
 	showOnly("box"+id);
 	var objSelect = MM_findObj("resStatusId"+id);
 	if(objSelect != null) {
@@ -189,46 +193,90 @@ function setYPos(id) {
 	<div class="textbox_center">
 	<table border="0" width="580">
 		<c:if test="${parentId>0}">
-			<div style="float:left"><fmt:message key="respond_this_Discrepancy_Note" bundle="${restext}"/></div>
+			<div id="instructions${boxId}" style="float:left"><fmt:message key="respond_this_Discrepancy_Note" bundle="${restext}"/></div>
 		</c:if>
 		<div style="float:right">
-			<a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/monitor-and-manage-data/notes-and-discrepancies')"><img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></a>
+			<a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/monitor-and-manage-data/notes-and-discrepancies')"><i class="fa fa-question"></i></a>
 			<c:choose>
 			<c:when test="${parentId==0}">
-				<a href="javascript:scrollToY('p');" onclick="javascript:leftnavExpand('<c:out value="${boxId}"/>');javascript:addText('a0','<b><fmt:message key="begin_new_thread" bundle="${resword}"/></b>');"><img name="close_box" alt="<fmt:message key="Close_Box" bundle="${resword}"/>" src="images/bt_Remove.gif" class="icon_dnBox"></a>
+				<a href="javascript:scrollToY('p');" onclick="javascript:leftnavExpand('<c:out value="${boxId}"/>');javascript:addText('a0','<b><fmt:message key="begin_new_thread" bundle="${resword}"/></b>');"><i class="fa fa-times"></i></a>
 			</c:when>
 			<c:otherwise>
-				<a href="javascript:scrollToY('msg<c:out value="${parentId}"/>');" onclick="javascript:leftnavExpand('<c:out value="${boxId}"/>');"><img name="close_box" alt="<fmt:message key="Close_Box" bundle="${resword}"/>" src="images/bt_Remove.gif" class="icon_dnBox"></a>
+				<a href="javascript:scrollToY('msg<c:out value="${parentId}"/>');" onclick="javascript:leftnavExpand('<c:out value="${boxId}"/>');"><i class="fa fa-times"/></i></a>
 			</c:otherwise>
 			</c:choose>
 		</div>
 		<div style="clear:both;"></div> 
-		<div class="dnBoxCol1-1"><fmt:message key="description" bundle="${resword}"/>:<span class="alert">*</span></div>
-		<div class="dnBoxCol2-1">
-			<span id="description${parentId}">
-				<div class="formfieldXL_BG"><input type="text" id="description${parentId}id" name="description${parentId}" value="<c:out value="${discrepancyNote.description}"/>" class="formfieldXL"></div>
-				<jsp:include page="../showMessage.jsp"><jsp:param name="key" value="description${parentId}"/></jsp:include>
-			</span>
-		</div>
-		<div class="dnBoxCol1"><fmt:message key="detailed_note" bundle="${resword}"/>:</div>
-		<div class="dnBoxCol2">
-			<div class="formtextareaXL4_BG">
-		  		<textarea name="detailedDes${parentId}" rows="4" cols="50" class="formtextareaXL4"><c:out value="${discrepancyNote.detailedNotes}"/></textarea>
-			</div>
-			<jsp:include page="../showMessage.jsp"><jsp:param name="key" value="detailedDes${parentId}"/></jsp:include>
-		</div>
+		<table border="0">
+			<tr>
+				<td>
+					<div class="dnBoxCol1"><fmt:message key="detailed_note" bundle="${resword}"/>:<span class="	alert">*</span></div>
+				</td>
+				<td>
+					<div class="dnBoxCol2">
+						<div class="formtextareaXL4_BG">
+			  			<textarea name="detailedDes${parentId}" rows="4" cols="50" class="formtextareaXL4"><c:out value="${discrepancyNote.detailedNotes}"/></textarea>
+						</div><br/>
+						<jsp:include page="../showMessage.jsp"><jsp:param name="key" value="detailedDes${parentId}"/></jsp:include>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="dnBoxCol1"><fmt:message key="assign_to_user" bundle="${resword}"/>:</div>
+				</td>
+				<td>
+					<div class="dnBoxCol2" class="formfieldL_BG">
+						<div class="formfieldL_BG">
+						<c:choose>
+						<c:when test='${discrepancyNote.assignedUserId != ""}'>
+							<c:set var="userAccountId1" value="${discrepancyNote.assignedUserId}"/>
+						</c:when>
+						<c:otherwise>
+							<c:set var="userAccountId1" value="0"/>
+						</c:otherwise>
+						</c:choose>
+						<select name="userAccountId${parentId}" id="userAccountId${parentId}" class="formfieldL" >
+							<option value="0">
+					  		<c:forEach var="user" items="${userAccounts}">
+					   		<c:choose>
+					     	<c:when test="${userAccountId1 == user.userAccountId}">
+					       		<option value="<c:out value="${user.userAccountId}"/>" selected><c:out value="${user.lastName}"/>, <c:out value="${user.firstName}"/> (<c:out value="${user.userName}"/>)
+					     	</c:when>
+					     	<c:otherwise>
+					       		<option value="<c:out value="${user.userAccountId}"/>"><c:out value="${user.lastName}"/>, <c:out value="${user.firstName}"/> (<c:out value="${user.userName}"/>)
+					     	</c:otherwise>
+					   		</c:choose>
+					 		</c:forEach>
+						</select>
+						</div>
+			  			<jsp:include page="../showMessage.jsp"><jsp:param name="key" value="userAccountId${parentId}"/></jsp:include>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="dnBoxCol1"><fmt:message key="email_assigned_user" bundle="${resword}"/>: 
+				</td>
+				<td>
+					<input name="sendEmail${parentId}" value="1" type="checkbox"/></div>
+				</td>
+			</tr>
+		</table>
+		
+		
 		
 		<c:choose>
 		<c:when test="${parentId > 0}">
 			<input type="hidden" name="typeId${parentId}" value="${param.typeId}"/>
 		</c:when>
 		<c:otherwise>
-			<div class="dnBoxCol1"><fmt:message key="type" bundle="${resword}"/>:<span class="alert">*</span></div>
-			<div class="dnBoxCol2"><div class="formfieldL_BG">
+			<div class="dnBoxCol1" style="display: none;"><fmt:message key="type" bundle="${resword}"/>:<span class="alert">*</span></div>
+			<div class="dnBoxCol2" style="display: none;"><div class="formfieldL_BG">
 				<c:set var="typeIdl" value="${discrepancyNote.discrepancyNoteTypeId}"/>
 				<c:choose>
 				<c:when test="${whichResStatus == 22 || whichResStatus == 1}">
-					<select name="typeId${parentId}" id="typeId${parentId}" class="formfieldL" onchange ="javascript:setElements(this.options[selectedIndex].value, 'user1', 'user2','<c:out value="${parentId}"/>','<c:out value="${whichResStatus}"/>','<fmt:message key="New" bundle="${resterm}"/>','<fmt:message key="Updated" bundle="${resterm}"/>','<fmt:message key="Resolution_Proposed" bundle="${resterm}"/>','<fmt:message key="Closed" bundle="${resterm}"/>','<fmt:message key="Not_Applicable" bundle="${resterm}"/>');">
+					<select name="typeId${parentId}" id="typeId${parentId}" class="formfieldL" onchange ="javascript:setElements(this.options[selectedIndex].value, 'user1', 'user2','<c:out value="${parentId}"/>','<c:out value="${whichResStatus}"/>','<fmt:message key="New" bundle="${resterm}"/>','<fmt:message key="Updated" bundle="${resterm}"/>','<fmt:message key="Closed" bundle="${resterm}"/>','<fmt:message key="Not_Applicable" bundle="${resterm}"/>');">
 						<c:forEach var="type" items="${discrepancyTypes2}">
 						<c:choose>
 						<c:when test="${typeIdl == type.id}">
@@ -256,7 +304,7 @@ function setYPos(id) {
 					</select>
 				</c:when>
 				<c:otherwise>
-					<select name="typeId${parentId}" id="typeId${parentId}" class="formfieldL" onchange ="javascript:setElements(this.options[selectedIndex].value, 'user1', 'user2', '<c:out value="${parentId}"/>','<c:out value="${whichResStatus}"/>','<fmt:message key="New" bundle="${resterm}"/>','<fmt:message key="Updated" bundle="${resterm}"/>','<fmt:message key="Resolution_Proposed" bundle="${resterm}"/>','<fmt:message key="Closed" bundle="${resterm}"/>','<fmt:message key="Not_Applicable" bundle="${resterm}"/>');">
+					<select name="typeId${parentId}" id="typeId${parentId}" class="formfieldL" onchange ="javascript:setElements(this.options[selectedIndex].value, 'user1', 'user2', '<c:out value="${parentId}"/>','<c:out value="${whichResStatus}"/>','<fmt:message key="New" bundle="${resterm}"/>','<fmt:message key="Updated" bundle="${resterm}"/>','<fmt:message key="Closed" bundle="${resterm}"/>','<fmt:message key="Not_Applicable" bundle="${resterm}"/>');">
 						<c:forEach var="type" items="${discrepancyTypes}">
 						<c:choose>
 						<c:when test="${typeIdl == type.id}">
@@ -290,8 +338,8 @@ function setYPos(id) {
 		</c:choose>
 		
 		<span id="res1${parentId}">
-			<div class="dnBoxCol1"><fmt:message key="Set_to_Status" bundle="${resword}"/>:<span class="alert">*</span></div>
-			<div class="dnBoxCol2">
+			<div class="dnBoxCol1" style="display:none;"><fmt:message key="Set_to_Status" bundle="${resword}"/>:<span class="alert">*</span></div>
+			<div class="dnBoxCol2" style="display:none;">
 				<div class="formfieldL_BG">
 				<c:set var="resStatusIdl" value="${discrepancyNote.resolutionStatusId}"/>
 			    <select name="resStatusId${parentId}" id="resStatusId${parentId}" class="formfieldL">
@@ -300,7 +348,7 @@ function setYPos(id) {
 						<c:set var="resStatuses" value="${resolutionStatuses}"/>
 					</c:when>
 					<c:otherwise>
-						<%-- for FVC; for Query, it will be set per setElements function --%>
+						<%-- for FVC; for JsonQuery, it will be set per setElements function --%>
 						<c:set var="resStatuses" value="${resolutionStatuses2}"/>
 					</c:otherwise>
 					</c:choose>
@@ -327,33 +375,7 @@ function setYPos(id) {
 			<span id="user1${parentId}" style="display:block">
       	</c:otherwise>
 		</c:choose>
-			<div class="dnBoxCol1"><fmt:message key="assign_to_user" bundle="${resword}"/>:</div>
-			<div class="dnBoxCol2" class="formfieldL_BG">
-				<div class="formfieldL_BG">
-					<c:choose>
-					<c:when test='${discrepancyNote.assignedUserId != ""}'>
-						<c:set var="userAccountId1" value="${discrepancyNote.assignedUserId}"/>
-					</c:when>
-					<c:otherwise>
-						<c:set var="userAccountId1" value="0"/>
-					</c:otherwise>
-					</c:choose>
-					<select name="userAccountId${parentId}" id="userAccountId${parentId}" class="formfieldL" >
-						<option value="0">
-				  		<c:forEach var="user" items="${userAccounts}">
-				   		<c:choose>
-				     	<c:when test="${userAccountId1 == user.userAccountId}">
-				       		<option value="<c:out value="${user.userAccountId}"/>" selected><c:out value="${user.lastName}"/>, <c:out value="${user.firstName}"/> (<c:out value="${user.userName}"/>)
-				     	</c:when>
-				     	<c:otherwise>
-				       		<option value="<c:out value="${user.userAccountId}"/>"><c:out value="${user.lastName}"/>, <c:out value="${user.firstName}"/> (<c:out value="${user.userName}"/>)
-				     	</c:otherwise>
-				   		</c:choose>
-				 		</c:forEach>
-					</select>
-				</div>
-		  		<jsp:include page="../showMessage.jsp"><jsp:param name="key" value="userAccountId${parentId}"/></jsp:include>
-			</div>
+			
 		</span>
 		
 		<c:choose>
@@ -364,8 +386,6 @@ function setYPos(id) {
 			<span id="user2${parentId}" style="display:block">
 		</c:otherwise>
 		</c:choose>
-			<div class="dnBoxCol1"><fmt:message key="email_assigned_user" bundle="${resword}"/>:</div>
-			<div class="dnBoxCol2"><input name="sendEmail${parentId}" value="1" type="checkbox"/></div>
 		</span>
 		
 		<c:set var= "noteEntityType" value="${discrepancyNote.entityType}"/>

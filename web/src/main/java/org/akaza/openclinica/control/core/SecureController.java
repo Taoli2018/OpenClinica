@@ -7,27 +7,70 @@
  */
 
 package org.akaza.openclinica.control.core;
-
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.ResourceBundle;
-import java.util.StringTokenizer;
+import org.akaza.openclinica.bean.admin.CRFBean;
+import org.akaza.openclinica.bean.core.*;
+import org.akaza.openclinica.bean.extract.ArchivedDatasetFileBean;
+import org.akaza.openclinica.bean.login.StudyUserRoleBean;
+import org.akaza.openclinica.bean.login.UserAccountBean;
+import org.akaza.openclinica.bean.managestudy.*;
+import org.akaza.openclinica.bean.submit.EventCRFBean;
+import org.akaza.openclinica.bean.submit.ItemBean;
+import org.akaza.openclinica.bean.submit.ItemDataBean;
+import org.akaza.openclinica.control.SpringServletAccess;
+import org.akaza.openclinica.controller.KeycloakController;
+import org.akaza.openclinica.core.EmailEngine;
+import org.akaza.openclinica.core.EventCRFLocker;
+import org.akaza.openclinica.core.SessionManager;
+import org.akaza.openclinica.core.form.StringUtil;
+import org.akaza.openclinica.dao.admin.CRFDAO;
+import org.akaza.openclinica.dao.core.AuditableEntityDAO;
+import org.akaza.openclinica.dao.core.CoreResources;
+import org.akaza.openclinica.dao.extract.ArchivedDatasetFileDAO;
+import org.akaza.openclinica.dao.hibernate.*;
+import org.akaza.openclinica.dao.login.UserAccountDAO;
+import org.akaza.openclinica.dao.managestudy.*;
+import org.akaza.openclinica.dao.service.StudyConfigService;
+import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
+import org.akaza.openclinica.dao.submit.EventCRFDAO;
+import org.akaza.openclinica.dao.submit.ItemDAO;
+import org.akaza.openclinica.dao.submit.ItemDataDAO;
+import org.akaza.openclinica.domain.datamap.EventCrf;
+import org.akaza.openclinica.domain.datamap.Study;
+import org.akaza.openclinica.domain.datamap.StudyParameterValue;
+import org.akaza.openclinica.exception.OpenClinicaException;
+import org.akaza.openclinica.i18n.core.LocaleResolver;
+import org.akaza.openclinica.i18n.util.I18nFormatUtil;
+import org.akaza.openclinica.i18n.util.ResourceBundleProvider;
+import org.akaza.openclinica.service.*;
+import org.akaza.openclinica.service.UserType;
+import org.akaza.openclinica.service.pmanage.Authorization;
+import org.akaza.openclinica.service.pmanage.ParticipantPortalRegistrar;
+import org.akaza.openclinica.view.BreadcrumbTrail;
+import org.akaza.openclinica.view.Page;
+import org.akaza.openclinica.view.StudyInfoPanel;
+import org.akaza.openclinica.view.StudyInfoPanelLine;
+import org.akaza.openclinica.web.InconsistentStateException;
+import org.akaza.openclinica.web.InsufficientPermissionException;
+import org.akaza.openclinica.web.SQLInitServlet;
+import org.akaza.openclinica.web.bean.EntityBeanTable;
+import org.apache.commons.lang.StringUtils;
+import org.quartz.JobKey;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerKey;
+import org.quartz.impl.StdScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -41,108 +84,62 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
-
-import org.akaza.openclinica.bean.admin.CRFBean;
-import org.akaza.openclinica.bean.core.DiscrepancyNoteType;
-import org.akaza.openclinica.bean.core.Role;
-import org.akaza.openclinica.bean.core.Status;
-import org.akaza.openclinica.bean.extract.ArchivedDatasetFileBean;
-import org.akaza.openclinica.bean.login.StudyUserRoleBean;
-import org.akaza.openclinica.bean.login.UserAccountBean;
-import org.akaza.openclinica.bean.managestudy.DiscrepancyNoteBean;
-import org.akaza.openclinica.bean.managestudy.EventDefinitionCRFBean;
-import org.akaza.openclinica.bean.managestudy.StudyBean;
-import org.akaza.openclinica.bean.managestudy.StudyEventBean;
-import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
-import org.akaza.openclinica.bean.managestudy.StudyGroupClassBean;
-import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
-import org.akaza.openclinica.bean.submit.EventCRFBean;
-import org.akaza.openclinica.bean.submit.ItemBean;
-import org.akaza.openclinica.bean.submit.ItemDataBean;
-import org.akaza.openclinica.control.SpringServletAccess;
-import org.akaza.openclinica.core.CRFLocker;
-import org.akaza.openclinica.core.EmailEngine;
-import org.akaza.openclinica.core.SessionManager;
-import org.akaza.openclinica.core.form.StringUtil;
-import org.akaza.openclinica.dao.admin.CRFDAO;
-import org.akaza.openclinica.dao.core.AuditableEntityDAO;
-import org.akaza.openclinica.dao.core.CoreResources;
-import org.akaza.openclinica.dao.extract.ArchivedDatasetFileDAO;
-import org.akaza.openclinica.dao.hibernate.EventDefinitionCrfTagDao;
-import org.akaza.openclinica.dao.hibernate.UserAccountDao;
-import org.akaza.openclinica.dao.managestudy.StudyDAO;
-import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
-import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
-import org.akaza.openclinica.dao.managestudy.StudyGroupClassDAO;
-import org.akaza.openclinica.dao.managestudy.StudyGroupDAO;
-import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
-import org.akaza.openclinica.dao.service.StudyConfigService;
-import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
-import org.akaza.openclinica.dao.submit.EventCRFDAO;
-import org.akaza.openclinica.dao.submit.ItemDAO;
-import org.akaza.openclinica.dao.submit.ItemDataDAO;
-import org.akaza.openclinica.domain.datamap.EventDefinitionCrf;
-import org.akaza.openclinica.domain.datamap.EventDefinitionCrfTag;
-import org.akaza.openclinica.domain.user.UserAccount;
-import org.akaza.openclinica.exception.OpenClinicaException;
-import org.akaza.openclinica.i18n.core.LocaleResolver;
-import org.akaza.openclinica.i18n.util.I18nFormatUtil;
-import org.akaza.openclinica.i18n.util.ResourceBundleProvider;
-import org.akaza.openclinica.service.pmanage.Authorization;
-import org.akaza.openclinica.service.pmanage.ParticipantPortalRegistrar;
-import org.akaza.openclinica.view.BreadcrumbTrail;
-import org.akaza.openclinica.view.Page;
-import org.akaza.openclinica.view.StudyInfoPanel;
-import org.akaza.openclinica.view.StudyInfoPanelLine;
-import org.akaza.openclinica.web.InconsistentStateException;
-import org.akaza.openclinica.web.InsufficientPermissionException;
-import org.akaza.openclinica.web.SQLInitServlet;
-import org.akaza.openclinica.web.bean.EntityBeanTable;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.impl.StdScheduler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class enhances the Controller in several ways.
  *
  * <ol>
- * <li>The method mayProceed, for which the class is named, is declared abstract and is called before processRequest. This
- * method indicates whether the user may proceed with the action he wishes to perform (as indicated by various attributes or
+ * <li>The method mayProceed, for which the class is named, is declared abstract and is called before processRequest.
+ * This
+ * method indicates whether the user may proceed with the action he wishes to perform (as indicated by various
+ * attributes or
  * parameters in request or session). Note, howeveer, that the method has a void return, and throws
- * InsufficientPermissionException. The intention is that if the user may not proceed with his desired action, the method
- * should throw an exception. InsufficientPermissionException will accept a Page object which indicates where the user should
- * be redirected in order to be informed that he has insufficient permission, and the process method enforces this redirection
+ * InsufficientPermissionException. The intention is that if the user may not proceed with his desired action, the
+ * method
+ * should throw an exception. InsufficientPermissionException will accept a Page object which indicates where the user
+ * should
+ * be redirected in order to be informed that he has insufficient permission, and the process method enforces this
+ * redirection
  * by catching an InsufficientPermissionException object.
  *
- * <li>Four new members, session, request, response, and the UserAccountBean object ub have been declared protected, and are
+ * <li>Four new members, session, request, response, and the UserAccountBean object ub have been declared protected, and
+ * are
  * set in the process method. This allows developers to avoid passing these objects between methods, and moreover it
  * accurately encodes the fact that these objects represent the state of the servlet.
  *
  * <br/>
- * In particular, please note that it is no longer necessary to generate a bean for the session manager, the current user or
+ * In particular, please note that it is no longer necessary to generate a bean for the session manager, the current
+ * user or
  * the current study.
  *
- * <li>The method processRequest has been declared abstract. This change is unlikely to affect most code, since by custom
+ * <li>The method processRequest has been declared abstract. This change is unlikely to affect most code, since by
+ * custom
  * processRequest is declared in each subclass anyway.
  *
- * <li>The standard try-catch block within most processRequest methods has been included in the process method, which calls
- * the processRequest method. Therefore, subclasses may throw an Exception in the processRequest method without having to
+ * <li>The standard try-catch block within most processRequest methods has been included in the process method, which
+ * calls
+ * the processRequest method. Therefore, subclasses may throw an Exception in the processRequest method without having
+ * to
  * handle it.
  *
- * <li>The addPageMessage method has been declared to streamline the process of setting page-level messages. The accompanying
- * showPageMessages.jsp file in jsp/include/ automatically displays all of the page messages; the developer need only include
+ * <li>The addPageMessage method has been declared to streamline the process of setting page-level messages. The
+ * accompanying
+ * showPageMessages.jsp file in jsp/include/ automatically displays all of the page messages; the developer need only
+ * include
  * this file in the jsp.
  *
- * <li>The addEntityList method makes it easy to add a Collection of EntityBeans to the request. Note that this method should
+ * <li>The addEntityList method makes it easy to add a Collection of EntityBeans to the request. Note that this method
+ * should
  * only be used for Collections from which one EntityBean must be selected by the user. If the Collection is empty, this
- * method will throw an InconsistentStateException, taking the user to an error page and settting a page message indicating
+ * method will throw an InconsistentStateException, taking the user to an error page and settting a page message
+ * indicating
  * that the user may not proceed because no entities are present. Note that the error page and the error message must be
  * specified.
  * </ol>
@@ -152,6 +149,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 public abstract class SecureController extends HttpServlet implements SingleThreadModel {
     protected ServletContext context;
     protected SessionManager sm;
+    private final static String STUDY_ENV_UUID = "studyEnvUuid";
+    private final static String FORCE_RENEW_AUTH = "forceRenewAuth";
+
     // protected final Logger logger =
     // LoggerFactory.getLogger(getClass().getName());
     protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
@@ -162,10 +162,15 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     protected HttpServletResponse response;
     protected UserAccountBean ub;
     protected StudyBean currentStudy;
+    protected StudyBean currentPublicStudy;
     protected StudyUserRoleBean currentRole;
     protected HashMap errors = new HashMap();
     protected UserAccountDao userDaoDomain;
     private static String SCHEDULER = "schedulerFactoryBean";
+    public static final String ENABLED = "enabled";
+    public static final String DISABLED = "disabled";
+
+    protected UserService userService;
 
     private StdScheduler scheduler;
     /**
@@ -203,9 +208,19 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     // Use this variable as the key for the support url
     public static final String SUPPORT_URL = "supportURL";
 
+    // Use this variable as the key for the walkme url
+    public static final String WALKME_URL = "walkmeURL";
+
+    // Use this variable as the key for the piwik url
+    public static final String PIWIK_URL = "piwikURL";
+
     public static final String MODULE = "module";// to determine which module
 
-    private CRFLocker crfLocker;
+    private EventCRFLocker eventCrfLocker;
+
+    private final String COMMON = "common";
+
+    public static final String ORIGINATING_PAGE = "originatingPage";
 
     // user is in
 
@@ -254,7 +269,8 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     @Override
     public void init() throws ServletException {
         context = getServletContext();
-        crfLocker = SpringServletAccess.getApplicationContext(context).getBean(CRFLocker.class);
+        eventCrfLocker = SpringServletAccess.getApplicationContext(context).getBean(EventCRFLocker.class);
+
     }
 
     /**
@@ -271,15 +287,20 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     public void passwdTimeOut() {
         Date lastChangeDate = ub.getPasswdTimestamp();
         if (!ub.isLdapUser() && lastChangeDate == null) {
-        	//@pgawade 18-Sep-2012: fix for issue #14506 (https://issuetracker.openclinica.com/view.php?id=14506#c58197)
-            //addPageMessage(respage.getString("welcome") + " " + ub.getFirstName() + " " + ub.getLastName() + ". " + respage.getString("password_set"));
+            // @pgawade 18-Sep-2012: fix for issue #14506
+            // (https://issuetracker.openclinica.com/view.php?id=14506#c58197)
+            // addPageMessage(respage.getString("welcome") + " " + ub.getFirstName() + " " + ub.getLastName() + ". " +
+            // respage.getString("password_set"));
             // + "<a href=\"UpdateProfile\">" + respage.getString("user_profile") + " </a>");
             int pwdChangeRequired = new Integer(SQLInitServlet.getField("change_passwd_required")).intValue();
-            if (pwdChangeRequired == 1) {
-            	addPageMessage(respage.getString("welcome") + " " + ub.getFirstName() + " " + ub.getLastName() + ". " + respage.getString("password_set"));
-                request.setAttribute("mustChangePass", "yes");
-                forwardPage(Page.RESET_PASSWORD);
-            }
+            /*
+             * if (pwdChangeRequired == 1) {
+             * addPageMessage(respage.getString("welcome") + " " + ub.getFirstName() + " " + ub.getLastName() + ". " +
+             * respage.getString("password_set"));
+             * request.setAttribute("mustChangePass", "yes");
+             * forwardPage(Page.RESET_PASSWORD);
+             * }
+             */
         }
     }
 
@@ -289,8 +310,9 @@ public abstract class SecureController extends HttpServlet implements SingleThre
         Integer datasetId = (Integer) request.getSession().getAttribute("datasetId");
         try {
             if (jobName != null && groupName != null) {
-                int state = getScheduler(request).getTriggerState(jobName, groupName);
-                org.quartz.JobDetail details = getScheduler(request).getJobDetail(jobName, groupName);
+
+                Trigger.TriggerState triggerState = getScheduler(request).getTriggerState(new TriggerKey(jobName, groupName));
+                org.quartz.JobDetail details = getScheduler(request).getJobDetail(new JobKey(jobName, groupName));
                 List contexts = getScheduler(request).getCurrentlyExecutingJobs();
                 // will we get the above, even if its completed running?
                 // ProcessingResultType message = null;
@@ -305,7 +327,7 @@ public abstract class SecureController extends HttpServlet implements SingleThre
                 // ProcessingResultType message = (ProcessingResultType) details.getResult();
                 org.quartz.JobDataMap dataMap = details.getJobDataMap();
                 String failMessage = dataMap.getString("failMessage");
-                if (state == Trigger.STATE_NONE || state== Trigger.STATE_COMPLETE) {
+                if (triggerState == Trigger.TriggerState.NONE || triggerState == Trigger.TriggerState.COMPLETE) {
                     // add the message here that your export is done
                     // TODO make absolute paths in the message, for example a link from /pages/* would break
                     // TODO i18n
@@ -314,26 +336,24 @@ public abstract class SecureController extends HttpServlet implements SingleThre
                         // ERROR: relation "demographics" already exists
                         // More information may be available in the log files.
                         addPageMessage("The extract data job failed with the message: <br/><br/>" + failMessage
-                            + "<br/><br/>More information may be available in the log files.");
+                                + "<br/><br/>More information may be available in the log files.");
                         request.getSession().removeAttribute("jobName");
                         request.getSession().removeAttribute("groupName");
                         request.getSession().removeAttribute("datasetId");
                     } else {
                         String successMsg = dataMap.getString("SUCCESS_MESSAGE");
                         String success = dataMap.getString("successMsg");
-                        if (success != null ) {
+                        if (success != null) {
 
                             if (successMsg.contains("$linkURL")) {
                                 successMsg = decodeLINKURL(successMsg, datasetId);
                             }
 
-                            if(successMsg!=null && !successMsg.isEmpty())
-                            {
+                            if (successMsg != null && !successMsg.isEmpty()) {
                                 addPageMessage(successMsg);
-                            }
-                            else {
-                            addPageMessage("Your Extract is now completed. Please go to review them at <a href='ExportDataset?datasetId="
-                                + datasetId + "'> Here </a>." );
+                            } else {
+                                addPageMessage("Your Extract is now completed. Please go to review them at <a href='ExportDataset?datasetId=" + datasetId
+                                        + "'> Here </a>.");
                             }
                             request.getSession().removeAttribute("jobName");
                             request.getSession().removeAttribute("groupName");
@@ -357,28 +377,41 @@ public abstract class SecureController extends HttpServlet implements SingleThre
 
         ArrayList<ArchivedDatasetFileBean> fileBeans = asdfDAO.findByDatasetId(datasetId);
 
-        successMsg =
-            successMsg.replace("$linkURL", "<a href=\"" + CoreResources.getField("sysURL.base") + "AccessFile?fileId=" + fileBeans.get(0).getId()
-                + "\">here </a>");
+        successMsg = successMsg.replace("$linkURL",
+                "<a href=\"" + CoreResources.getField("sysURL.base") + "AccessFile?fileId=" + fileBeans.get(0).getId() + "\">here </a>");
 
         return successMsg;
     }
 
     private StdScheduler getScheduler(HttpServletRequest request) {
-        scheduler =
-            this.scheduler != null ? scheduler : (StdScheduler) SpringServletAccess.getApplicationContext(request.getSession().getServletContext()).getBean(
-                    SCHEDULER);
+        scheduler = this.scheduler != null ? scheduler
+                : (StdScheduler) SpringServletAccess.getApplicationContext(request.getSession().getServletContext()).getBean(SCHEDULER);
         return scheduler;
     }
 
+
     private void process(HttpServletRequest request, HttpServletResponse response) throws OpenClinicaException, UnsupportedEncodingException {
 
+        System.out.println("Metric0" + new Date());
+        this.request = request;
+        this.response = response;
         request.setCharacterEncoding("UTF-8");
+//        checkPermissions();
         session = request.getSession();
         // BWP >> 1/8/2008
         try {
             // YW 10-03-2007 <<
+            // Since we are managing the session on our own, disable Tomcat session timeout
             session.setMaxInactiveInterval(Integer.parseInt(SQLInitServlet.getField("max_inactive_interval")));
+            String smURL = CoreResources.getField("smURL");
+            if (StringUtils.isNotEmpty(smURL)) {
+
+                int index = smURL.indexOf("//");
+                String protocol = smURL.substring(0, index) + "//";
+                String subDomain = smURL.substring(smURL.indexOf("//") + 2, smURL.indexOf("/", protocol.length()));
+                String crossStorageURL = protocol + subDomain + "/hub/hub.html";
+                session.setAttribute("crossStorageURL", crossStorageURL);
+            }
             // YW >>
         } catch (NumberFormatException nfe) {
             // BWP>>3600 is the datainfo.properties maxInactiveInterval on
@@ -391,9 +424,21 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             session.setAttribute(SUPPORT_URL, SQLInitServlet.getSupportURL());
         }
 
+        // If the session already has a value with key WALKME_URL don't reset
+        if (session.getAttribute(WALKME_URL) == null) {
+            session.setAttribute(WALKME_URL, CoreResources.getField("walkme.url"));
+        }
+
+        // If the session already has a value with key PIWIK_URL don't reset
+        if (session.getAttribute(PIWIK_URL) == null) {
+            session.setAttribute(PIWIK_URL, CoreResources.getField("piwik.url"));
+        }
+
         ub = (UserAccountBean) session.getAttribute(USER_BEAN_NAME);
         currentStudy = (StudyBean) session.getAttribute("study");
-        currentRole = (StudyUserRoleBean) session.getAttribute("userRole");
+        currentPublicStudy = (StudyBean) session.getAttribute("publicStudy");
+
+
 
         // Set current language preferences
         Locale locale = LocaleResolver.getLocale(request);
@@ -417,25 +462,92 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             // from the perspective of
             // JUnit servlets tests
             /*
-             * if(sm==null && (!StringUtil.isBlank(userName))) {//check if user logged in, then create a new sessionmanger to
+             * if(sm==null && (!StringUtil.isBlank(userName))) {//check if user logged in, then create a new
+             * sessionmanger to
              * get ub //create a new sm in order to get a new ub object sm = new SessionManager(ub, userName); }
              */
             // BWP 01/08 >>
             // sm = new SessionManager(ub, userName);
             sm = new SessionManager(ub, userName, SpringServletAccess.getApplicationContext(context));
-            ub = sm.getUserBean();
-            session.setAttribute("userBean", ub);
+            WebApplicationContext webApplicationContext = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+            KeycloakController controller = (KeycloakController) webApplicationContext .getBean("keycloakController");
 
+            String ocUserUuid = null;
+            System.out.println("Metric1" + new Date());
+
+            try {
+                ocUserUuid = controller.getOcUserUuid(request);
+                ub = (UserAccountBean) session.getAttribute(USER_BEAN_NAME);
+            } catch (CustomRuntimeException e) {
+                forwardPage(Page.ERROR);
+                return;
+            }
+            System.out.println("Metric2" + new Date());
+
+            if (ocUserUuid != null) {
+                if (ub == null || StringUtils.isEmpty(ub.getName())) {
+                    UserAccountDAO uDAO = new UserAccountDAO(sm.getDataSource());
+                    ub = (UserAccountBean) uDAO.findByUserUuid(ocUserUuid);
+                }
+            }
+            if (ub == null || StringUtils.isEmpty(ub.getName())) {
+                if(session != null || request.isRequestedSessionIdValid() ) {
+                    session.invalidate();
+                    SecurityContextHolder.clearContext();
+                }
+                String authorizeUrl = controller.buildAuthorizeUrl(request);
+                logger.info("Secure" +
+                        "" +
+                        "" +
+                        "Controller In login_required:%%%%%%%%" + authorizeUrl);
+                response.sendRedirect(authorizeUrl);
+                return;
+            }
+            request.setAttribute("userBean", ub);
+            if (processSpecificStudyEnvUuid()) {
+                /* this handles the scenario when forceRenewAuth is true */
+                session.removeAttribute("userRole");
+                response.sendRedirect(request.getRequestURI() + "?" + STUDY_ENV_UUID  + "=" +  getParameter(request,STUDY_ENV_UUID) +  "&firstLoginCheck=true");
+                return;
+            }
             StudyDAO sdao = new StudyDAO(sm.getDataSource());
-            if (currentStudy == null || currentStudy.getId() <= 0) {
+            if (currentPublicStudy == null || currentPublicStudy.getId() <= 0) {
+                UserAccountDAO uDAO = new UserAccountDAO(sm.getDataSource());
+                ub = (UserAccountBean) uDAO.findByUserName(ub.getName());
+                session.setAttribute(USER_BEAN_NAME, ub);
                 if (ub.getId() > 0 && ub.getActiveStudyId() > 0) {
+                    CoreResources.setRequestSchema(request, "public");
                     StudyParameterValueDAO spvdao = new StudyParameterValueDAO(sm.getDataSource());
-                    currentStudy = (StudyBean) sdao.findByPK(ub.getActiveStudyId());
+                    currentPublicStudy = (StudyBean) sdao.findByPK(ub.getActiveStudyId());
 
-                    ArrayList studyParameters = spvdao.findParamConfigByStudy(currentStudy);
+                    ArrayList studyParameters = spvdao.findParamConfigByStudy(currentPublicStudy);
 
-                    currentStudy.setStudyParameters(studyParameters);
+                    currentPublicStudy.setStudyParameters(studyParameters);
 
+                    // set up the panel here, tbh
+                    panel.reset();
+                    /*
+                     * panel.setData("Study", currentPublicStudy.getName()); panel.setData("Summary",
+                     * currentPublicStudy.getSummary());
+                     * panel.setData("Start Date", sdf.format(currentPublicStudy.getDatePlannedStart()));
+                     * panel.setData("End Date",
+                     * sdf.format(currentPublicStudy.getDatePlannedEnd())); panel.setData("Principal Investigator",
+                     * currentPublicStudy.getPrincipalInvestigator());
+                     */
+                    session.setAttribute(STUDY_INFO_PANEL, panel);
+                } else {
+                    currentPublicStudy = new StudyBean();
+                }
+                session.setAttribute("publicStudy", currentPublicStudy);
+                request.setAttribute("requestSchema", currentPublicStudy.getSchemaName());
+                if (StringUtils.isEmpty(currentPublicStudy.getIdentifier())) {
+                    logger.error("No study assigned to this user:" + ub.getName() + " uuid:" + ub.getUserUuid());
+                    forwardPage(Page.ERROR);
+                    return;
+                }
+                currentStudy = (StudyBean) sdao.findByUniqueIdentifier(currentPublicStudy.getIdentifier());
+                if (currentStudy != null) {
+                    currentStudy.setParentStudyName(currentPublicStudy.getParentStudyName());
                     StudyConfigService scs = new StudyConfigService(sm.getDataSource());
                     if (currentStudy.getParentStudyId() <= 0) {// top study
                         scs.setParametersForStudy(currentStudy);
@@ -446,30 +558,42 @@ public abstract class SecureController extends HttpServlet implements SingleThre
                         // YW >>
                         scs.setParametersForSite(currentStudy);
                     }
-
-                    // set up the panel here, tbh
-                    panel.reset();
-                    /*
-                     * panel.setData("Study", currentStudy.getName()); panel.setData("Summary", currentStudy.getSummary());
-                     * panel.setData("Start Date", sdf.format(currentStudy.getDatePlannedStart())); panel.setData("End Date",
-                     * sdf.format(currentStudy.getDatePlannedEnd())); panel.setData("Principal Investigator",
-                     * currentStudy.getPrincipalInvestigator());
-                     */
-                    session.setAttribute(STUDY_INFO_PANEL, panel);
-                } else {
-                    currentStudy = new StudyBean();
                 }
+                request.setAttribute("requestSchema", "public");
+
                 session.setAttribute("study", currentStudy);
-            } else if (currentStudy.getId() > 0) {
+            } else if (currentPublicStudy.getId() > 0) {
                 // YW 06-20-2007<< set site's parentstudy name when site is
                 // restored
-                if (currentStudy.getParentStudyId() > 0) {
+                if (currentPublicStudy.getParentStudyId() > 0) {
+                    currentPublicStudy.setParentStudyName(((StudyBean) sdao.findByPK(currentPublicStudy.getParentStudyId())).getName());
+                    request.setAttribute("requestSchema", currentPublicStudy.getSchemaName());
                     currentStudy.setParentStudyName(((StudyBean) sdao.findByPK(currentStudy.getParentStudyId())).getName());
+                    request.setAttribute("requestSchema", "public");
                 }
                 // YW >>
             }
+            currentRole = (StudyUserRoleBean) session.getAttribute("userRole");
 
-            if (currentStudy.getParentStudyId() > 0) {
+            if (currentRole == null || !currentRole.isActive() || currentRole.getId() <= 0) {
+                refreshUserRole(request,ub,currentPublicStudy);
+                currentRole = (StudyUserRoleBean) session.getAttribute("userRole");
+            }
+            // YW << For the case that current role is not "invalid" but current
+            // active study has been removed.
+            else if (currentPublicStudy.getId() == 0)
+                throw new Exception("No study assigned to this user");
+            else if (currentRole.getId() > 0
+                    && (currentPublicStudy.getStatus().equals(Status.DELETED) || currentPublicStudy.getStatus().equals(Status.AUTO_DELETED))) {
+                currentRole.setRole(Role.INVALID);
+                currentRole.setStatus(Status.DELETED);
+                session.setAttribute("userRole", currentRole);
+            }
+
+
+            StudyBean userRoleStudy = CoreResources.getPublicStudy(currentRole.getStudyId(), sm.getDataSource());
+
+            if (userRoleStudy.getParentStudyId() > 0) {
                 /*
                  * The Role decription will be set depending on whether the user logged in at study lever or site level.
                  * issue-2422
@@ -495,6 +619,9 @@ public abstract class SecureController extends HttpServlet implements SingleThre
                         break;
                     case 7:
                         role.setDescription("site_Data_Entry_Person2");
+                        break;
+                    case 8:
+                        role.setDescription("site_Data_Entry_Participant");
                         break;
                     default:
                         // logger.info("No role matched when setting role description");
@@ -529,36 +656,14 @@ public abstract class SecureController extends HttpServlet implements SingleThre
                 }
             }
 
-            if (currentRole == null || currentRole.getId() <= 0) {
-                // if (ub.getId() > 0 && currentStudy.getId() > 0) {
-                // if current study has been "removed", current role will be
-                // kept as "invalid" -- YW 06-21-2007
-                if (ub.getId() > 0 && currentStudy.getId() > 0 && !currentStudy.getStatus().getName().equals("removed")) {
-                    currentRole = ub.getRoleByStudy(currentStudy.getId());
-                    if (currentStudy.getParentStudyId() > 0) {
-                        // Checking if currentStudy has been removed or not will
-                        // ge good enough -- YW 10-17-2007
-                        StudyUserRoleBean roleInParent = ub.getRoleByStudy(currentStudy.getParentStudyId());
-                        // inherited role from parent study, pick the higher
-                        // role
-                        currentRole.setRole(Role.max(currentRole.getRole(), roleInParent.getRole()));
-                    }
-                    // logger.info("currentRole:" + currentRole.getRoleName());
-                } else {
-                    currentRole = new StudyUserRoleBean();
-                }
-                session.setAttribute("userRole", currentRole);
-            }
-            // YW << For the case that current role is not "invalid" but current
-            // active study has been removed.
-            else if (currentRole.getId() > 0 && (currentStudy.getStatus().equals(Status.DELETED) || currentStudy.getStatus().equals(Status.AUTO_DELETED))) {
-                currentRole.setRole(Role.INVALID);
-                currentRole.setStatus(Status.DELETED);
-                session.setAttribute("userRole", currentRole);
-            }
+
+
             // YW 06-19-2007 >>
 
             request.setAttribute("isAdminServlet", getAdminServlet());
+
+            boolean advSearch = isContactsModuleEnabled();
+            request.setAttribute("advsearchStatus", (advSearch? ENABLED : DISABLED));
 
             this.request = request;
             this.response = response;
@@ -583,8 +688,11 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             if (!request.getRequestURI().endsWith("ResetPassword")) {
                 passwdTimeOut();
             }
+            request.setAttribute("enrollmentCapped", isEnrollmentCapped());
+            request.setAttribute("requestSchema", getRequestSchema(request));
             mayProceed();
-            pingJobServer(request);
+            // pingJobServer(request);
+            // Set if enrollment is capped. Used by navBar.jsp to hide "Add Participant" link in the menu
             processRequest();
         } catch (InconsistentStateException ise) {
             ise.printStackTrace();
@@ -607,6 +715,41 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             logger.error(SecureController.getStackTrace(e));
 
             forwardPage(Page.ERROR);
+        }
+        System.out.println("Metric4" + new Date());
+    }
+
+    private boolean shouldProcessUser() {
+        String path = StringUtils.substringAfterLast(request.getRequestURI(), "/");
+        boolean flag = false;
+        switch(path) {
+            case "VerifyImportedRule":
+            case "UpdateRuleSetRule":
+            case "ViewRuleAssignment":
+                break;
+            default:
+                flag = true;
+                break;
+        }
+        return flag;
+    }
+    public String getRequestSchema(HttpServletRequest request) {
+        switch (StringUtils.substringAfterLast(request.getRequestURI(), "/")) {
+        case "ChangeStudy":
+        case "DeleteStudyUserRole":
+        case "DeleteUser":
+        case "ListStudyUser":
+        case "ViewUserAccount":
+        case "ListUserAccounts":
+        case "CreateUserAccount":
+        case "SetUserRole":
+        case "ListStudy":
+        case "AuditUserActivity":
+        case "EditStudyUserRole":
+        case "SignStudySubject":
+            return "public";
+        default:
+            return currentPublicStudy.getSchemaName();
         }
     }
 
@@ -640,8 +783,10 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, java.io.IOException {
@@ -655,23 +800,38 @@ public abstract class SecureController extends HttpServlet implements SingleThre
 
     /**
      * <P>
-     * Forwards to a jsp page. Additions to the forwardPage() method involve checking the session for the bread crumb trail
+     * Forwards to a jsp page. Additions to the forwardPage() method involve checking the session for the bread crumb
+     * trail
      * and setting it, if necessary. Setting it here allows the developer to only have to update the
      * <code>BreadcrumbTrail</code> class.
      *
-     * @param jspPage The page to go to.
-     * @param checkTrail The command to check for, and set a trail in the session.
+     * @param jspPage
+     *            The page to go to.
+     * @param checkTrail
+     *            The command to check for, and set a trail in the session.
      */
     protected void forwardPage(Page jspPage, boolean checkTrail) {
-    	Page page1 = Page.valueOf(jspPage.name());
-    	String temp;
-    	
-    	// YW 10-03-2007 <<
+        Page page1 = Page.valueOf(jspPage.name());
+        String temp;
+
+        // YW 10-03-2007 <<
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", -1);
         response.setHeader("Cache-Control", "no-store");
         // YW >>
+
+        // to load all available event based on currentStudy for Task > Add Subject
+        if (currentPublicStudy != null)
+            request.setAttribute("requestSchema", currentPublicStudy.getSchemaName());
+        request.setAttribute("allDefsArray", this.getEventDefinitionsByCurrentStudy());
+        try {
+            String paramsString = Utils.getParamsString(request.getParameterMap());
+
+            request.setAttribute("currentPageUrl", URLEncoder.encode(request.getRequestURL().toString() + "?" + paramsString, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            logger.error("Error getting parameters:" + e);
+        }
 
         if (request.getAttribute(POP_UP_URL) == null) {
             request.setAttribute(POP_UP_URL, "");
@@ -682,14 +842,16 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             if (checkTrail) {
                 BreadcrumbTrail bt = new BreadcrumbTrail();
                 if (session != null) {// added bu jxu, fixed bug for log out
-                /*    ArrayList trail = (ArrayList) session.getAttribute("trail");
-                    if (trail == null) {
-                        trail = bt.generateTrail(jspPage, request);
-                    } else {
-                        bt.setTrail(trail);
-                        trail = bt.generateTrail(jspPage, request);
-                    }
-                    session.setAttribute("trail", trail);*/
+                    /*
+                     * ArrayList trail = (ArrayList) session.getAttribute("trail");
+                     * if (trail == null) {
+                     * trail = bt.generateTrail(jspPage, request);
+                     * } else {
+                     * bt.setTrail(trail);
+                     * trail = bt.generateTrail(jspPage, request);
+                     * }
+                     * session.setAttribute("trail", trail);
+                     */
                     panel = (StudyInfoPanel) session.getAttribute(STUDY_INFO_PANEL);
                     if (panel == null) {
                         panel = new StudyInfoPanel();
@@ -703,40 +865,40 @@ public abstract class SecureController extends HttpServlet implements SingleThre
                 // we are also using checkTrail to update the panel, tbh
                 // 01/31/2005
             }
-           
-             temp = page1.getFileName();
+
+            temp = page1.getFileName();
             // above added 01/19/2005, tbh
             context.getRequestDispatcher(temp).forward(request, response);
         } catch (Exception se) {
-/*            if ("View Notes".equals(jspPage.getTitle())) {
-                String viewNotesURL = jspPage.getFileName();
-                if (viewNotesURL != null && viewNotesURL.contains("listNotes_p_=")) {
-                    String[] ps = viewNotesURL.split("listNotes_p_=");
-                    String t = ps[1].split("&")[0];
-                    int p = t.length() > 0 ? Integer.valueOf(t).intValue() : -1;
-                    if (p > 1) {
-                        viewNotesURL = viewNotesURL.replace("listNotes_p_=" + p, "listNotes_p_=" + (p - 1));
-                        //forwardPage(Page.setNewPage(viewNotesURL, "View Notes"));
-                    	try {
-							getServletContext().getRequestDispatcher(viewNotesURL).forward(request, response);
-						} catch (ServletException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-                    } else if (p <= 0) {
-                        forwardPage(Page.VIEW_DISCREPANCY_NOTES_IN_STUDY);
-                    }
-                }
-            }
-*/          	logger.error(se.getMessage(),se);
-        }
-        finally {
-        	page1 = null;
-        	jspPage = null;
-        	temp= null;
+            /*
+             * if ("View Notes".equals(jspPage.getTitle())) {
+             * String viewNotesURL = jspPage.getFileName();
+             * if (viewNotesURL != null && viewNotesURL.contains("listNotes_p_=")) {
+             * String[] ps = viewNotesURL.split("listNotes_p_=");
+             * String t = ps[1].split("&")[0];
+             * int p = t.length() > 0 ? Integer.valueOf(t).intValue() : -1;
+             * if (p > 1) {
+             * viewNotesURL = viewNotesURL.replace("listNotes_p_=" + p, "listNotes_p_=" + (p - 1));
+             * //forwardPage(Page.setNewPage(viewNotesURL, "View Notes"));
+             * try {
+             * getServletContext().getRequestDispatcher(viewNotesURL).forward(request, response);
+             * } catch (ServletException e) {
+             * // TODO Auto-generated catch block
+             * e.printStackTrace();
+             * } catch (IOException e) {
+             * // TODO Auto-generated catch block
+             * e.printStackTrace();
+             * }
+             * } else if (p <= 0) {
+             * forwardPage(Page.VIEW_DISCREPANCY_NOTES_IN_STUDY);
+             * }
+             * }
+             * }
+             */ logger.error(se.getMessage(), se);
+        } finally {
+            page1 = null;
+            jspPage = null;
+            temp = null;
         }
     }
 
@@ -746,16 +908,22 @@ public abstract class SecureController extends HttpServlet implements SingleThre
 
     /**
      * This method supports functionality of the type
-     * "if a list of entities is empty, then jump to some page and display an error message." This prevents users from seeing
-     * empty drop-down lists and being given error messages when they can't choose an entity from the drop-down list. Use,
+     * "if a list of entities is empty, then jump to some page and display an error message." This prevents users from
+     * seeing
+     * empty drop-down lists and being given error messages when they can't choose an entity from the drop-down list.
+     * Use,
      * e.g.:
      * <code>addEntityList("groups", allGroups, "There are no groups to display, so you cannot add a subject to this Study.",
      * Page.SUBMIT_DATA)</code>
      *
-     * @param beanName The name of the entity list as it should be stored in the request object.
-     * @param list The Collection of entities.
-     * @param messageIfEmpty The message to display if the collection is empty.
-     * @param destinationIfEmpty The Page to go to if the collection is empty.
+     * @param beanName
+     *            The name of the entity list as it should be stored in the request object.
+     * @param list
+     *            The Collection of entities.
+     * @param messageIfEmpty
+     *            The message to display if the collection is empty.
+     * @param destinationIfEmpty
+     *            The Page to go to if the collection is empty.
      * @throws InconsistentStateException
      */
     protected void addEntityList(String beanName, Collection list, String messageIfEmpty, Page destinationIfEmpty) throws InconsistentStateException {
@@ -779,33 +947,45 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             request.setAttribute(POP_UP_URL, url);
             request.setAttribute("hasPopUp", 1);
             logger.info("just set pop up url: " + url);
-           
+
         }
     }
 
     /**
-     * <p>Check if an entity with passed entity id is included in studies of current user.</p>
+     * <p>
+     * Check if an entity with passed entity id is included in studies of current user.
+     * </p>
      *
-     * <p>Note: This method called AuditableEntityDAO.findByPKAndStudy which required
+     * <p>
+     * Note: This method called AuditableEntityDAO.findByPKAndStudy which required
      * "The subclass must define findByPKAndStudyName before calling this
-     * method. Otherwise an inactive AuditableEntityBean will be returned."</p>
+     * method. Otherwise an inactive AuditableEntityBean will be returned."
+     * </p>
+     * 
      * @author ywang 10-18-2007
-     * @param entityId int
-     * @param userName String
-     * @param adao AuditableEntityDAO
-     * @param ds javax.sql.DataSource
+     * @param entityId
+     *            int
+     * @param userName
+     *            String
+     * @param adao
+     *            AuditableEntityDAO
+     * @param ds
+     *            javax.sql.DataSource
      */
     protected boolean entityIncluded(int entityId, String userName, AuditableEntityDAO adao, DataSource ds) {
         StudyDAO sdao = new StudyDAO(ds);
         ArrayList<StudyBean> studies = (ArrayList<StudyBean>) sdao.findAllByUserNotRemoved(userName);
         for (int i = 0; i < studies.size(); ++i) {
-            if (adao.findByPKAndStudy(entityId, studies.get(i)).getId() > 0) {
+            StudyBean publicStudy = studies.get(i);
+            CoreResources.setRequestSchema(request, publicStudy.getSchemaName());
+            StudyBean study = sdao.findByOid(publicStudy.getOid());
+            if (adao.findByPKAndStudy(entityId, study).getId() > 0) {
                 return true;
             }
             // Here follow the current logic - study subjects at sites level are
             // visible to parent studies.
-            if (studies.get(i).getParentStudyId() <= 0) {
-                ArrayList<StudyBean> sites = (ArrayList<StudyBean>) sdao.findAllByParent(studies.get(i).getId());
+            if (study.getParentStudyId() <= 0) {
+                ArrayList<StudyBean> sites = (ArrayList<StudyBean>) sdao.findAllByParent(study.getId());
                 if (sites.size() > 0) {
                     for (int j = 0; j < sites.size(); ++j) {
                         if (adao.findByPKAndStudy(entityId, sites.get(j)).getId() > 0) {
@@ -881,16 +1061,24 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     public ArrayList getEventDefinitionsByCurrentStudy() {
         StudyDAO studyDAO = new StudyDAO(sm.getDataSource());
         StudyEventDefinitionDAO studyEventDefinitionDAO = new StudyEventDefinitionDAO(sm.getDataSource());
+        ArrayList<StudyEventDefinitionBean> tempList = new ArrayList();
+        ArrayList<StudyEventDefinitionBean> allDefs = new ArrayList();
+        if (currentStudy == null)
+            return allDefs;
         int parentStudyId = currentStudy.getParentStudyId();
-        ArrayList allDefs = new ArrayList();
         if (parentStudyId > 0) {
             StudyBean parentStudy = (StudyBean) studyDAO.findByPK(parentStudyId);
             allDefs = studyEventDefinitionDAO.findAllActiveByStudy(parentStudy);
         } else {
-            parentStudyId = currentStudy.getId();
             allDefs = studyEventDefinitionDAO.findAllActiveByStudy(currentStudy);
         }
-        return allDefs;
+        for (StudyEventDefinitionBean studyEventDefinition : allDefs) {
+            if (!studyEventDefinition.getType().equals(COMMON)) {
+                tempList.add(studyEventDefinition);
+            }
+        }
+
+        return tempList;
     }
 
     public ArrayList getStudyGroupClassesByCurrentStudy() {
@@ -904,7 +1092,7 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             studyGroupClasses = studyGroupClassDAO.findAllActiveByStudy(parentStudy);
         } else {
             parentStudyId = currentStudy.getId();
-            studyGroupClasses = studyGroupClassDAO.findAllActiveByStudy(currentStudy);
+            studyGroupClasses = studyGroupClassDAO.findAllActiveByStudy(currentPublicStudy);
         }
 
         for (int i = 0; i < studyGroupClasses.size(); i++) {
@@ -946,13 +1134,14 @@ public abstract class SecureController extends HttpServlet implements SingleThre
         Boolean messageSent = true;
         try {
             JavaMailSenderImpl mailSender = (JavaMailSenderImpl) SpringServletAccess.getApplicationContext(context).getBean("mailSender");
-            //@pgawade 09-Feb-2012 #issue 13201 - setting the "mail.smtp.localhost" property to localhost when java API is not able to
-            //retrieve the host name
+            // @pgawade 09-Feb-2012 #issue 13201 - setting the "mail.smtp.localhost" property to localhost when java API
+            // is not able to
+            // retrieve the host name
             Properties javaMailProperties = mailSender.getJavaMailProperties();
-            if(null != javaMailProperties){
-            	if (javaMailProperties.get("mail.smtp.localhost") == null || ((String)javaMailProperties.get("mail.smtp.localhost")).equalsIgnoreCase("") ){
-            		javaMailProperties.put("mail.smtp.localhost", "localhost");
-            	}
+            if (null != javaMailProperties) {
+                if (javaMailProperties.get("mail.smtp.localhost") == null || ((String) javaMailProperties.get("mail.smtp.localhost")).equalsIgnoreCase("")) {
+                    javaMailProperties.put("mail.smtp.localhost", "localhost");
+                }
             }
 
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -1053,7 +1242,6 @@ public abstract class SecureController extends HttpServlet implements SingleThre
         return url;
     }
 
-
     public DiscrepancyNoteBean getNoteInfo(DiscrepancyNoteBean note) {
         StudySubjectDAO ssdao = new StudySubjectDAO(sm.getDataSource());
         if ("itemData".equalsIgnoreCase(note.getEntityType())) {
@@ -1075,7 +1263,8 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             StudyEventDefinitionDAO seddao = new StudyEventDefinitionDAO(sm.getDataSource());
             StudyEventDefinitionBean sed = (StudyEventDefinitionBean) seddao.findByPK(event.getStudyEventDefinitionId());
             note.setEventName(sed.getName());
-            note.setEventStart(event.getDateStarted());
+            if (event.getDateStarted() != null)
+                note.setEventStart(event.getDateStarted());
 
             CRFDAO cdao = new CRFDAO(sm.getDataSource());
             CRFBean crf = cdao.findByVersionId(ec.getCRFVersionId());
@@ -1132,49 +1321,56 @@ public abstract class SecureController extends HttpServlet implements SingleThre
 
         } else if ("Subject".equalsIgnoreCase(note.getEntityType())) {
             int subjectId = note.getEntityId();
-            StudySubjectBean ss = ssdao.findBySubjectIdAndStudy(subjectId, currentStudy);
+            StudySubjectBean ss = ssdao.findBySubjectIdAndStudy(subjectId, currentPublicStudy);
             note.setSubjectName(ss.getName());
         }
 
         return note;
     }
-    public void checkRoleByUserAndStudy(UserAccountBean ub, int studyId, int siteId){
-        StudyUserRoleBean studyUserRole = ub.getRoleByStudy(studyId);
+
+    public void checkRoleByUserAndStudy(UserAccountBean ub, StudyBean tenantStudy, StudyDAO studyDAO) {
+        StudyBean study = null;
+
+        if (StringUtils.isNotEmpty(tenantStudy.getSchemaName()))
+            study = tenantStudy;
+        else
+            study = studyDAO.getPublicStudy(tenantStudy.getOid());
+
+        StudyUserRoleBean studyUserRole = ub.getRoleByStudy(study.getParentStudyId());
         StudyUserRoleBean siteUserRole = new StudyUserRoleBean();
-        if (siteId != 0) {
-            siteUserRole = ub.getRoleByStudy(siteId);
+        if (study.getId() != 0) {
+            siteUserRole = ub.getRoleByStudy(study.getId());
         }
-        if(studyUserRole.getRole().equals(Role.INVALID) && siteUserRole.getRole().equals(Role.INVALID)){
-            addPageMessage(respage.getString("no_have_correct_privilege_current_study")
-                    + " " + respage.getString("change_active_study_or_contact"));
+        if (studyUserRole.getRole().equals(Role.INVALID) && siteUserRole.getRole().equals(Role.INVALID)) {
+            addPageMessage(respage.getString("no_have_correct_privilege_current_study") + " " + respage.getString("change_active_study_or_contact"));
             forwardPage(Page.MENU_SERVLET);
             return;
         }
     }
 
-    protected void baseUrl() throws MalformedURLException{
+    protected void baseUrl() throws MalformedURLException {
+        /*
         String portalURL = CoreResources.getField("portalURL");
         URL pManageUrl = new URL(portalURL);
 
-    ParticipantPortalRegistrar registrar = new ParticipantPortalRegistrar();
-    Authorization pManageAuthorization = registrar.getAuthorization(currentStudy.getOid());
-    String url="";
-    if (pManageAuthorization!=null)
-          url = pManageUrl.getProtocol() + "://" + pManageAuthorization.getStudy().getHost() + "." + pManageUrl.getHost()
+        ParticipantPortalRegistrar registrar = new ParticipantPortalRegistrar();
+        Authorization pManageAuthorization = registrar.getAuthorization(currentStudy.getOid());
+        String url = "";
+        if (pManageAuthorization != null)
+            url = pManageUrl.getProtocol() + "://" + pManageAuthorization.getStudy().getHost() + "." + pManageUrl.getHost()
                     + ((pManageUrl.getPort() > 0) ? ":" + String.valueOf(pManageUrl.getPort()) : "");
-        System.out.println("the url :  "+ url);
-        request.setAttribute("participantUrl",url+"/");
+        System.out.println("the url :  " + url);
+        */
+        request.setAttribute("participantUrl","need_to_fix");
 
     }
 
-
     /**
-     * A inner class designed to allow the implementation of a JUnit test case for abstract SecureController. The inner class
+     * A inner class designed to allow the implementation of a JUnit test case for abstract SecureController. The inner
+     * class
      * allows the test case to call the outer class' private process() method.
      *
      * @author Bruce W. Perry 01/2008
-     * @see org.akaza.openclinica.servlettests.SecureControllerServletTest
-     * @see org.akaza.openclinica.servlettests.SecureControllerWrapper
      */
     public class SecureControllerTestDelegate {
 
@@ -1187,12 +1383,288 @@ public abstract class SecureController extends HttpServlet implements SingleThre
         }
     }
 
-
-    public CRFLocker getCrfLocker() {
-        return crfLocker;
+    public  EventCRFLocker getEventCrfLocker() {
+        return eventCrfLocker;
     }
 
-    
-    
-    
+
+    private boolean isEnrollmentCapEnforced(){
+        StudyParameterValueDAO studyParameterValueDAO = new StudyParameterValueDAO(sm.getDataSource());
+        String enrollmentCapStatus=null;
+        if(currentStudy.getParentStudyId()!=0){
+            enrollmentCapStatus = studyParameterValueDAO.findByHandleAndStudy(currentStudy.getParentStudyId(), "enforceEnrollmentCap").getValue();
+        }else {
+            enrollmentCapStatus = studyParameterValueDAO.findByHandleAndStudy(currentStudy.getId(), "enforceEnrollmentCap").getValue();
+        }
+        boolean capEnforced = Boolean.valueOf(enrollmentCapStatus);
+        return capEnforced;
+    }
+
+    protected boolean isEnrollmentCapped(){
+
+        StudyDAO sdao = new StudyDAO(sm.getDataSource());
+        String previousSchema = (String) request.getAttribute("requestSchema");
+        request.setAttribute("requestSchema", currentPublicStudy.getSchemaName());
+
+        boolean capIsOn = isEnrollmentCapEnforced();
+
+        StudySubjectDAO studySubjectDAO = new StudySubjectDAO(sm.getDataSource());
+        int numberOfSubjects = studySubjectDAO.getCountofActiveStudySubjects();
+
+        StudyDAO studyDAO = new StudyDAO(sm.getDataSource());
+        StudyBean sb = null;
+        if(currentStudy.getParentStudyId()!=0){
+            sb = (StudyBean) studyDAO.findByPK(currentStudy.getParentStudyId());
+        }else{
+             sb = (StudyBean) studyDAO.findByPK(currentStudy.getId());
+        }
+        int  expectedTotalEnrollment = sb.getExpectedTotalEnrollment();
+
+        request.setAttribute("requestSchema", previousSchema);
+
+        if (numberOfSubjects >= expectedTotalEnrollment && capIsOn)
+            return true;
+        else
+            return false;
+    }
+    private boolean
+    processForceRenewAuth(String renewAuth) throws IOException {
+        logger.info("forceRenewAuth is true");
+        boolean isRenewAuth = false;
+        if (StringUtils.isNotEmpty(renewAuth)) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                auth.setAuthenticated(false);
+                SecurityContextHolder.clearContext();
+            }
+            return true;
+        }
+        return isRenewAuth;
+    }
+
+
+    private ArrayList<String> extractParametersAsListFromParameterNames(Enumeration<String> parameterNames){
+        ArrayList<String> parameters = new ArrayList<>();
+        if (parameterNames.hasMoreElements()) {
+            parameters = new ArrayList<>(Arrays.asList(request.getParameterNames().nextElement().split("=|&")));
+        }
+        return parameters;
+    }
+
+    /**
+     * The parameter separators are being URL encoded hence not being interpreted as separate parameters
+     * eg. MainMenu?studyEnvUuid%3D3d3a3d9e-8dc8-49ce-9800-810e665f062c%26forceRenewAuth%3Dtrue
+     * @param request
+     * @param parameterName
+     * @return parameter value
+     */
+    protected String getParameter(HttpServletRequest request, String parameterName){
+        String paramValue = request.getParameter(parameterName);
+        if (paramValue == null){
+            ArrayList<String> parameters = extractParametersAsListFromParameterNames(request.getParameterNames());
+            paramValue = parameters.indexOf(parameterName) > -1 ? parameters.get(parameters.indexOf(parameterName) + 1) : null;
+        }
+        logger.info("Getting parameter name: " + parameterName + " value: " + paramValue);
+        return paramValue;
+    }
+
+    public boolean processSpecificStudyEnvUuid() throws Exception {
+        boolean isRenewAuth = false;
+
+        // Only do this for MainMenuServlet
+        String path = StringUtils.substringAfterLast(request.getRequestURI(), "/");
+
+        if (!path.equalsIgnoreCase("MainMenu")) {
+            return isRenewAuth;
+        }
+        logger.info("MainMenuServlet processSpecificStudyEnvUuid:%%%%%%%%" + session.getAttribute("firstLoginCheck"));
+        String studyEnvUuid = getParameter(request, STUDY_ENV_UUID);
+        if (StringUtils.isEmpty(studyEnvUuid)) {
+            return isRenewAuth;
+        }
+        String forceRenewAuth = getParameter(request, FORCE_RENEW_AUTH);
+        if (processForceRenewAuth(forceRenewAuth))
+            return true;
+        ServletContext context = getServletContext();
+        WebApplicationContext ctx =
+                WebApplicationContextUtils
+                        .getWebApplicationContext(context);
+        String currentSchema = CoreResources.getRequestSchema(request);
+        CoreResources.setRequestSchema(request, "public");
+        StudyBuildService studyService = ctx.getBean("studyBuildService", StudyBuildService.class);
+
+        StudyDAO sd = new StudyDAO(sm.getDataSource());
+        StudyBean tmpPublicStudy = sd.findByStudyEnvUuid(studyEnvUuid);
+
+        if (tmpPublicStudy == null) {
+            CoreResources.setRequestSchema(request,currentSchema);
+            return isRenewAuth;
+        }
+
+        studyService.updateStudyUserRoles(request, studyService.getUserAccountObject(ub), tmpPublicStudy.getId(), studyEnvUuid, false);
+        UserAccountDAO userAccountDAO = new UserAccountDAO(sm.getDataSource());
+
+        ArrayList userRoleBeans = (ArrayList) userAccountDAO.findAllRolesByUserName(ub.getName());
+        ub.setRoles(userRoleBeans);
+        session.setAttribute(SecureController.USER_BEAN_NAME, ub);
+
+        StudyUserRoleBean role = ub.getRoleByStudy(tmpPublicStudy.getId());
+
+        if (role.getStudyId() == 0) {
+            logger.error("You have no roles for this study." + studyEnvUuid + " currentStudy is:" + tmpPublicStudy.getName() + " schema:" + tmpPublicStudy.getSchemaName());
+            logger.error("Creating an invalid role, ChangeStudy page will be shown");
+            currentRole = new StudyUserRoleBean();
+            session.setAttribute("userRole", currentRole);
+        } else {
+            currentPublicStudy = tmpPublicStudy;
+            CoreResources.setRequestSchema(request, currentPublicStudy.getSchemaName());
+            currentStudy = sd.findByStudyEnvUuid(studyEnvUuid);
+            if (currentStudy.getParentStudyId() > 0) {
+                currentStudy.setParentStudyName(sd.findByPK(currentStudy.getParentStudyId()).getName());
+                currentPublicStudy.setParentStudyName(currentStudy.getParentStudyName());
+            }
+            StudyConfigService scs = new StudyConfigService(sm.getDataSource());
+            scs.setParametersForStudy(currentStudy);
+
+            session.setAttribute("publicStudy", currentPublicStudy);
+            session.setAttribute("study", currentStudy);
+            currentRole = role;
+            session.setAttribute("userRole", role);
+            logger.info("Found role for this study:" + role.getRoleName());
+            if (ub.getActiveStudyId() == currentPublicStudy.getId())
+                return isRenewAuth;
+            ub.setActiveStudyId(currentPublicStudy.getId());
+            userAccountDAO.update(ub);
+        }
+
+        return isRenewAuth;
+    }
+
+    public String getPermissionTagsString() {
+        PermissionService permissionService = (PermissionService) SpringServletAccess.getApplicationContext(context).getBean("permissionService");
+        String permissionTags = permissionService.getPermissionTagsString(request);
+        return permissionTags;
+    }
+    public List<String>  getPermissionTagsList() {
+        PermissionService permissionService = (PermissionService) SpringServletAccess.getApplicationContext(context).getBean("permissionService");
+        List<String> permissionTagsList = permissionService.getPermissionTagsList(request);
+        return permissionTagsList;
+    }
+
+    public boolean hasFormAccess(EventCrf ec) {
+        Integer formLayoutId = request.getParameter("formLayoutId") != null? new Integer(request.getParameter("formLayoutId")) : null;
+        Integer studyEventId = request.getParameter("studyEventId") != null? new Integer(request.getParameter("studyEventId")) : null;
+        PermissionService permissionService = (PermissionService) SpringServletAccess.getApplicationContext(context).getBean("permissionService");
+        return permissionService.hasFormAccess(ec, formLayoutId, studyEventId, request);
+    }
+    protected CustomRole checkMatchingUuid(CustomRole customRole, ChangeStudyDTO changeStudyDTO, StudyEnvironmentRoleDTO s) {
+        if (StringUtils.equals(changeStudyDTO.getStudyEnvUuid().toString(), s.getStudyEnvironmentUuid())) {
+            customRole.studyRoleMap.put(changeStudyDTO.getStudyId(), s.getDynamicRoleName());
+            customRole.siteRoleMap.put(changeStudyDTO.getStudyId(), s.getDynamicRoleName());
+        }
+        return customRole;
+    }
+
+    protected void populateCustomUserRoles(CustomRole customRole, String username) {
+        StudyBuildService studyBuildService = (StudyBuildService) SpringServletAccess.getApplicationContext(context).getBean("studyBuildService");
+        List<ChangeStudyDTO> byUser = getStudyDao().findByUser(username);
+        List<StudyEnvironmentRoleDTO> userRoles = (List<StudyEnvironmentRoleDTO>) session.getAttribute("allUserRoles");
+        if (userRoles == null) {
+            logger.error("******************userRoles should not be null");
+            ResponseEntity<List<StudyEnvironmentRoleDTO>> responseEntity = studyBuildService.getUserRoles(request, true);
+            userRoles = responseEntity.getBody();
+        }
+        if (byUser == null) {
+            logger.error("byUser variable should not be null for username:" + username);
+        }
+        Set<CustomRole> customRoles = userRoles.stream().flatMap(s -> byUser.stream().map(r -> checkMatchingUuid(customRole, r, s))).collect(Collectors.toSet());
+    }
+
+    protected String getParticipateStatus(int parentStudyId) {
+        String participateStatus = "";
+        StudyParameterValueDao studyParameterValueDao = (StudyParameterValueDao) SpringServletAccess.getApplicationContext(context).getBean("studyParameterValueDao");
+        StudyParameterValue participantPortalStatus = studyParameterValueDao.findByStudyIdParameter(parentStudyId, "participantPortal");
+        if (participantPortalStatus != null)
+            participateStatus = participantPortalStatus.getValue();
+
+        return participateStatus;
+    }
+    protected UserService getUserService() {
+        return userService= (UserService) SpringServletAccess.getApplicationContext(context).getBean("userService");
+    }
+
+    protected void changeParticipantAccountStatus(StudyBean study, StudySubjectBean studySub, UserStatus userStatus) {
+        // check if particiate module enabled
+        int parentStudyId = (study.getParentStudyId() != 0) ? study.getParentStudyId() : study.getId();
+        String participateStatus = getParticipateStatus(parentStudyId);
+        if (participateStatus.equals(ENABLED) && studySub.getUserId() != 0) {
+            studySub.setUserStatus(userStatus);
+            StudySubjectDAO sdao = new StudySubjectDAO(sm.getDataSource());
+            sdao.update(studySub);
+        }
+    }
+
+    public static void refreshUserRole(HttpServletRequest req, UserAccountBean ub, StudyBean currentPublicStudy) {
+        StudyUserRoleBean currentRole = new StudyUserRoleBean();
+        if (ub.getId() > 0 && currentPublicStudy.getId() > 0 && !currentPublicStudy.getStatus().getName().equals("removed")) {
+            currentRole = ub.getRoleByStudy(currentPublicStudy.getId());
+            if (currentPublicStudy.getParentStudyId() > 0) {
+                StudyUserRoleBean roleInParent = ub.getRoleByStudy(currentPublicStudy.getParentStudyId());
+                currentRole.setRole(Role.max(currentRole.getRole(), roleInParent.getRole()));
+            }
+        }
+        System.out.println("Setting this role in session: {}" + currentRole.getRoleName());
+        req.getSession().setAttribute("userRole", currentRole);
+    }
+
+    public int getSubjectCount(StudyBean studyBean) {
+        int subjectCount = 0;
+        StudyDAO sdao = new StudyDAO(sm.getDataSource());
+        if (studyBean != null)
+            subjectCount = studyBean.getSubjectCount();
+
+        if (subjectCount == 0) {
+            StudySubjectDAO ssdao = new StudySubjectDAO(sm.getDataSource());
+            ArrayList ss = ssdao.findAllBySiteId(studyBean.getId());
+            if (ss != null) {
+                subjectCount = ss.size();
+            }
+        }
+
+        return subjectCount;
+    }
+
+    protected CryptoConverter getCrytoConverter() {
+        return (CryptoConverter) SpringServletAccess.getApplicationContext(context).getBean("cryptoConverter");
+    }
+
+    protected ValidateService getValidateService() {
+        return (ValidateService) SpringServletAccess.getApplicationContext(context).getBean("validateService");
+    }
+
+    protected StudyDao getStudyDao() {
+        return (StudyDao) SpringServletAccess.getApplicationContext(context).getBean("studyDaoDomain");
+    }
+
+
+
+    private boolean isContactsModuleEnabled(){
+        String previousSchema = (String) request.getAttribute("requestSchema");
+        request.setAttribute("requestSchema", currentPublicStudy.getSchemaName());
+
+        StudyParameterValueDAO studyParameterValueDAO = new StudyParameterValueDAO(sm.getDataSource());
+        String contactsModuleStatus=null;
+        if(currentStudy.getParentStudyId()!=0){
+            contactsModuleStatus = studyParameterValueDAO.findByHandleAndStudy(currentStudy.getParentStudyId(), "contactsModule").getValue();
+        }else {
+            contactsModuleStatus = studyParameterValueDAO.findByHandleAndStudy(currentStudy.getId(), "contactsModule").getValue();
+        }
+        request.setAttribute("requestSchema", previousSchema);
+
+        if (contactsModuleStatus.equals(ENABLED)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

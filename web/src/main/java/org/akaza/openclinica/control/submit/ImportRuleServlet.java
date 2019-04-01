@@ -82,6 +82,23 @@ public class ImportRuleServlet extends SecureController {
             File file = getCoreResources().getFile("rules_template_with_notes.xml",  "rules"+File.separator);
             dowloadFile(file, "text/xml");
         }
+        if ("downloadImportTemplate".equalsIgnoreCase(action)) {
+            // File file = new File(SpringServletAccess.getPropertiesDir(context) + "import_template.xml");
+            File file = getCoreResources().getFile("import_template.xml",  "rules"+File.separator);
+            dowloadFile(file, "text/xml");
+        }
+        
+        //upload
+        if ("downloadUploadDataTemplate".equalsIgnoreCase(action)) {
+            // File file = new File(SpringServletAccess.getPropertiesDir(context) + "import_template.xml");
+            File file = getCoreResources().getFile("template_pipe_delimited_simpleTabularFormat.txt",  "rules"+File.separator);
+            dowloadFile(file, "text/xml");
+        }
+        if ("downloadUploadMappingTemplate".equalsIgnoreCase(action)) {
+            // File file = new File(SpringServletAccess.getPropertiesDir(context) + "import_template.xml");
+            File file = getCoreResources().getFile("template_pipe_delimited_mapping.txt",  "rules"+File.separator);
+            dowloadFile(file, "text/xml");
+        }
         if ("confirm".equalsIgnoreCase(action)) {
 
             try {
@@ -218,7 +235,7 @@ public class ImportRuleServlet extends SecureController {
             return;
         }
         Role r = currentRole.getRole();
-        if (r.equals(Role.STUDYDIRECTOR) || r.equals(Role.COORDINATOR)) {
+        if (r.equals(Role.STUDYDIRECTOR) || r.equals(Role.COORDINATOR) || r.equals(Role.STUDY_RESEARCHASSISTANT) || r.equals(Role.STUDY_INVESTIGATOR) || r.equals(Role.INVESTIGATOR)) {
             return;
         }
         addPageMessage(respage.getString("no_have_correct_privilege_current_study") + respage.getString("change_study_contact_sysadmin"));

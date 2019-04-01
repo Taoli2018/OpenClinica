@@ -35,7 +35,6 @@ public class GenericOidGenerator extends OidGenerator implements Serializable {
         if (oid.equals("_")) {
             oid = randomizeOid("");
         }
-        logger.debug("OID : " + oid);
         return oid;
     }
 }

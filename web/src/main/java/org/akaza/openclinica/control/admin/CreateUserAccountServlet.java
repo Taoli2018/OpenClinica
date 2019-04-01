@@ -83,6 +83,7 @@ public class CreateUserAccountServlet extends SecureController {
 
     @Override
     protected void processRequest() throws Exception {
+        request.setAttribute("requestSchema", "public");
         FormProcessor fp = new FormProcessor(request);
 
         StudyDAO sdao = new StudyDAO(sm.getDataSource());
@@ -142,6 +143,9 @@ public class CreateUserAccountServlet extends SecureController {
                         break;
                     case 7:
                         roleMap.put(role.getId(), resterm.getString("site_Data_Entry_Person2").trim());
+                        break;
+                    case 8:
+                        roleMap.put(role.getId(), resterm.getString("site_Data_Entry_Participant").trim());
                         break;
                     default:
                         // logger.info("No role matched when setting role description");

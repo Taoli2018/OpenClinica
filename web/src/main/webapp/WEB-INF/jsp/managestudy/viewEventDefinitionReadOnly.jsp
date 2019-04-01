@@ -12,26 +12,26 @@
 
 <!-- then instructions-->
 <tr id="sidebar_Instructions_open" style="display: none">
-		<td class="sidebar_tab">
+    <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+    <fmt:message key="instructions" bundle="${resword}"/>
 
-		<div class="sidebar_tab_content"> 
-		</div>
+    <div class="sidebar_tab_content"> 
+    </div>
 
-		</td>
-	
-	</tr>
-	<tr id="sidebar_Instructions_closed" style="display: all">
-		<td class="sidebar_tab">
+    </td>
+  
+  </tr>
+  <tr id="sidebar_Instructions_closed" style="display: all">
+    <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+    <fmt:message key="instructions" bundle="${resword}"/>
 
-		</td>
+    </td>
   </tr>
 <jsp:include page="../include/sideInfo.jsp"/>
 
@@ -54,9 +54,6 @@
     <tr valign="top"><td class="table_header_column"><fmt:message key="oid" bundle="${resword}"/>:</td><td class="table_cell">  
   <c:out value="${definition.oid}"/>
    </td></tr>
-  <tr valign="top"><td class="table_header_column"><fmt:message key="description" bundle="${resword}"/>:</td><td class="table_cell">  
-  <c:out value="${definition.description}"/>&nbsp;
-  </td></tr>
  
  <tr valign="top"><td class="table_header_column"><fmt:message key="repeating" bundle="${resword}"/>:</td><td class="table_cell">
   <c:choose>
@@ -69,9 +66,6 @@
     <c:out value="${definition.type}"/>
    </td></tr>
   
-  <tr valign="top"><td class="table_header_column"><fmt:message key="category" bundle="${resword}"/>:</td><td class="table_cell">  
-  <c:out value="${definition.category}"/>&nbsp;
-  </td></tr>
   </table>
   </div>
 </div></div></div></div></div></div></div></div>
@@ -91,9 +85,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%"> 
  <tr valign="top"> 
     <td class="table_header_row"><fmt:message key="name" bundle="${resword}"/></td>   
-    <td valign="top" class="table_header_row"><fmt:message key="required" bundle="${resword}"/></td>     
-    <td valign="top" class="table_header_row"><fmt:message key="double_data_entry" bundle="${resword}"/></td>         
-    <td valign="top" class="table_header_row"><fmt:message key="password_required" bundle="${resword}"/></td>
+    <td valign="top" class="table_header_row"><fmt:message key="required" bundle="${resword}"/></td>             
     <!-- <td valign="top" class="table_header_row"><fmt:message key="enforce_decision_conditions" bundle="${restext}"/></td>-->
     <td valign="top" class="table_header_row"><fmt:message key="default_version" bundle="${resword}"/></td>
      <td valign="top" class="table_header_row"><fmt:message key="hidden_crf" bundle="${resword}"/></td>     
@@ -106,8 +98,7 @@
      <td valign="top" class="table_header_row"><fmt:message key="offline" bundle="${resword}"/></td>  
     </c:when>  
    </c:choose>
-
-     <td valign="top" class="table_header_row"><fmt:message key="null_values" bundle="${resword}"/></td>    
+   
      <td valign="top" class="table_header_row"><fmt:message key="sdv_option" bundle="${resword}"/></td>
     <td valign="top" class="table_header_row"><fmt:message key="status" bundle="${resword}"/></td>
     <td valign="top" class="table_header_row"><fmt:message key="actions" bundle="${resword}"/></td>
@@ -133,20 +124,6 @@
      <c:otherwise> <fmt:message key="no" bundle="${resword}"/> </c:otherwise>
     </c:choose>
    </td>
-     
-    <td class="table_cell">
-     <c:choose>
-      <c:when test="${crf.doubleEntry == true}"> <fmt:message key="yes" bundle="${resword}"/> </c:when>
-      <c:otherwise> <fmt:message key="no" bundle="${resword}"/> </c:otherwise>
-     </c:choose>
-    </td>         
-
-    <td class="table_cell">
-     <c:choose>
-      <c:when test="${crf.electronicSignature == true}"> <fmt:message key="yes" bundle="${resword}"/> </c:when>
-      <c:otherwise> <fmt:message key="no" bundle="${resword}"/> </c:otherwise>
-     </c:choose>
-    </td>
 
     <%--<td class="table_cell">
      <c:choose>
@@ -208,21 +185,18 @@
       </td>          
         </c:when>
       </c:choose>
-
-   <td class="table_cell"> 
-    <c:out value="${crf.nullValues}"/> &nbsp;    
-  </td>          
+       
   <td class="table_cell"><fmt:message key="${crf.sourceDataVerification.description}" bundle="${resterm}"/></td> 
    <td class="table_cell"><c:out value="${crf.status.name}"/></td> 
    <td class="table_cell">
      <table border="0" cellpadding="0" cellspacing="0">
-	  <tr>       
+    <tr>       
         <td>
           <!-- <a href="ViewTableOfContent?crfVersionId=<c:out value="${crf.defaultVersionId}"/>&sedId=<c:out value="${definition.id}"/>"
-			onMouseDown="javascript:setImage('bt_View1','images/bt_View_d.gif');"
-			onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"><img 
-			name="bt_View1" src="images/bt_View.gif" border="0" alt="<fmt:message key="view_CRF_version" bundle="${resword}"/>" title="<fmt:message key="view_CRF_version" bundle="${resword}"/>" align="left" hspace="6"></a>-->
-		  <!--<a href="ViewSectionDataEntry?module=<c:out value="${module}"/>&crfId=<c:out value="${crf.crfId}"/>&crfVersionId=<c:out value="${crf.defaultVersionId}"/>&tabId=1"
+      onMouseDown="javascript:setImage('bt_View1','images/bt_View_d.gif');"
+      onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"><img 
+      name="bt_View1" src="images/bt_View.gif" border="0" alt="<fmt:message key="view_CRF_version" bundle="${resword}"/>" title="<fmt:message key="view_CRF_version" bundle="${resword}"/>" align="left" hspace="6"></a>-->
+      <!--<a href="ViewSectionDataEntry?module=<c:out value="${module}"/>&crfId=<c:out value="${crf.crfId}"/>&crfVersionId=<c:out value="${crf.defaultVersionId}"/>&tabId=1"
                onMouseDown="javascript:setImage('bt_View1','images/bt_View_d.gif');"
                onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"><img
               name="bt_View1" src="images/bt_View.gif" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="6"></a>-->
@@ -232,19 +206,19 @@
                 name="bt_View1" src="images/bt_View.gif" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="6"></a>
 
         </td>
-		<%--
-		<c:if test="${crf.status.id==1 && crf.owner.id==userBean.id}">
-		<td>
-		 <a href="InitUpdateCRF?crfId=<c:out value="${crf.crfId}"/>"
-			onMouseDown="javascript:setImage('bt_Edit1','images/bt_Edit_d.gif');"
-			onMouseUp="javascript:setImage('bt_Edit1','images/bt_Edit.gif');"><img 
-			name="bt_Edit1" src="images/bt_Edit.gif" border="0" alt="<fmt:message key="edit_CRF" bundle="${resword}"/>" title="<fmt:message key="edit_CRF" bundle="${resword}"/>" align="left" hspace="6"></a>
-		  
-		</td>
-		</c:if>		
-		--%>
-	  </tr>
-	 </table> 	
+    <%--
+    <c:if test="${crf.status.id==1 && crf.owner.id==userBean.id}">
+    <td>
+     <a href="InitUpdateCRF?crfId=<c:out value="${crf.crfId}"/>"
+      onMouseDown="javascript:setImage('bt_Edit1','images/bt_Edit_d.gif');"
+      onMouseUp="javascript:setImage('bt_Edit1','images/bt_Edit.gif');"><img 
+      name="bt_Edit1" src="images/bt_Edit.gif" border="0" alt="<fmt:message key="edit_CRF" bundle="${resword}"/>" title="<fmt:message key="edit_CRF" bundle="${resword}"/>" align="left" hspace="6"></a>
+      
+    </td>
+    </c:if>   
+    --%>
+    </tr>
+   </table>   
    </td>
    </tr>
    <c:set var="prevCrf" value="${crf}"/>
@@ -258,10 +232,6 @@
 </div>
 </c:if>
 <p><a href="#" onClick="history.go(-1)"><fmt:message key="go_back" bundle="${resword}"/></a></p>  
- 
- <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/> 
- </c:import>
- 
+
    
 <jsp:include page="../include/footer.jsp"/>

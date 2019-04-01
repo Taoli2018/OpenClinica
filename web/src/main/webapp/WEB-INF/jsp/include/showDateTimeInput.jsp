@@ -50,19 +50,20 @@
 <div class="formfieldS_BG">
     <input type="text" name="<c:out value="${dateFieldName}"/>" value="<c:out value="${date}" />" class="formfieldS" id="${prefix}dateField"/>
 </div>
-</td>
+</td><td>&nbsp;</td>
 <td valign="top">
     <a href="#" >
-        <img src="images/bt_Calendar.gif" alt="<fmt:message key="show_calendar" bundle="${resword}"/>" title="<fmt:message key="show_calendar" bundle="${resword}"/>" border="0" id="${prefix}dateTrigger" />
+        <span class="icon icon-calendar" alt="<fmt:message key="show_calendar" bundle="${resword}"/>" title="<fmt:message key="show_calendar" bundle="${resword}"/>" border="0" id="${prefix}dateTrigger" />
         <script type="text/javascript">
         Calendar.setup({inputField  : "${prefix}dateField", ifFormat    : "<fmt:message key="date_format_calender" bundle="${resformat}"/>", button      : "${prefix}dateTrigger" });
         </script>
         
     </a>
 </td>
+</td><td>&nbsp;</td>
 <td valign="top">
 <div class="formfieldXS_BG">
-<select name="<c:out value="${hourFieldName}"/>" class="formfieldXS">
+<select style="height:2em;" name="<c:out value="${hourFieldName}"/>" class="formfieldXS">
     <option value="<c:out value="-1"/>" ><c:out value=""/></option>
 
 <% if (resformat.getString("date_time_format_string").contains("HH") || resformat.getString("date_time_format_string").contains("kk")) { %>
@@ -92,11 +93,11 @@
 </div>
 </td>
 
-<td class="formlabel">:</td>
+<td class="formlabel" valign="top">:</td>
 
 <td valign="top">
 <div class="formfieldXS_BG">
-<select name="<c:out value="${minuteFieldName}"/>" class="formfieldXS">
+<select style="height:2em;" name="<c:out value="${minuteFieldName}"/>" class="formfieldXS">
     <option value="<c:out value="-1"/>" ><c:out value=""/></option>
     <c:forEach var="currMinute" begin="0" end="59" step="1">
         <c:choose>

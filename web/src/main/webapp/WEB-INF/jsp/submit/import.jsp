@@ -23,9 +23,9 @@
 <tr id="sidebar_Instructions_open" style="display: all">
 	<td class="sidebar_tab">
 		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');">
-			<img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10">
+			<span class="icon icon-caret-down gray"></span>
 		</a>
-		<b><fmt:message key="instructions" bundle="${restext}"/></b>
+		<fmt:message key="instructions" bundle="${restext}"/>
 		<div class="sidebar_tab_content">
 			<fmt:message key="import_side_bar_instructions" bundle="${restext}"/>
 		</div>
@@ -35,9 +35,9 @@
 <tr id="sidebar_Instructions_closed" style="display: none">
 	<td class="sidebar_tab">
 		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');">
-			<img src="images/sidebar_expand.gif" border="0" align="right" hspace="10">
+			<span class="icon icon-caret-right gray"></span>
 		</a>
-		<b><fmt:message key="instructions" bundle="${restext}"/></b>
+		<fmt:message key="instructions" bundle="${restext}"/>
 	</td>
 </tr>
 
@@ -64,7 +64,7 @@
 
 <fmt:message key="import_crf_data" bundle="${resworkflow}"/>
 <a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/submit-data-module-overview/import-data')">
-    <img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${restext}"/>" title="<fmt:message key="help" bundle="${restext}"/>">
+    <span class=""></span>
 </a></h1>
 <p><fmt:message key="import_instructions" bundle="${restext}"/></p>
 
@@ -96,10 +96,12 @@
 </div>
 
 <br clear="all">
-<input type="submit" value="<fmt:message key="continue" bundle="${resword}"/>" class="button_long">
+<input type="submit" value="<fmt:message key="preview" bundle="${resword}"/>" class="button_long">
 <input type="button" onclick="goBack()"  name="cancel" value="<fmt:message key="cancel" bundle="${resword}"/>" class="button_medium"/>
 
 </form>
+<br/>
+<div class="homebox_bullets"><a href="ImportRule?action=downloadImportTemplate"><b><fmt:message key="download_import_template" bundle="${resword}"/></b></a></div>
 
 
 <jsp:include page="../include/footer.jsp"/>

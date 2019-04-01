@@ -23,42 +23,42 @@
 
 <tr id="sidebar_Instructions_open" style="display: all">
 
-		<td class="sidebar_tab">
+    <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open');
-		leftnavExpand('sidebar_Instructions_closed');">
-            <img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open');
+    leftnavExpand('sidebar_Instructions_closed');">
+            <span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+    <fmt:message key="instructions" bundle="${resword}"/>
 
-		<div class="sidebar_tab_content">
-		  <b><fmt:message key="create_CRF" bundle="${resword}"/> : </b>
-		  <fmt:message key="br_create_new_CRF_entering" bundle="${respage}"/><br/><br/>
-		  <b><fmt:message key="create_CRF_version" bundle="${resword}"/> : </b>
-		  <fmt:message key="br_create_new_CRF_uploading" bundle="${respage}"/><br/><br/>
-		  <b><fmt:message key="revise_CRF_version" bundle="${resword}"/> : </b>
-		  <fmt:message key="br_if_you_owner_CRF_version" bundle="${respage}"/><br/><br/>
-		  <b><fmt:message key="CRF_spreadsheet_template" bundle="${resword}"/> : </b>
-		  <fmt:message key="br_download_blank_CRF_spreadsheet_from" bundle="${respage}"/><br/><br/>
-		  <b><fmt:message key="example_CRF_br_spreadsheets" bundle="${resword}"/> : </b>
+    <div class="sidebar_tab_content">
+      <b><fmt:message key="create_CRF" bundle="${resword}"/> : </b>
+      <fmt:message key="br_create_new_CRF_entering" bundle="${respage}"/><br/><br/>
+      <b><fmt:message key="create_CRF_version" bundle="${resword}"/> : </b>
+      <fmt:message key="br_create_new_CRF_uploading" bundle="${respage}"/><br/><br/>
+      <b><fmt:message key="revise_CRF_version" bundle="${resword}"/> : </b>
+      <fmt:message key="br_if_you_owner_CRF_version" bundle="${respage}"/><br/><br/>
+      <b><fmt:message key="CRF_spreadsheet_template" bundle="${resword}"/> : </b>
+      <fmt:message key="br_download_blank_CRF_spreadsheet_from" bundle="${respage}"/><br/><br/>
+      <b><fmt:message key="example_CRF_br_spreadsheets" bundle="${resword}"/> : </b>
           <fmt:message key="br_download_example_CRF_instructions_from" bundle="${respage}"/><br/>
-		  
-		
-		</div>
 
-		</td>
 
-	</tr>
-	<tr id="sidebar_Instructions_closed" style="display: none">
-		<td class="sidebar_tab">
+    </div>
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open');
-		leftnavExpand('sidebar_Instructions_closed');">
-            <img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+    </td>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+  </tr>
+  <tr id="sidebar_Instructions_closed" style="display: none">
+    <td class="sidebar_tab">
 
-		</td>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open');
+    leftnavExpand('sidebar_Instructions_closed');">
+            <span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
+
+    <fmt:message key="instructions" bundle="${resword}"/>
+
+    </td>
   </tr>
 <jsp:include page="../include/sideInfo.jsp"/>
 
@@ -78,7 +78,7 @@
      </c:otherwise>
  </c:choose>
 </span>
-</h1>
+</h1><br/>
 
 <script type="text/JavaScript" language="JavaScript">
 <!--
@@ -116,16 +116,16 @@ function submitXform(){
     } else if (versionName.value =='' ){
         alert('<fmt:message key="xform_upload_version" bundle="${resword}"/>');
         return false;
-	} else if (versionDescription.value =='' ){
+  } else if (versionDescription.value =='' ){
         alert('<fmt:message key="xform_upload_version_description" bundle="${resword}"/>');
         return false;
     } else if (revisionNotes.value =='' ){
         alert('<fmt:message key="xform_upload_version_revision_notes" bundle="${resword}"/>');
         return false;
-	} else if (xformText.value =='' ){
-	    alert('<fmt:message key="xform_upload_xform_contents" bundle="${resword}"/>');
-	    return false;
-	}
+  } else if (xformText.value =='' ){
+      alert('<fmt:message key="xform_upload_xform_contents" bundle="${resword}"/>');
+      return false;
+  }
 }
 
 function toggleSectionDisplay(showDivId,hideDivId){
@@ -161,6 +161,7 @@ function toggleSectionDisplay(showDivId,hideDivId){
 
 <tr>
 <td class="formlabel"><fmt:message key="ms_excel_file_to_upload" bundle="${resword}"/>:</td>
+<td>&nbsp;&nbsp;&nbsp;</td>
 <td><div class="formfieldFile_BG"><input type="file" name="excel_file" id="excel_file_path"></div>
 <br><jsp:include page="../showMessage.jsp"><jsp:param name="key" value="excel_file"/></jsp:include></td>
 </tr>
@@ -178,11 +179,11 @@ function toggleSectionDisplay(showDivId,hideDivId){
 <table border="0" cellpadding="0" cellspacing="0">
 <tr>
 <td>
-<input type="submit" onclick="return submitform();" value="<fmt:message key="preview_CRF_version" bundle="${resword}"/>" class="button_long">
+<input type="submit" onclick="return submitform();" value="<fmt:message key="preview_CRF_version" bundle="${resword}"/>" class="button_long">&nbsp;&nbsp;
 </td>
 <td>
 <input type="button" onclick="confirmExit('ListCRF?module=<c:out value="${module}"/>')" name="exit" value="<fmt:message key="exit" bundle="${resword}"/>   "class="button_medium"/>
-</tr></table>
+</tr></table><br/>
 </form>
 
 </div>
@@ -193,7 +194,7 @@ function toggleSectionDisplay(showDivId,hideDivId){
     <div style="width: 800px">
     <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
 
-<div class="textbox_center">
+    <div class="textbox_center">
         <table border="0" cellpadding="0" cellspacing="0">
         <c:if test="${empty CrfId}">
           <tr>
@@ -201,6 +202,7 @@ function toggleSectionDisplay(showDivId,hideDivId){
             <td><input type="text" id="crfName" name="crfName"/></td>
           </tr>
           </c:if>
+         <%--
          <tr>
             <td class="formlabel"><fmt:message key="version_name" bundle="${resword}"/>:</td>
             <td><input type="text" id="versionName" name="versionName"/></td>
@@ -213,23 +215,27 @@ function toggleSectionDisplay(showDivId,hideDivId){
             <td class="formlabel"><fmt:message key="revision_notes" bundle="${resword}"/>:</td>
             <td><input type="text" id="revisionNotes" name="revisionNotes"/></td>
           </tr>
+          --%>
         </table>
-</div>
+    </div>
+        <%--
         <div class="crf-upload-padded-div"><textarea class="crf-upload-padded-div" id="xformText" name="xformText" rows="40" cols="60"></textarea></div>
         <br>
+        --%>
         <div class="crf-upload-padded-div"><fmt:message key="xform_upload_media_instruction" bundle="${resword}"/></div>
         <br>
         <div class="textbox_center">
         <table border="0" cellpadding="0" cellspacing="0">
           <tr>
             <td class="formlabel"><fmt:message key="upload_media_files" bundle="${resword}"/>:</td>
+            <td>&nbsp;&nbsp;&nbsp;</td>
             <td><div><input type="file" name="media_file" id="xform_media_file_path" multiple></div>
             <br><jsp:include page="../showMessage.jsp"><jsp:param name="key" value="excel_file"/></jsp:include></td>
           </tr>
         </table>
         </div>
         <input type="hidden" name="crfId" value="<c:out value="${version.crfId}"/>">
-  
+
     </div></div></div></div></div></div></div></div>
     </div>
 
@@ -239,6 +245,7 @@ function toggleSectionDisplay(showDivId,hideDivId){
         <td>
           <input type="submit" onclick="return submitXform()" value="<fmt:message key="submit" bundle="${resword}"/>" class="button_medium">
         </td>
+        <td>&nbsp;&nbsp;&nbsp;</td>
         <td>
           <input type="button" onclick="confirmExit('ListCRF?module=<c:out value="${module}"/>')" name="exit" value="<fmt:message key="exit" bundle="${resword}"/>   "class="button_medium"/>
         </td>
@@ -247,18 +254,5 @@ function toggleSectionDisplay(showDivId,hideDivId){
     </form>
 </div>
 </c:if>
-
-<c:choose>
-  <c:when test="${userBean.sysAdmin && module=='admin'}">
-  <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="admin"/>
-  </c:import>
- </c:when>
-  <c:otherwise>
-   <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/>
-  </c:import>
-  </c:otherwise>
- </c:choose>
 
 <jsp:include page="../include/footer.jsp"/>

@@ -1,22 +1,20 @@
 package org.akaza.openclinica.controller.helper;
 
-import org.akaza.openclinica.dao.managestudy.StudyDAO;
-import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
-import org.akaza.openclinica.dao.service.StudyConfigService;
-import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.core.Status;
 import org.akaza.openclinica.bean.login.StudyUserRoleBean;
 import org.akaza.openclinica.bean.login.UserAccountBean;
+import org.akaza.openclinica.bean.managestudy.StudyBean;
+import org.akaza.openclinica.dao.managestudy.StudyDAO;
+import org.akaza.openclinica.dao.service.StudyConfigService;
+import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
 import org.akaza.openclinica.view.StudyInfoPanel;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *This class has been created from the existing SecureController to implement the
@@ -117,6 +115,9 @@ public class SetUpStudyRole {
                         break;
                     case 7:
                         role.setDescription("site_Data_Entry_Person2");
+                        break;
+                    case 8:
+                        role.setDescription("site_Data_Entry_Participant");
                         break;
                     default:
                         // logger.info("No role matched when setting role description");

@@ -18,33 +18,33 @@
 <jsp:include page="../include/sideAlert.jsp"/>
 <!-- then instructions-->
 <tr id="sidebar_Instructions_open" style="display: none">
-		<td class="sidebar_tab">
+    <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+    <fmt:message key="instructions" bundle="${resword}"/>
 
-		<div class="sidebar_tab_content">
+    <div class="sidebar_tab_content">
 
-		</div>
+    </div>
 
-		</td>
+    </td>
 
-	</tr>
-	<tr id="sidebar_Instructions_closed">
-		<td class="sidebar_tab">
+  </tr>
+  <tr id="sidebar_Instructions_closed">
+    <td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+    <fmt:message key="instructions" bundle="${resword}"/>
 
-		</td>
+    </td>
   </tr>
 <jsp:include page="../include/sideInfo.jsp"/>
 
 <jsp:useBean scope='request' id='sections' class='java.util.ArrayList'/>
 <jsp:useBean scope='request' id='crfname' class='java.lang.String'/>
-<jsp:useBean scope='request' id='version' class='org.akaza.openclinica.bean.submit.CRFVersionBean'/>
+<jsp:useBean scope='request' id='version' class='org.akaza.openclinica.bean.submit.FormLayoutBean'/>
 <c:choose>
 <c:when test="${userBean.sysAdmin && module=='admin'}">
 <h1><span class="title_manage"><fmt:message key="view_CRF_version_details" bundle="${resword}"/>: <c:out value="${crfname}"/> <c:out value="${version.name}"/>  </span></h1>
@@ -122,7 +122,7 @@
    <td class="table_cell"><c:out value="${group.meta.repeatNum}"/>&nbsp;</td>
    <td class="table_cell"><c:out value="${group.meta.repeatMax}"/>&nbsp;</td>
    <td class="table_cell">
-   		<c:choose>
+      <c:choose>
       <c:when test="${group.meta.showGroup==true}">
        <fmt:message key="yes" bundle="${resword}"/>
       </c:when>
@@ -188,10 +188,10 @@
    <tr valign="top">
     <c:choose>
     <c:when test="${item.id > 0}">
-    	<td class="table_cell"><a href="javascript: openDocWindow('ViewItemDetail?itemId=<c:out value="${item.id}"/>')"><c:out value="${item.name}"/></a></td>
+      <td class="table_cell"><a href="javascript: openDocWindow('ViewItemDetail?itemId=<c:out value="${item.id}"/>')"><c:out value="${item.name}"/></a></td>
     </c:when>
     <c:otherwise>
-    	<td class="table_cell"><c:out value="${item.name}"/></td>
+      <td class="table_cell"><c:out value="${item.name}"/></td>
     </c:otherwise>
     </c:choose>
     <td class="table_cell"><c:out value="${item.oid}"/>&nbsp;</td>
@@ -206,10 +206,10 @@
     <td class="table_cell"><c:out value="${item.description}"/>&nbsp;</td>
     <c:choose>
     <c:when test="${item.itemMeta.groupLabel != 'Ungrouped'}">
-    	<td class="table_cell"><c:out value="${item.itemMeta.groupLabel}"/></td>
+      <td class="table_cell"><c:out value="${item.itemMeta.groupLabel}"/></td>
     </c:when>
     <c:otherwise>
-    	<td class="table_cell"><c:out value=""/></td>
+      <td class="table_cell"><c:out value=""/></td>
     </c:otherwise>
     </c:choose>
     <td class="table_cell"><c:out value="${item.units}"/>&nbsp;</td>
@@ -226,15 +226,15 @@
       <c:set var="optionSize" value="${optionSize+1}"/>
     </c:forEach>
     <c:forEach var="option" items="${item.itemMeta.responseSet.options}">
-     	<c:choose>
-     		<c:when test="${optionSize > 1}">
-     			<c:out value="${option.text}"/>,
-     		</c:when>
-     		<c:otherwise>
-      			<c:out value="${option.text}"/>
-      		</c:otherwise>
-      	</c:choose>
-      	<c:set var="optionSize" value="${optionSize-1}"/>
+      <c:choose>
+        <c:when test="${optionSize > 1}">
+          <c:out value="${option.text}"/>,
+        </c:when>
+        <c:otherwise>
+            <c:out value="${option.text}"/>
+          </c:otherwise>
+        </c:choose>
+        <c:set var="optionSize" value="${optionSize-1}"/>
     </c:forEach>&nbsp;
     </td>
     <td class="table_cell">
@@ -243,15 +243,15 @@
       <c:set var="optionSize" value="${optionSize+1}"/>
     </c:forEach>
     <c:forEach var="option" items="${item.itemMeta.responseSet.options}">
-     	<c:choose>
-     		<c:when test="${optionSize > 1}">
-     			<c:out value="${option.value}"/>,
-     		</c:when>
-     		<c:otherwise>
-      			<c:out value="${option.value}"/>
-      		</c:otherwise>
-      	</c:choose>
-      	<c:set var="optionSize" value="${optionSize-1}"/>
+      <c:choose>
+        <c:when test="${optionSize > 1}">
+          <c:out value="${option.value}"/>,
+        </c:when>
+        <c:otherwise>
+            <c:out value="${option.value}"/>
+          </c:otherwise>
+        </c:choose>
+        <c:set var="optionSize" value="${optionSize-1}"/>
     </c:forEach>&nbsp;
     </td>
      <td class="table_cell">
@@ -285,21 +285,5 @@
 </div>
 <br><br>
 </c:forEach>
-
-
-<c:choose>
-  <c:when test="${userBean.sysAdmin && module=='admin'}">
-  <p><a href="ListCRF?module=admin"><fmt:message key="go_back_to_CRF_list" bundle="${resword}"/></a></p>
-  <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="admin"/>
-  </c:import>
- </c:when>
-  <c:otherwise>
-  <p><a href="ListCRF?module=manage"><fmt:message key="go_back_to_CRF_list" bundle="${resword}"/></a></p>
-   <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/>
-  </c:import>
-  </c:otherwise>
- </c:choose>
 
 <jsp:include page="../include/footer.jsp"/>

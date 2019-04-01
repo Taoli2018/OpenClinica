@@ -89,9 +89,4 @@
 <br><p><a href="ListStudyUser"><fmt:message key="go_back_to_user_list" bundle="${resword}"/></a></p>
 <br><br>
 
-
-<c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/> 
- </c:import>
- 
 <jsp:include page="../include/footer.jsp"/>

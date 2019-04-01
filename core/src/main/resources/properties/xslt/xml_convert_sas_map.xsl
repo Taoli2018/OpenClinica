@@ -118,7 +118,7 @@
             </xsl:if>
         </xsl:for-each>
     </xsl:template>
-    
+
     <!-- Return row header data using above data.-->
     <xsl:template match="row" mode="map">
         <xsl:param name="itemgroup"/>

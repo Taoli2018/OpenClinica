@@ -2,6 +2,8 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
+<link rel="stylesheet" href="includes/font-awesome-4.7.0/css/font-awesome.css">
+
 <fmt:setBundle basename="org.akaza.openclinica.i18n.words" var="reswords"/>
 
 <tr id="sidebar_IconKey_open">
@@ -9,11 +11,11 @@
 
 		<a href="javascript:leftnavExpand('sidebar_IconKey_open'); leftnavExpand('sidebar_IconKey_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
 
-		<b><fmt:message key="icon_key" bundle="${reswords}"/></b><br clear="all"><br>
+		<fmt:message key="icon_key" bundle="${reswords}"/><br clear="all"><br>
 
 		<table border="0" cellpadding="4" cellspacing="0">
 			<tr>
-				<td><img src="images/icon_Note.gif"></td>
+				<td><span class="fa fa-bublle-red"></td>
 				<td><fmt:message key="discrepancy_note" bundle="${reswords}"/></td>
 			</tr>
 			<tr>
@@ -30,12 +32,6 @@
 			</tr>
 		</table>
 
-		<div class="sidebar_tab_content">
-
-		 <a href="#" onClick="openDefWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/overview-openclinica/home-page#content-title-3610'); return false;"><fmt:message key="view_all_icons" bundle="${reswords}"/></a>
-
-		</div>
-
 		</td>
 	</tr>
 	<tr id="sidebar_IconKey_closed" style="display: none">
@@ -43,7 +39,7 @@
 
 		<a href="javascript:leftnavExpand('sidebar_IconKey_open'); leftnavExpand('sidebar_IconKey_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
 
-		<b><fmt:message key="icon_key" bundle="${reswords}"/></b>
+		<fmt:message key="icon_key" bundle="${reswords}"/>
 
 		</td>
 	</tr>

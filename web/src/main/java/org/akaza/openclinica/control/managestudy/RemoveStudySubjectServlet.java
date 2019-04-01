@@ -7,6 +7,7 @@
  */
 package org.akaza.openclinica.control.managestudy;
 
+import liquibase.util.StringUtils;
 import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.core.Status;
 import org.akaza.openclinica.bean.managestudy.StudyBean;
@@ -25,8 +26,15 @@ import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
 import org.akaza.openclinica.dao.submit.EventCRFDAO;
 import org.akaza.openclinica.dao.submit.ItemDataDAO;
 import org.akaza.openclinica.dao.submit.SubjectDAO;
+import org.akaza.openclinica.domain.datamap.StudySubject;
+import org.akaza.openclinica.service.OCUserDTO;
+import org.akaza.openclinica.service.UserService;
+import org.akaza.openclinica.service.UserStatus;
+import org.akaza.openclinica.service.UserType;
 import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,6 +45,8 @@ import java.util.Date;
  * Removes a study subject and all the related data
  */
 public class RemoveStudySubjectServlet extends SecureController {
+
+
     /**
      *
      */
@@ -79,10 +89,10 @@ public class RemoveStudySubjectServlet extends SecureController {
 
             StudySubjectBean studySub = (StudySubjectBean) subdao.findByPK(studySubId);
 
-            StudyDAO studydao = new StudyDAO(sm.getDataSource());
-            StudyBean study = (StudyBean) studydao.findByPK(studyId);
+            StudyDAO studyDAO = new StudyDAO(sm.getDataSource());
+            StudyBean study = (StudyBean) studyDAO.findByPK(studyId);
 
-            checkRoleByUserAndStudy(ub, study.getParentStudyId(), study.getId());
+            checkRoleByUserAndStudy(ub, study, studyDAO);
 
             // find study events
             StudyEventDAO sedao = new StudyEventDAO(sm.getDataSource());
@@ -98,7 +108,7 @@ public class RemoveStudySubjectServlet extends SecureController {
                 }
 
                 request.setAttribute("subject", subject);
-                request.setAttribute("study", study);
+                request.setAttribute("subjectStudy", study);
                 request.setAttribute("studySub", studySub);
                 request.setAttribute("events", displayEvents);
 
@@ -109,6 +119,7 @@ public class RemoveStudySubjectServlet extends SecureController {
                 studySub.setStatus(Status.DELETED);
                 studySub.setUpdater(ub);
                 studySub.setUpdatedDate(new Date());
+                studySub.setUserStatus(UserStatus.INACTIVE);
                 subdao.update(studySub);
 
                 // remove all study events
@@ -183,5 +194,6 @@ public class RemoveStudySubjectServlet extends SecureController {
 
         logger.info("Sending email done..");
     }
+
 
 }

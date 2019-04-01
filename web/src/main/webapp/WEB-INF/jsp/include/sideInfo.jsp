@@ -15,15 +15,14 @@
 <c:choose>
  <c:when test="${userBean != null && userBean.id>0}">
  <%-- BWP 3098 >> switch displays for Info box--%>
-    <tr id="sidebar_Info_open"<c:if test="${closeInfoShowIcons}">style="display: none"</c:if>>
+    <tr id="sidebar_Info_open"<c:if test="${!closeInfoShowIcons}">style="display: none"</c:if>>
 		<td class="sidebar_tab">
 
 		<a href="javascript:leftnavExpand('sidebar_Info_open'); leftnavExpand('sidebar_Info_closed');">
+               <span class="icon icon-caret-down gray"></span>
+		</a>
 
-                <img src="${pageContext.request.contextPath}/images/sidebar_collapse.gif" border="0" align="right" hspace="10">
-</a>
-
-		<b><fmt:message key="info" bundle="${restext}"/></b>
+		<fmt:message key="info" bundle="${restext}"/>
 
 		<div class="sidebar_tab_content">
 
@@ -76,29 +75,48 @@
 		</td>
 	</tr>
     <%-- BWP 3098 >> switch displays for Info box--%>
-    <tr id="sidebar_Info_closed"<c:if test="${! closeInfoShowIcons}">style="display: none"</c:if>>
-		<td class="sidebar_tab">
+    <tr id="sidebar_Info_closed"<c:if test="${closeInfoShowIcons}">style="display: none"</c:if>>
+		<td class="sidebar_tab" style="border-bottom: 1px solid #999;">
 
-		<a href="javascript:leftnavExpand('sidebar_Info_open'); leftnavExpand('sidebar_Info_closed');"><img src="${pageContext.request.contextPath}/images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Info_open'); leftnavExpand('sidebar_Info_closed');"><span class="icon icon-caret-right gray"></span></a>
 
-		<b>Info</b>
+		<fmt:message key="info" bundle="${resword}"/>
 
 		</td>
 	</tr>
-	<c:if test="${panel.iconInfoShown && !panel.manageSubject}">
+	<tr id="sidebar_Links_open"<c:if test="${!closeQuickLinks}">style="display: none"</c:if>>
+		<td class="sidebar_tab">
 
-	 <%-- <c:import url="include/sideIcons.jsp"/> --%>
+		<a href="javascript:leftnavExpand('sidebar_Links_open'); leftnavExpand('sidebar_Links_closed');">
+               <span class="icon icon-caret-down gray"></span>
+		</a>
 
-	</c:if>
-	<c:if test="${iconInfoShown}">
+		<fmt:message key="quick_links" bundle="${resword}"/>
 
-	 	<c:import url="/WEB-INF/jsp/include/sideIconsSubject.jsp"/>
+		<div class="sidebar_tab_content">
 
-	</c:if>
-  <%-- BWP 3098: show icons by default; added   || closeInfoShowIcons--%>
-    <c:if test="${(!panel.iconInfoShown && panel.manageSubject) || closeInfoShowIcons}">
-	 <c:import url="/WEB-INF/jsp/include/sideIconsSubject.jsp"/>
-	</c:if>
+			<span style="color: #789EC5">
+			<c:url var="viewNotes" value="/ViewNotes"/>
+	    <a href="${viewNotes}?module=submit&listNotes_f_discrepancyNoteBean.user=<c:out value="${userBean.name}"/>"><fmt:message key="notes_assigned_to_me" bundle="${restext}"/></a>
+
+   	</div>
+
+		</td>
+	</tr>
+	</tr>
+    <%-- OC-8695 --%>
+    <tr id="sidebar_Links_closed"<c:if test="${closeQuickLinks}">style="display: none"</c:if>>
+		<td class="sidebar_tab">
+
+		<a href="javascript:leftnavExpand('sidebar_Links_open'); leftnavExpand('sidebar_Links_closed');"><span class="icon icon-caret-right gray"></span></a>
+
+		<fmt:message key="quick_links" bundle="${resword}"/>
+
+		</td>
+	</tr>
+    <c:if test="${iconInfoShown || (!panel.iconInfoShown && panel.manageSubject) || closeInfoShowIcons}">
+        <c:import url="/WEB-INF/jsp/include/sideIconsSubject.jsp"/>
+    </c:if>
 	
   </table>         
   <c:choose> 
@@ -191,7 +209,6 @@
 	<a href="RequestPassword"><fmt:message key="forgot_password" bundle="${resword}"/></a>
 </c:otherwise>
 </c:choose>
-
 
 <!-- End Sidebar Contents -->
 

@@ -21,9 +21,8 @@
 <!-- then instructions-->
 <tr id="sidebar_Instructions_open" style="display: none">
 	<td class="sidebar_tab"><a
-		href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img
-			src="images/sidebar_collapse.gif" border="0" align="right"
-			hspace="10"></a> <b><fmt:message key="instructions"
+		href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right"
+			hspace="10"></span></a> <b><fmt:message key="instructions"
 				bundle="${restext}" /></b>
 
 		<div class="sidebar_tab_content"></div></td>
@@ -31,8 +30,7 @@
 </tr>
 <tr id="sidebar_Instructions_closed" style="display: all">
 	<td class="sidebar_tab"><a
-		href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img
-			src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+		href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
 		<b><fmt:message key="instructions" bundle="${resword}" /></b>
 		<div class="sidebar_tab_content">
 			<fmt:message key="choose_crf_migration_batch_instruction_key"
@@ -150,7 +148,7 @@
 			<td><select name="selectedSourceVersion"
 				id="selectedSourceVersion">
 					<option value="-1">-Select-</option>
-					<c:forEach var="version" items="${crf.versions}">
+					<c:forEach var="version" items="${crf.formLayouts}">
 						<option value="<c:out value="${version.oid}"/>">&nbsp;
 							<c:out value="${version.name}" />&nbsp;
 						</option>
@@ -162,7 +160,7 @@
 			<td><select name="selectedTargetVersion"
 				id="selectedTargetVersion">
 					<option value="-1">-Select-</option>
-					<c:forEach var="version" items="${crf.versions}">
+					<c:forEach var="version" items="${crf.formLayouts}">
 						<option value="<c:out value="${version.oid}" />">&nbsp;
 							<c:out value="${version.name}" />&nbsp;
 						</option>

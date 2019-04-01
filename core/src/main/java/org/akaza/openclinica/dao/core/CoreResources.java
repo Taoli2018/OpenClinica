@@ -1,22 +1,13 @@
 package org.akaza.openclinica.dao.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import org.akaza.openclinica.bean.extract.ExtractPropertyBean;
+import org.akaza.openclinica.bean.login.UserAccountBean;
+import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.bean.service.PdfProcessingFunction;
 import org.akaza.openclinica.bean.service.SasProcessingFunction;
 import org.akaza.openclinica.bean.service.SqlProcessingFunction;
+import org.akaza.openclinica.dao.login.UserAccountDAO;
+import org.akaza.openclinica.dao.managestudy.StudyDAO;
 import org.akaza.openclinica.exception.OpenClinicaSystemException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -28,12 +19,31 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.sql.DataSource;
+import java.io.*;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Properties;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.akaza.openclinica.dao.hibernate.multitenant.CurrentTenantIdentifierResolverImpl.CURRENT_TENANT_ID;
 
 public class CoreResources implements ResourceLoaderAware {
 
     private ResourceLoader resourceLoader;
     public static String PROPERTIES_DIR;
     private static String DB_NAME;
+    public static ThreadLocal<String> tenantSchema = new ThreadLocal<>();
     private static Properties DATAINFO;
     private static Properties EXTRACTINFO;
 
@@ -65,7 +75,7 @@ public class CoreResources implements ResourceLoaderAware {
 
     /**
      * TODO: Delete me!
-     * 
+     *
      * @param dataInfoProps
      * @throws IOException
      */
@@ -135,30 +145,31 @@ public class CoreResources implements ResourceLoaderAware {
             // setPROPERTIES_DIR(resourceLoader);
             // @pgawade 18-April-2011 Fix for issue 8394
             webapp = getWebAppName(resourceLoader.getResource("/").getURI().getPath());
-            getPropertiesSource();
-
-            String filePath = "$catalina.home/$WEBAPP.lower.config";
-
-            filePath = replaceWebapp(filePath);
-            filePath = replaceCatHome(filePath);
-
-            String dataInfoPropFileName = filePath + "/datainfo.properties";
-            String extractPropFileName = filePath + "/extract.properties";
-
-            Properties OC_dataDataInfoProperties = getPropValues(dataInfoProp, dataInfoPropFileName);
-            Properties OC_dataExtractProperties = getPropValues(extractProp, extractPropFileName);
-
-            if (OC_dataDataInfoProperties != null)
-                dataInfo = OC_dataDataInfoProperties;
-            if (OC_dataExtractProperties != null)
-                extractInfo = OC_dataExtractProperties;
-
-            String dbName = dataInfo.getProperty("dbType");
+            /*
+             * getPropertiesSource();
+             *
+             * String filePath = "$catalina.home/$WEBAPP.lower.config";
+             *
+             * filePath = replaceWebapp(filePath);
+             * filePath = replaceCatHome(filePath);
+             *
+             * String dataInfoPropFileName = filePath + "/datainfo.properties";
+             * String extractPropFileName = filePath + "/extract.properties";
+             *
+             * Properties OC_dataDataInfoProperties = getPropValues(dataInfoProp, dataInfoPropFileName);
+             * Properties OC_dataExtractProperties = getPropValues(extractProp, extractPropFileName);
+             *
+             * if (OC_dataDataInfoProperties != null)
+             * dataInfo = OC_dataDataInfoProperties;
+             * if (OC_dataExtractProperties != null)
+             * extractInfo = OC_dataExtractProperties;
+             *
+             */ String dbName = dataInfo.getProperty("dbType");
 
             DATAINFO = dataInfo;
             dataInfo = setDataInfoProperties();// weird, but there are references to dataInfo...MainMenuServlet for
-                                               // instance
-
+            // instance
+            tenantSchema.set(DATAINFO.getProperty("schema"));
             EXTRACTINFO = extractInfo;
 
             DB_NAME = dbName;
@@ -172,7 +183,7 @@ public class CoreResources implements ResourceLoaderAware {
                 extractProperties = findExtractProperties();
                 // JN: this is in for junits to run without extract props
                 copyImportRulesFiles();
-                copyConfig();
+                // copyConfig();
             }
 
             // tbh, following line to be removed
@@ -186,6 +197,15 @@ public class CoreResources implements ResourceLoaderAware {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public static UserAccountBean setRootUserAccountBean(HttpServletRequest request, DataSource dataSource) {
+        UserAccountDAO userAccountDAO = new UserAccountDAO(dataSource);
+        UserAccountBean ub = (UserAccountBean) userAccountDAO.findByUserName("root");
+        if (ub.getId() != 0) {
+            request.getSession().setAttribute("userBean", ub);
+        }
+        return ub;
     }
 
     /**
@@ -277,7 +297,7 @@ public class CoreResources implements ResourceLoaderAware {
     }
 
     private Properties setDataInfoProperties() {
-        getPropertiesSource();
+        // getPropertiesSource();
 
         String filePath = DATAINFO.getProperty("filePath");
         if (filePath == null || filePath.isEmpty())
@@ -291,13 +311,14 @@ public class CoreResources implements ResourceLoaderAware {
             DATAINFO.setProperty("filePath", filePath);
 
         DATAINFO.setProperty("changeLogFile", "src/main/resources/migration/master.xml");
+
         // sysURL.base
         String sysURLBase = DATAINFO.getProperty("sysURL").replace("MainMenu", "");
         DATAINFO.setProperty("sysURL.base", sysURLBase);
 
         if (DATAINFO.getProperty("org.quartz.jobStore.misfireThreshold") == null)
             DATAINFO.setProperty("org.quartz.jobStore.misfireThreshold", "60000");
-        DATAINFO.setProperty("org.quartz.jobStore.class", "org.quartz.impl.jdbcjobstore.JobStoreTX");
+        DATAINFO.setProperty("org.quartz.jobStore.class", "org.akaza.openclinica.dao.core.MultiSchemaJobStoreTx");// "org.quartz.impl.jdbcjobstore.JobStoreTX");
 
         if (database.equalsIgnoreCase("oracle")) {
             DATAINFO.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate");
@@ -344,6 +365,7 @@ public class CoreResources implements ResourceLoaderAware {
 
         DATAINFO.setProperty("ra", "Data_Entry_Person");
         DATAINFO.setProperty("ra2", "site_Data_Entry_Person2");
+        DATAINFO.setProperty("participate", "site_Data_Entry_Participant");
         DATAINFO.setProperty("investigator", "Investigator");
         DATAINFO.setProperty("director", "Study_Director");
 
@@ -364,6 +386,16 @@ public class CoreResources implements ResourceLoaderAware {
         if (supportURL == null || supportURL.isEmpty())
             supportURL = "https://www.openclinica.com/support";
         DATAINFO.setProperty("supportURL", supportURL);
+
+        String walkmeURL = DATAINFO.getProperty("walkme.url");
+        if (walkmeURL == null || walkmeURL.isEmpty())
+            walkmeURL = "https://ineedawalkme.url";
+        DATAINFO.setProperty("walkmeURL", walkmeURL);
+
+        String piwikURL = DATAINFO.getProperty("piwik.url");
+        if (piwikURL == null || piwikURL.isEmpty())
+            piwikURL = "https://ineedapiwik.url";
+        DATAINFO.setProperty("piwikURL", piwikURL);
 
         DATAINFO.setProperty("show_unique_id", "1");
 
@@ -400,6 +432,10 @@ public class CoreResources implements ResourceLoaderAware {
 
     }
 
+    public static String getStudyManager() {
+        return DATAINFO.getProperty("smURL");
+    }
+
     private void setMailProps() {
 
         DATAINFO.setProperty("mail.host", DATAINFO.getProperty("mailHost"));
@@ -421,28 +457,190 @@ public class CoreResources implements ResourceLoaderAware {
         DATAINFO.setProperty("designer.url", DATAINFO.getProperty("designerURL"));
     }
 
+    public static void setSchema(Connection conn) throws SQLException {
+        Statement statement = conn.createStatement();
+        String schema = null;
+
+        schema = handleMultiSchemaConnection(conn);
+
+        logger.debug("Using schema in CoreResources:schema:" + schema);
+        if (StringUtils.isEmpty(schema) || conn.getSchema().equalsIgnoreCase(schema))
+            return;
+        try {
+            statement.execute("set search_path to '" + schema + "'");
+        } finally {
+            statement.close();
+        }
+    }
+
+    public static String getRequestSchema() {
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null && requestAttributes.getRequest() != null) {
+            HttpServletRequest request = requestAttributes.getRequest();
+            if (request.getAttribute("requestSchema") != null) {
+                return (String) request.getAttribute("requestSchema");
+            }
+        }
+        String schema = null;
+        if (tenantSchema.get() != null) {
+            schema = tenantSchema.get();
+        } else
+            schema = DATAINFO.getProperty("schema");
+        return schema;
+
+    }
+
+    public static String getRequestSchema(HttpServletRequest request) {
+        return (String) request.getAttribute("requestSchema");
+    }
+
+    public static boolean setRequestSchema(String schema) {
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null && requestAttributes.getRequest() != null) {
+            HttpServletRequest request = requestAttributes.getRequest();
+            request.setAttribute("requestSchema", schema);
+            return true;
+        } else {
+            CoreResources.tenantSchema.set(schema);
+        }
+
+        return false;
+    }
+
+    public static void setRequestSchema(HttpServletRequest request, String schema) {
+        request.setAttribute("requestSchema", schema);
+    }
+
+    public static HttpServletRequest getRequest() {
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null && requestAttributes.getRequest() != null) {
+            HttpServletRequest request = requestAttributes.getRequest();
+            return request;
+        }
+        return null;
+    }
+
+    public static Boolean isPublicStudySameAsTenantStudy(StudyBean tenantStudy, int publicStudyID, DataSource ds) {
+        StudyBean publicStudy = getPublicStudy(tenantStudy.getOid(), ds);
+        return publicStudy.getId() == publicStudyID;
+    }
+    
+    public static Boolean isPublicStudySameAsTenantStudy(StudyBean tenantStudy, String publicStudyOID, DataSource ds) {
+        StudyBean publicStudy = getPublicStudy(tenantStudy.getOid(), ds);
+        return publicStudy.getOid().equals(publicStudyOID);
+    }
+
+    public static StudyBean getPublicStudy(String ocId, DataSource ds) {
+        StudyDAO studyDAO = new StudyDAO(ds);
+        HttpServletRequest request = getRequest();
+        String schema = null;
+        if (request == null) {
+            schema = CoreResources.getRequestSchema();
+        } else {
+            if (request != null)
+                schema = (String) request.getAttribute("requestSchema");
+        }
+        if (request != null)
+            request.setAttribute("requestSchema", "public");
+
+        StudyBean study = studyDAO.findByOid(ocId);
+        if (StringUtils.isNotEmpty(schema) && request != null)
+            request.setAttribute("requestSchema", schema);
+        return study;
+    }
+
+    public static StudyBean getPublicStudy(int id, DataSource ds) {
+        StudyDAO studyDAO = new StudyDAO(ds);
+        HttpServletRequest request = getRequest();
+        String schema = null;
+        if (request == null) {
+            schema = CoreResources.getRequestSchema();
+        } else {
+            if (request != null)
+                schema = (String) request.getAttribute("requestSchema");
+        }
+        if (request != null)
+            request.setAttribute("requestSchema", "public");
+
+        StudyBean study = (StudyBean) studyDAO.findByPK(id);
+        if (StringUtils.isNotEmpty(schema) && request != null)
+            request.setAttribute("requestSchema", schema);
+        return study;
+    }
+
+    public static void setRequestSchemaByStudy(String ocId, DataSource ds) {
+        StudyBean studyBean = getPublicStudy(ocId, ds);
+        if (studyBean != null)
+            setRequestSchema(studyBean.getSchemaName());
+    }
+
+    private static String handleMultiSchemaConnection(Connection conn) throws SQLException {
+        String schema = null;
+        if (tenantSchema.get() == null)
+            tenantSchema.set(conn.getSchema());
+
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null && requestAttributes.getRequest() != null) {
+            HttpServletRequest request = requestAttributes.getRequest();
+            HttpSession session = requestAttributes.getRequest().getSession();
+            if (request.getAttribute("changeStudySchema") != null) {
+                schema = (String) request.getAttribute("changeStudySchema");
+                logger.debug("request.getAttribute(\"changeStudySchema\"):" + schema);
+                if (session != null) {
+                    session.setAttribute(CURRENT_TENANT_ID, schema);
+                }
+            } else if (request.getAttribute("requestSchema") != null) {
+                schema = (String) request.getAttribute("requestSchema");
+                logger.debug("request.getAttribute(\"requestSchema\"):" + schema);
+            } else if (session != null) {
+                schema = (String) session.getAttribute(CURRENT_TENANT_ID);
+                logger.debug("Session schema:" + schema);
+            } else {
+                schema = (String) request.getAttribute(CURRENT_TENANT_ID);
+                logger.debug("Request schema:" + schema);
+            }
+            if (StringUtils.isNotEmpty(schema))
+                tenantSchema.set(schema);
+        }
+        if (StringUtils.isEmpty(schema)) {
+            if (tenantSchema.get() != null) {
+                schema = tenantSchema.get();
+            } else
+                schema = DATAINFO.getProperty("schema");
+        }
+        logger.debug("Current thread schema:" + tenantSchema.get());
+        logger.debug("Current thread:" + Thread.currentThread().getId() + " Current schema for JDBC connections:" + schema);
+        return schema;
+    }
+
     private void setDatabaseProperties(String database) {
 
         DATAINFO.setProperty("username", DATAINFO.getProperty("dbUser"));
         DATAINFO.setProperty("password", DATAINFO.getProperty("dbPass"));
+        DATAINFO.setProperty("archiveUsername", DATAINFO.getProperty("archiveDbUser"));
+        DATAINFO.setProperty("archivePassword", DATAINFO.getProperty("archiveDbPass"));
+        String dbSSLsetting = String.valueOf(DATAINFO.getOrDefault("dbSSL", "false"));
+
         String url = null, driver = null, hibernateDialect = null;
+        String archiveUrl = null;
         if (database.equalsIgnoreCase("postgres")) {
             url = "jdbc:postgresql:" + "//" + DATAINFO.getProperty("dbHost") + ":" + DATAINFO.getProperty("dbPort") + "/" + DATAINFO.getProperty("db");
             driver = "org.postgresql.Driver";
-            hibernateDialect = "org.hibernate.dialect.PostgreSQLDialect";
+            hibernateDialect = "org.hibernate.dialect.PostgreSQL94Dialect";
+            archiveUrl = "jdbc:postgresql:" + "//" + DATAINFO.getProperty("archiveDbHost") + ":" + DATAINFO.getProperty("archiveDbPort") + "/"
+                    + DATAINFO.getProperty("archiveDb");
+            if (dbSSLsetting.equals("true")){
+                url = url + "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+            }
         } else if (database.equalsIgnoreCase("oracle")) {
             url = "jdbc:oracle:thin:" + "@" + DATAINFO.getProperty("dbHost") + ":" + DATAINFO.getProperty("dbPort") + ":" + DATAINFO.getProperty("db");
             driver = "oracle.jdbc.driver.OracleDriver";
             hibernateDialect = "org.hibernate.dialect.OracleDialect";
         }
-        // If logLevel is 'TRACE' or 'DEBUG', enagle log4jdbc
-        String logLevel = DATAINFO.getProperty("logLevel");
-        if (logLevel != null && (logLevel.equalsIgnoreCase("TRACE") || logLevel.equalsIgnoreCase("DEBUG"))) {
-            driver = "net.sf.log4jdbc.DriverSpy";
-            url = StringUtils.replace(url, "jdbc:", "jdbc:log4jdbc:");
-        }
+
         DATAINFO.setProperty("dataBase", database);
         DATAINFO.setProperty("url", url);
+        DATAINFO.setProperty("archiveUrl", archiveUrl);
         DATAINFO.setProperty("hibernate.dialect", hibernateDialect);
         DATAINFO.setProperty("driver", driver);
 
@@ -493,10 +691,14 @@ public class CoreResources implements ResourceLoaderAware {
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(resourceLoader);
         String[] fileNames = { "rules.xsd", "rules_template.xml", "rules_template_with_notes.xml" };
         Resource[] resources = null;
+        Resource[] resourcesTemplate = null;
+        Resource[] resourcesPipeDelimitedTemplate = null;
         FileOutputStream out = null;
 
         resources = resolver.getResources("classpath*:properties/rules_template*.xml");
-
+        resourcesTemplate = resolver.getResources("classpath*:properties/import_template*.xml");
+        resourcesPipeDelimitedTemplate =resolver.getResources("classpath*:properties/template_pipe*.txt");
+        
         File dest = new File(getField("filePath") + "rules");
         if (!dest.exists()) {
             if (!dest.mkdirs()) {
@@ -504,6 +706,23 @@ public class CoreResources implements ResourceLoaderAware {
             }
         }
         for (Resource r : resources) {
+            File f = new File(dest, r.getFilename());
+
+            out = new FileOutputStream(f);
+            IOUtils.copy(r.getInputStream(), out);
+            out.close();
+
+        }
+        for (Resource r : resourcesTemplate) {
+            File f = new File(dest, r.getFilename());
+
+            out = new FileOutputStream(f);
+            IOUtils.copy(r.getInputStream(), out);
+            out.close();
+
+        }
+        
+        for (Resource r : resourcesPipeDelimitedTemplate) {
             File f = new File(dest, r.getFilename());
 
             out = new FileOutputStream(f);
@@ -555,7 +774,7 @@ public class CoreResources implements ResourceLoaderAware {
         }
 
         /*
-         * 
+         *
          * for (Resource r: resources) { File f = new File(dest, r.getFilename()); if(!f.exists()){ out = new
          * FileOutputStream(f); IOUtils.copy(r.getInputStream(), out); out.close(); } }
          */
@@ -563,7 +782,7 @@ public class CoreResources implements ResourceLoaderAware {
 
     /**
      * @deprecated. ByteArrayInputStream keeps the whole file in memory needlessly. Use Commons IO's
-     *              {@link IOUtils#copy(java.io.InputStream, java.io.OutputStream)} instead.
+     * {@link IOUtils#copy(java.io.InputStream, java.io.OutputStream)} instead.
      */
     @Deprecated
     private void copyFiles(ByteArrayInputStream fis, File dest) {
@@ -577,8 +796,8 @@ public class CoreResources implements ResourceLoaderAware {
                 fos.write(buffer, 0, bytesRead);
             }
         } catch (IOException ioe) {// error while copying files
-            OpenClinicaSystemException oe = new OpenClinicaSystemException("Unable to copy file: " + fis + "to" + dest.getAbsolutePath() + "."
-                    + dest.getAbsolutePath() + ".");
+            OpenClinicaSystemException oe = new OpenClinicaSystemException(
+                    "Unable to copy file: " + fis + "to" + dest.getAbsolutePath() + "." + dest.getAbsolutePath() + ".");
             oe.initCause(ioe);
             oe.setStackTrace(ioe.getStackTrace());
             throw oe;
@@ -587,8 +806,8 @@ public class CoreResources implements ResourceLoaderAware {
                 try {
                     fis.close();
                 } catch (IOException ioe) {
-                    OpenClinicaSystemException oe = new OpenClinicaSystemException("Unable to copy file: " + fis + "to" + dest.getAbsolutePath() + "."
-                            + dest.getAbsolutePath() + ".");
+                    OpenClinicaSystemException oe = new OpenClinicaSystemException(
+                            "Unable to copy file: " + fis + "to" + dest.getAbsolutePath() + "." + dest.getAbsolutePath() + ".");
                     oe.initCause(ioe);
                     oe.setStackTrace(ioe.getStackTrace());
                     logger.debug(ioe.getMessage());
@@ -600,8 +819,8 @@ public class CoreResources implements ResourceLoaderAware {
                 try {
                     fos.close();
                 } catch (IOException ioe) {
-                    OpenClinicaSystemException oe = new OpenClinicaSystemException("Unable to copy file: " + fis + "to" + dest.getAbsolutePath() + "."
-                            + dest.getAbsolutePath() + ".");
+                    OpenClinicaSystemException oe = new OpenClinicaSystemException(
+                            "Unable to copy file: " + fis + "to" + dest.getAbsolutePath() + "." + dest.getAbsolutePath() + ".");
                     oe.initCause(ioe);
                     oe.setStackTrace(ioe.getStackTrace());
                     logger.debug(ioe.getMessage());
@@ -671,7 +890,7 @@ public class CoreResources implements ResourceLoaderAware {
                 ExtractPropertyBean epbean = new ExtractPropertyBean();
                 epbean.setId(i);
                 // we will implement a find by id function in the front end
-    
+
                 // check to make sure the file exists, if not throw an exception and system will abort to start.
                 checkForFile(getExtractFields("extract." + i + ".file"));
                 epbean.setFileName(getExtractFields("extract." + i + ".file"));
@@ -695,11 +914,11 @@ public class CoreResources implements ResourceLoaderAware {
                  * if(clinica.equalsIgnoreCase("clinical_data")) epbean.setFormat("occlinical_data"); else
                  * epbean.setFormat("oc1.3"); } else
                  */
-    
+
                 epbean.setOdmType(getExtractField("extract." + i + ".odmType"));
-    
+
                 epbean.setFormat("oc1.3");
-    
+
                 // destination file name of the copied files
                 epbean.setExportFileName(getExtractFields("extract." + i + ".exportname"));
                 // post-processing event after the creation
@@ -713,7 +932,7 @@ public class CoreResources implements ResourceLoaderAware {
                 if (epbean.getFileName().length != epbean.getExportFileName().length)
                     throw new OpenClinicaSystemException(
                             "The comma seperated values of file names and export file names should correspond 1 on 1 for the property number" + i);
-    
+
                 if ("sql".equals(whichFunction)) {
                     // set the bean within, so that we can access the file locations etc
                     SqlProcessingFunction function = new SqlProcessingFunction(epbean);
@@ -750,14 +969,14 @@ public class CoreResources implements ResourceLoaderAware {
                     // since the database is the last option TODO: think about custom post processing options
                     else {
                         SqlProcessingFunction function = new SqlProcessingFunction(epbean);
-    
+
                         function.setDatabaseType(getExtractFieldNoRep(whichFunction + ".dataBase").toLowerCase());
                         function.setDatabaseUrl(getExtractFieldNoRep(whichFunction + ".url"));
                         function.setDatabaseUsername(getExtractFieldNoRep(whichFunction + ".username"));
                         function.setDatabasePassword(getExtractFieldNoRep(whichFunction + ".password"));
                         epbean.setPostProcessing(function);
                     }
-    
+
                 } else {
                     // add a null here
                     epbean.setPostProcessing(null);
@@ -775,11 +994,12 @@ public class CoreResources implements ResourceLoaderAware {
     private int getMaxExtractCounterValue() {
         Set<String> properties = EXTRACTINFO.stringPropertyNames();
         int numExtractTypes = 0;
-        for (String property:properties) {
+        for (String property : properties) {
             if (property.split(Pattern.quote(".")).length == 3 && property.startsWith("extract.") && property.endsWith(".file")) {
                 try {
                     int value = Integer.parseInt(property.split(Pattern.quote("."))[1]);
-                    if (value > numExtractTypes) numExtractTypes = value;
+                    if (value > numExtractTypes)
+                        numExtractTypes = value;
                 } catch (Exception e) {
                     // Wasn't a number. Do nothing.
                 }
@@ -901,6 +1121,11 @@ public class CoreResources implements ResourceLoaderAware {
             value = value.trim();
         }
         return value == null ? "" : value;
+    }
+
+    public static String getSBSFieldFormservice(){
+        String value = getField("SBSUrl");
+        return value.replaceFirst("user-service(.)*","form-service/api");
     }
 
     // TODO internationalize

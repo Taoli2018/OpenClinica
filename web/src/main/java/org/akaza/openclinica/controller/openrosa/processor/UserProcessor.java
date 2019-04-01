@@ -1,7 +1,5 @@
 package org.akaza.openclinica.controller.openrosa.processor;
 
-import java.util.Date;
-
 import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.login.UserAccountBean;
 import org.akaza.openclinica.controller.openrosa.SubmissionContainer;
@@ -18,24 +16,26 @@ import org.akaza.openclinica.domain.user.UserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
 
-@Component
-public class UserProcessor implements Processor, Ordered {
+import java.util.Date;
 
-    @Autowired
-    UserAccountDao userAccountDao;
+import static org.akaza.openclinica.controller.openrosa.SubmissionProcessorChain.ProcessorEnum;
+
+@Component
+@Order(value=4)
+public class UserProcessor implements Processor {
+
+    @Autowired UserAccountDao userAccountDao;
     
-    @Autowired
-    UserTypeDao userTypeDao;
+    @Autowired UserTypeDao userTypeDao;
     
-    @Autowired
-    StudyUserRoleDao studyUserRoleDao;
+    @Autowired StudyUserRoleDao studyUserRoleDao;
     
-    @Autowired
-    StudyDao studyDao;
+    @Autowired StudyDao studyDao;
     
     public static final String INPUT_FIRST_NAME = "Participant";
     public static final String INPUT_LAST_NAME = "User";
@@ -44,16 +44,25 @@ public class UserProcessor implements Processor, Ordered {
     protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
 
     @Override
-    public void process(SubmissionContainer container) throws Exception{
+    public ProcessorEnum process(SubmissionContainer container) throws Exception{
         logger.info("Executing User Processor.");
         Errors errors = container.getErrors();
 
         String contextStudySubjectOid = container.getSubjectContext().get("studySubjectOID");
         String studySubjectOid = container.getSubject().getOcOid();
         String parentStudyOid = getParentStudy(container.getStudy().getOc_oid()).getOc_oid();
-
+        String userAccountId = container.getSubjectContext().get("userAccountID");
+        // Check if UserAccount is specified in subject context
+        if (!StringUtils.isEmpty(userAccountId)) {
+            UserAccount existingAccount = userAccountDao.findByUserId(Integer.valueOf(userAccountId));
+            if (existingAccount == null) {
+                logger.info("Could not find existing user account from provided context.  Aborting submission.");
+                errors.reject("Could not find existing user account from provided context.  Aborting submission.");
+                throw new Exception("Could not find existing user account from provided context.  Aborting submission.");
+            }
+            container.setUser(existingAccount);
         // if study subject oid is not null, just look up user account
-        if (contextStudySubjectOid != null) {
+        } else if (contextStudySubjectOid != null) {
             String userName = parentStudyOid + "." + contextStudySubjectOid;
             UserAccount existingAccount = userAccountDao.findByUserName(userName);
             if (existingAccount == null) {
@@ -66,7 +75,7 @@ public class UserProcessor implements Processor, Ordered {
             String userName = parentStudyOid + "." + studySubjectOid;
             UserAccount existingAccount = userAccountDao.findByUserName(userName);
             if (existingAccount != null) {
-                container.setUser(existingAccount);;
+                container.setUser(existingAccount);
             } else {
                 //Create user account
                 UserAccount rootUser = userAccountDao.findByUserId(1);
@@ -99,23 +108,21 @@ public class UserProcessor implements Processor, Ordered {
                 
                 //Create study user role
                 Date date = new Date();
-                StudyUserRoleId studyUserRoleId = new StudyUserRoleId(Role.RESEARCHASSISTANT2.getName(), container.getStudy().getStudyId(), Status.AUTO_DELETED.getCode(),
-                        rootUser.getUserId(), date,
+                StudyUserRoleId studyUserRoleId = new StudyUserRoleId(Role.RESEARCHASSISTANT2.getName(), container.getStudy().getStudyId(),
                         createdUser.getUserName());
                 StudyUserRole studyUserRole = new StudyUserRole(studyUserRoleId);
+                studyUserRole.setStatusId(Status.AUTO_DELETED.getCode());
+                studyUserRole.setOwnerId(rootUser.getUserId());
+                studyUserRole.setDateCreated(date);
                 studyUserRoleDao.saveOrUpdate(studyUserRole);
                 //TODO: StudyUserRole object had to be heavily modified.  May need fixing.  Also roleName specified
                 // doesn't exist in role table.  May need to fix that.
                 // This table should also foreign key to user_account but doesn't.
             }
         }
+        return ProcessorEnum.PROCEED;
     }
 
-
-    @Override
-    public int getOrder() {
-        return 2;
-    }
     private Study getParentStudy(String studyOid) {
         Study study = studyDao.findByOcOID(studyOid);
         Study parentStudy = study.getStudy();

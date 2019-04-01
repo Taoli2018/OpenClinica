@@ -145,6 +145,21 @@ public class CRFDAO<K extends String, V extends ArrayList> extends AuditableEnti
 
     }
 
+    public ArrayList findAllByStudyEvent(int studyEventId) {
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(Integer.valueOf(1), Integer.valueOf(studyEventId));
+        ArrayList alist = this.select(digester.getQuery("findAllByStudyEvent"), variables);
+        ArrayList al = new ArrayList();
+
+        Iterator it = alist.iterator();
+        while (it.hasNext()) {
+            CRFBean eb = (CRFBean) this.getEntityFromHashMap((HashMap) it.next());
+            al.add(eb);
+        }
+        return al;
+
+    }
     public Collection findAllByLimit(boolean hasLimit) {
         this.setTypesExpected();
         ArrayList alist = null;
@@ -305,6 +320,26 @@ public class CRFDAO<K extends String, V extends ArrayList> extends AuditableEnti
         variables.put(Integer.valueOf(1), Integer.valueOf(crfVersionId));
 
         String sql = digester.getQuery("findByVersionId");
+        ArrayList rows = select(sql, variables);
+
+        if (rows.size() > 0) {
+            HashMap row = (HashMap) rows.get(0);
+            answer = (CRFBean) getEntityFromHashMap(row);
+        }
+
+        return answer;
+    }
+
+    public CRFBean findByLayoutId(int formLayoutId) {
+        CRFBean answer = new CRFBean();
+
+        this.unsetTypeExpected();
+        this.setTypesExpected();
+
+        HashMap variables = new HashMap();
+        variables.put(Integer.valueOf(1), Integer.valueOf(formLayoutId));
+
+        String sql = digester.getQuery("findByLayoutId");
         ArrayList rows = select(sql, variables);
 
         if (rows.size() > 0) {

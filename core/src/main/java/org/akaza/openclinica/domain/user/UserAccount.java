@@ -48,7 +48,7 @@ import org.hibernate.annotations.Type;
  */
 @Entity
 @Table(name = "user_account", schema = "public")
-@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence", value = "user_account_user_id_seq") })
+@GenericGenerator(name = "id-generator", strategy = "native", parameters = { @Parameter(name = "sequence_name", value = "user_account_user_id_seq") })
 
 public class UserAccount extends DataMapDomainObject {
 
@@ -83,6 +83,17 @@ public class UserAccount extends DataMapDomainObject {
 	private String timeZone;
 	private boolean enableApiKey;
 	private String apiKey;
+
+	@Column(name = "user_uuid", length = 255)
+	public String getUserUuid() {
+		return userUuid;
+	}
+
+	public void setUserUuid(String userUuid) {
+		this.userUuid = userUuid;
+	}
+
+	private String userUuid;
 	
 	private List userRoleAccesses ;
 	private List<Item> items;
@@ -387,7 +398,8 @@ public class UserAccount extends DataMapDomainObject {
         this.apiKey = apiKey;
     }
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "userAccount")
+
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "userAccount")
 	public List<Item> getItems() {
 		return this.items;
 	}

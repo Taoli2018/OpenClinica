@@ -30,13 +30,15 @@ public class Status extends Term implements Comparable {
     public static final Status FROZEN = new Status(9, "frozen");
     public static final Status SOURCE_DATA_VERIFICATION = new Status(10, "source_data_verification");
     public static final Status RESET = new Status(11, "reset");
+    public static final Status ARCHIVED = new Status(12, "archived");
+
 
     private static final Status[] members =
-        { INVALID, AVAILABLE, PENDING, PRIVATE, UNAVAILABLE, LOCKED, DELETED, AUTO_DELETED, SIGNED, FROZEN, SOURCE_DATA_VERIFICATION,RESET };
-    private static List list = Arrays.asList(members);  
+        { INVALID, AVAILABLE, PENDING, PRIVATE, UNAVAILABLE, LOCKED, DELETED, AUTO_DELETED, SIGNED, FROZEN, SOURCE_DATA_VERIFICATION, RESET, ARCHIVED };
+    private static List list = Arrays.asList(members);
 
     private static final Status[] activeMembers = { AVAILABLE, SIGNED, DELETED, AUTO_DELETED };
-    private static List activeList = Arrays.asList(activeMembers);  
+    private static List activeList = Arrays.asList(activeMembers);
 
     private static final Status[] studySubjectDropDownMembers = { AVAILABLE, SIGNED, DELETED, AUTO_DELETED };
     private static List studySubjectDropDownList = Arrays.asList(studySubjectDropDownMembers);
@@ -85,11 +87,11 @@ public class Status extends Term implements Comparable {
         }
         return (Status) get(id, list);
     }
-    
+
     public static Status getByName(String name) {
         for (int i = 0; i < list.size(); i++) {
             Status temp = (Status) list.get(i);
-            if (temp.getName().equals(name)) {
+            if (temp.getName().equalsIgnoreCase(name)) {
                 return temp;
             }
         }
@@ -192,6 +194,11 @@ public class Status extends Term implements Comparable {
     public boolean isFrozen() {
         return this == Status.FROZEN;
     }
+
+    public boolean isArchived() {
+        return this == Status.ARCHIVED;
+    }
+
 
     /* public static void main(String[] args) {
          int[] nums = {0,1,2,3,4,5,6,7,8,9};

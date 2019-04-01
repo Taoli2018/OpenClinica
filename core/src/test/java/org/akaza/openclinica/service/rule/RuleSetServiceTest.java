@@ -8,9 +8,11 @@ import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
 import org.akaza.openclinica.dao.submit.CRFVersionDAO;
 import org.akaza.openclinica.domain.rule.RuleSetBean;
 import org.akaza.openclinica.templates.HibernateOcDbTestCase;
+import org.junit.Ignore;
 
 import java.util.List;
 
+@Ignore
 public class RuleSetServiceTest extends HibernateOcDbTestCase {
 
     public RuleSetServiceTest() {
@@ -91,6 +93,7 @@ public class RuleSetServiceTest extends HibernateOcDbTestCase {
 
         RuleSetServiceInterface instance = (RuleSetServiceInterface) getContext().getBean("ruleSetService");
         List<RuleSetBean> ruleSets = instance.getRuleSetsByCrfStudyAndStudyEventDefinition(study, studyEventDefinition, crfVersion);
+
         return ruleSets;
 
     }

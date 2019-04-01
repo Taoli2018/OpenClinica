@@ -20,7 +20,8 @@ public class StudyDTO {
     private ArrayList<ErrorObject> errors;
     private String message;
     private ArrayList<UserRole> assignUserRoles;
-	
+	private String studyCreationLink;
+
 	public StudyDTO() {
 		super();
 	}
@@ -97,7 +98,6 @@ public class StudyDTO {
 		this.expectedTotalEnrollment = expectedTotalEnrollment;
 	}
 
-
 	public String getStatus() {
 		return status;
 	}
@@ -147,6 +147,11 @@ public class StudyDTO {
 		this.assignUserRoles = assignUserRoles;
 	}
 
+	public String getStudyCreationLink() {
+		return studyCreationLink;
+	}
 
-
+	public void setStudyCreationLink(String studyCreationLink) {
+		this.studyCreationLink = studyCreationLink;
+	}
 }

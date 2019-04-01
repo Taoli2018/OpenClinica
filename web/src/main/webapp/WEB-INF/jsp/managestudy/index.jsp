@@ -28,9 +28,9 @@
 <div id="sidebar_Instructions_open" class="sidebar_tab" style="display: all">
 		
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${restext}"/></b>
+		<fmt:message key="instructions" bundle="${restext}"/>
 
 		<div class="sidebar_tab_content">
 
@@ -44,9 +44,9 @@
 	<div id="sidebar_Instructions_closed" class="sidebar_tab" style="display: none">
 		
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${restext}"/></b>
+		<fmt:message key="instructions" bundle="${restext}"/>
 
 		</div>
 <jsp:include page="../include/sideInfo.jsp"/>
@@ -372,9 +372,7 @@
 
 
 <!-- End Main Content Area -->
-<c:import url="../include/workflow.jsp">
-  <c:param name="module" value="manage"/>
-</c:import>
+
 </div>
 <br clear="all">
 <jsp:include page="../include/footer.jsp"/>

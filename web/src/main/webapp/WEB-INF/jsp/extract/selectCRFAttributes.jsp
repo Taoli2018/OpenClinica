@@ -6,20 +6,40 @@
 <jsp:include page="../include/extract-header.jsp"/>
 
 
-<jsp:include page="../include/sidebar.jsp"/>
+<%--<jsp:include page="../include/sidebar.jsp"/>--%>
+<!-- move the alert message to the sidebar-->
+<jsp:include page="../include/sideAlert.jsp"/>
+<!-- then instructions-->
+<tr id="sidebar_Instructions_open" style="display: none">
+    <td class="sidebar_tab">
+
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
+
+    <fmt:message key="instructions" bundle="${resword}"/>
+
+    <div class="sidebar_tab_content">
+
+    </div>
+
+    </td>
+
+  </tr>
+  <tr id="sidebar_Instructions_closed" style="display: all">
+    <td class="sidebar_tab">
+
+    <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
+
+    <fmt:message key="instructions" bundle="${resword}"/>
+
+    </td>
+  </tr>
+
+<jsp:include page="../include/createDatasetSideInfo.jsp"/>
 
 <jsp:useBean scope='session' id='userBean' class='org.akaza.openclinica.bean.login.UserAccountBean'/>
 <jsp:useBean scope="request" id="eventlist" class="java.util.HashMap"/>
 
 <h1><span class="title_manage"><fmt:message key="create_dataset" bundle="${resword}"/>: <fmt:message key="select_CRF_attributes" bundle="${resword}"/></span></h1>
-
-<P><jsp:include page="../showInfo.jsp"/></P>
-
-<jsp:include page="createDatasetBoxes.jsp" flush="true">
-<jsp:param name="selectStudyEvents" value="1"/>
-</jsp:include>
-
-<P><jsp:include page="../showMessage.jsp"/></P>
 
 <fmt:message key="instructions_extract_select_CRF_and_group" bundle="${resword}"/>
 
@@ -50,28 +70,7 @@
     </c:choose>
    <fmt:message key="version_name" bundle="${resword}"/>
    </p>
-   <p>
-    <c:choose>
-     <c:when test="${newDataset.showCRFinterviewerName}">
-       <input type="checkbox" checked name="interviewer" value="yes">  
-     </c:when>
-     <c:otherwise>
-       <input type="checkbox" name="interviewer" value="yes">
-     </c:otherwise>
-    </c:choose>   
-   <fmt:message key="interviewer_name" bundle="${resword}"/>
-   </p>
-   <p>
-    <c:choose>
-     <c:when test="${newDataset.showCRFinterviewerDate}">
-       <input type="checkbox" checked name="interviewer_date" value="yes">  
-     </c:when>
-     <c:otherwise>
-       <input type="checkbox" name="interviewer_date" value="yes">
-     </c:otherwise>
-    </c:choose>   
-   <fmt:message key="interview_date" bundle="${resword}"/>
-   </p>
+   
    
  
 <table border="0" cellpadding="0" cellspacing="0" >

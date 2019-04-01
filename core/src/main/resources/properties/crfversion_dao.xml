@@ -23,6 +23,10 @@
         <name>findAllByOid</name>
         <sql>SELECT * FROM CRF_VERSION where oc_oid=?</sql>
     </query>
+    <query>
+        <name>findAllByFormOid</name>
+        <sql>SELECT v.* FROM CRF_VERSION v,CRF c where v.crf_id =c.crf_id and c.oc_oid=?</sql>
+    </query>
 	<query>
 		<name>findAllByCRF</name>
 		<sql>SELECT * FROM CRF_VERSION WHERE crf_id =? order by DATE_CREATED desc </sql>
@@ -101,10 +105,6 @@
     <query>
         <name>delete</name>
         <sql>delete from CRF_VERSION where crf_version_id=</sql>
-    </query>    
-    <query>
-        <name>deleteCrfVersionMediaByVersion</name>
-        <sql>delete from crf_version_media where crf_version_id=</sql>
     </query>    
 	<query>
 		<name>deleteItemsByVersion</name>

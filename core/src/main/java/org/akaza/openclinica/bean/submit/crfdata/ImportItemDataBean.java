@@ -13,8 +13,10 @@ public class ImportItemDataBean {
     private String reasonForNull;
     private AuditLogsBean auditLogs = new AuditLogsBean();
     private DiscrepancyNotesBean discrepancyNotes = new DiscrepancyNotesBean();
-    
-    private boolean hasValueWithNull; //this is just a flag, it is not an attribute/element
+    private boolean deleted;
+    private String itemName;
+
+    private boolean hasValueWithNull; // this is just a flag, it is not an attribute/element
 
     public String getItemOID() {
         return itemOID;
@@ -63,7 +65,7 @@ public class ImportItemDataBean {
     public void setReasonForNull(String reasonForNull) {
         this.reasonForNull = reasonForNull;
     }
-    
+
     public AuditLogsBean getAuditLogs() {
         return auditLogs;
     }
@@ -87,4 +89,21 @@ public class ImportItemDataBean {
     public void setHasValueWithNull(boolean hasValueWithNull) {
         this.hasValueWithNull = hasValueWithNull;
     }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
 }

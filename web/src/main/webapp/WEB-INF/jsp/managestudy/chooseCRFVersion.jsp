@@ -8,22 +8,24 @@
 <fmt:setBundle basename="org.akaza.openclinica.i18n.notes" var="restext"/>
 <fmt:setBundle basename="org.akaza.openclinica.i18n.page_messages" var="resmessages"/>
 <c:set var="dteFormat"><fmt:message key="date_format_string" bundle="${resformat}"/></c:set>
+<link rel="stylesheet" href="../../includes/css/icomoon-style.css">
 
 <link rel="stylesheet" href="../../includes/style_shaded_table.css" type="text/css">
 
+<link rel="SHORTCUT ICON" href="../../images/favicon.png" type="image/x-icon" />
 
-<jsp:include page="../include/managestudy_top_pages_new.jsp"/>
-	
-	
+<jsp:include page="../include/managestudy_top_pages_new.jsp">
+	<jsp:param name="isSpringControllerCCV" value="true" />
+</jsp:include>
 
 <!-- move the alert message to the sidebar-->
 <jsp:include page="../include/sideAlert.jsp"/>
 <tr id="sidebar_Instructions_open" style="display: all">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="../../images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+		<fmt:message key="instructions" bundle="${resword}"/>
 
 		<div class="sidebar_tab_content">
 			<fmt:message key="choose_crf_instruction_key"  bundle="${resword}"/>
@@ -35,20 +37,21 @@
 	<tr id="sidebar_Instructions_closed" style="display: none">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="../../images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+		<fmt:message key="instructions" bundle="${resword}"/>
 
 		</td>
   </tr><jsp:include page="../include/sideInfo.jsp"/>
   
 <h1><span class="title_manage">
 <fmt:message key="choose_CRF_version" bundle="${resword}"/>
-<a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/submit-data-module-overview/crf-version-migration')"><img src="../../images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${resword}"/>" title="<fmt:message key="help" bundle="${resword}"/>"></a>
+
  
 </span></h1>
-<script type="text/JavaScript" language="JavaScript" src="../../includes/jmesa/jquery.min.js"></script>
-<script type="text/JavaScript" language="JavaScript" src="../../includes/jmesa/jquery-migrate-1.1.1.js"></script> 
+<script type="text/JavaScript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.min.js"></script>
+<script type="text/JavaScript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery-migrate-1.4.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.blockUI.js"></script>
 
 <script type="text/javascript" language="javascript">
 $.noConflict();
@@ -67,15 +70,15 @@ $.noConflict();
 <input type="hidden" name="studySubjectId" value="${studySubjectId}">
 <input type="hidden" name="eventDefinitionCRFId" value="${eventDefinitionCRFId}">
 <input type="hidden" name="studySubjectLabel" value="${studySubjectLabel}">
-<input type="hidden" name="crfversionId" value="${crfversionId}">
+<input type="hidden" name="formLayoutId" value="${formLayoutId}">
 <input type="hidden" name="crfId" value="${crfBean.id}">
 <input type="hidden" name="crfName" value="${crfName}">
-<input type="hidden" name="crfVersionName" value="${crfVersionName}">
-<input type="hidden" name="eventCRFId" value="${eventCRFId}">
+<input type="hidden" name="formLayoutName" value="${formLayoutName}">
+<input type="hidden" name="eventCrfId" value="${eventCrfId}">
 <input type="hidden" name="eventName" value="${eventName}">
 <input type="hidden" name="eventCreateDate" value="${eventCreateDate}">
 <input type="hidden" name="eventOrdinal" value="${eventOrdinal}">
-        	
+<input type="hidden" name="originatingPage" value="${originatingPage}">
 
 
 <table cellpadding="2" cellspacing="2" border="0" class="dataTable" >
@@ -110,7 +113,7 @@ $.noConflict();
 <!-- default version label here -->
 <tr><td>
 <fmt:message key="choose_CRF_version_current_crf_version_title" bundle="${resword}"/></td>
-<td><c:out value="${crfVersionName}"/></td></tr>
+<td><c:out value="${formLayoutName}"/></td></tr>
 <tr><td>
 <!-- select new version here -->
 <fmt:message key="choose_CRF_version_combo_title" bundle="${resword}"/></td>
@@ -119,7 +122,7 @@ $.noConflict();
 <select name="selectedVersionId" id="selectedVersion">
 <option value="-1" >-Select-</option>
 <c:forEach var="version" items="${crfBean.versions}">
-<c:if test="${version.id != crfversionId}">
+<c:if test="${version.id != formLayoutId}">
 <option value="<c:out value="${version.id}" />" >&nbsp;<c:out value="${version.name}" />&nbsp;</option>
 </c:if>
 </c:forEach>
@@ -137,13 +140,12 @@ $.noConflict();
 <table cellpadding="0" cellspacing="0" border="1" class="shaded_table" >
 <tr>
 <td class="table_header_row" style="color: #789EC5;"><fmt:message key="version_name" bundle="${resword}"/></td>
-<td class="table_header_row" style="color: #789EC5;"><fmt:message key="version_oid" bundle="${resword}"/></td>
+<td class="table_header_row" style="color: #789EC5;"><fmt:message key="layout_oid" bundle="${resword}"/></td>
 <td class="table_header_row" style="color: #789EC5;"><fmt:message key="date_created" bundle="${resword}"/></td>
 <td class="table_header_row" style="color: #789EC5;"><fmt:message key="owner" bundle="${resword}"/></td>
 <td class="table_header_row" style="color: #789EC5;"><fmt:message key="default_version" bundle="${resword}"/></td>
 <td class="table_header_row" style="color: #789EC5;"><fmt:message key="action" bundle="${resword}"/></td>
 </tr>
-
 <!-- versions data -->
 
 <c:forEach var="version" items="${crfBean.versions}">
@@ -154,16 +156,13 @@ $.noConflict();
 <td  class="table_cell"  > <fmt:formatDate value="${version.createdDate}" pattern="${dteFormat}"/>&nbsp;</td>
 <td  class="table_cell"  > <c:out value="${crfBean.owner.name}" />&nbsp;</td>
 <!-- <td  class="table_cell"  > <c:out value="${version.status.name}" />&nbsp;</td>-->
-<td  class="table_cell"  style="text-align:center;" ><c:if test="${version.id == crfversionId}">X</c:if>&nbsp;</td>
-<td  class="table_cell"  > &nbsp;
-<a onmouseup="javascript:setImage('bt_View1','../../images/bt_View.gif');" onmousedown="javascript:setImage('bt_View1','../../images/bt_View_d.gif');" 
-href="#" onclick="window.openNewWindow('../../ViewSectionDataEntry?module=admin&crfId=<c:out value="${crfBean.id}"/>&crfVersionId=<c:out value="${version.id}"/>&tabId=1&crfListPage=yes','','','')">
-<img hspace="6" border="0" align="left" title="View" alt="View" src="../../images/bt_View.gif" name="bt_View1">
-</a>
-&nbsp;
+<td  class="table_cell"  style="text-align:center;" ><c:if test="${version.id == formLayoutId}">X</c:if>&nbsp;</td>
+<td  class="table_cell"  >
+<a href="../../EnketoFormServlet?formLayoutId=<c:out value="${version.id}"/>&studyEventId=<c:out value="0"/>&eventCrfId=<c:out value="0"/>&mode=preview" target="_blank"><span
+ name="bt_View1" class="icon icon-search" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="6"></a>
 <a onmouseup="javascript:setImage('bt_Metadata','../../images/bt_Metadata.gif');" onmousedown="javascript:setImage('bt_Metadata','../../images/bt_Metadata.gif');" 
 href="#" onclick="window.openNewWindow('../../ViewCRFVersion?id=<c:out value="${version.id}"/>','','','')">
-<img hspace="6" border="0" align="left" title="Metadata" alt="Metadata" src="../../images/bt_Metadata.gif" name="bt_Metadata">
+<span border="0" align="left" title="Metadata" alt="Metadata" class="icon icon-icon-dataEntryCompleted orange" name="bt_Metadata">
 </a>
 
 

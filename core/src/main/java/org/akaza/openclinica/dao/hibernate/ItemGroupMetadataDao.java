@@ -1,12 +1,18 @@
 package org.akaza.openclinica.dao.hibernate;
 
+import org.akaza.openclinica.domain.datamap.ItemGroupMetadata;
+import org.akaza.openclinica.domain.datamap.ItemMetadata;
+import org.hibernate.query.Query;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.akaza.openclinica.domain.datamap.ItemGroupMetadata;
-import org.hibernate.Query;
-
 public class ItemGroupMetadataDao extends AbstractDomainDao<ItemGroupMetadata> {
+
+    static String findMetadataByItemCrfVersionQuery = "select new ItemMetadata(igm, ifm) from ItemGroupMetadata igm "
+            + "join igm.item item on item.itemId = :itemid "
+            + "join ItemFromMetadata ifm "
+            + "join igm.crfVersion crfVersion on crfVersion.crfVersionId = :crfversionid";
 
     @Override
     Class<ItemGroupMetadata> domainClass() {
@@ -22,20 +28,30 @@ public class ItemGroupMetadataDao extends AbstractDomainDao<ItemGroupMetadata> {
         return (ArrayList<ItemGroupMetadata>) q.list();
     }
 
-    public ItemGroupMetadata findByItemCrfVersion(int item_id, int crf_version_id) {
-        String query = "from " + getDomainClassName() + " do where do.item.itemId = :itemid and do.crfVersion.crfVersionId = :crfversionid";
-        org.hibernate.Query q = getCurrentSession().createQuery(query);
-        q.setInteger("itemid", item_id);
-        q.setInteger("crfversionid", crf_version_id);
+    public ItemMetadata findMetadataByItemCrfVersion(int itemId, int crfVersionId) {
+        Query q = getCurrentSession().createQuery(findMetadataByItemCrfVersionQuery);
+        q.setParameter("itemid", itemId);
+        q.setParameter("crfversionid", crfVersionId);
+        return (ItemMetadata) q.uniqueResult();
+    }
+    static String findByItemCrfVersionQuery = "select igm from ItemGroupMetadata igm "
+            + "join igm.item item on item.itemId = :itemid "
+            + "join igm.crfVersion crfVersion on crfVersion.crfVersionId = :crfversionid";
+
+    static String findAllByCrfVersionQuery = "select igm from ItemGroupMetadata igm "
+            + "join igm.crfVersion crfVersion on crfVersion.crfVersionId = :crfversionid";
+
+
+    public ItemGroupMetadata findByItemCrfVersion(int itemId, int crfVersionId) {
+        Query q = getCurrentSession().createQuery(findByItemCrfVersionQuery);
+        q.setParameter("itemid", itemId);
+        q.setParameter("crfversionid", crfVersionId);
         return (ItemGroupMetadata) q.uniqueResult();
     }
 
-    public static final String findAllByCrfVersionQuery = "select distinct * from item_group_metadata igm where igm.crf_version_id = :crfversionid";
-
-    @SuppressWarnings("unchecked")
-    public List<ItemGroupMetadata> findAllByCrfVersion(int crf_version_id) {
-        Query q = getCurrentSession().createSQLQuery(findAllByCrfVersionQuery).addEntity(ItemGroupMetadata.class);
-        q.setInteger("crfversionid", crf_version_id);
+    public List<ItemGroupMetadata> findAllByCrfVersion(int crfVersionId) {
+        Query q = getCurrentSession().createQuery(findAllByCrfVersionQuery);
+        q.setParameter("crfversionid", crfVersionId);
         return (List<ItemGroupMetadata>) q.list();
     }
 }

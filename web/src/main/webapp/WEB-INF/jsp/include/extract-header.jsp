@@ -18,9 +18,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=11" />
 
-<title><fmt:message key="openclinica" bundle="${resword}"/></title>
+<title><fmt:message key="openclinica" bundle="${resword}"/></title> 
+<link rel="SHORTCUT ICON" href="images/favicon.png" type="image/x-icon" />
 
 <link rel="stylesheet" href="includes/styles.css" type="text/css">
 <%-- <link rel="stylesheet" href="includes/styles2.css" type="text/css">--%>
@@ -29,6 +30,14 @@
 <%-- <script type="text/JavaScript" language="JavaScript" src="includes/global_functions_javascript2.js"></script> --%>
 <script language="JavaScript" src="includes/Tabs.js"></script>
 <script language="JavaScript" src="includes/CalendarPopup.js"></script>
+
+<!-- Added for the new Calender -->
+<link rel="stylesheet" type="text/css" media="all" href="includes/new_cal/skins/aqua/theme.css" title="Aqua" />
+<script type="text/javascript" src="includes/new_cal/calendar.js"></script>
+<script type="text/javascript" src="includes/new_cal/lang/calendar-en.js"></script>
+<script type="text/javascript" src="includes/new_cal/lang/<fmt:message key="jscalendar_language_file" bundle="${resformat}"/>"></script>
+<script type="text/javascript" src="includes/new_cal/calendar-setup.js"></script>
+<!-- End -->
 
 </head>
 
@@ -48,10 +57,6 @@ document.write('<table border="0" cellpadding="0" cellspacing="0" width="' + doc
 </script>
 			<tr>
 				<td valign="top">
-
-<!-- Logo -->
-
-	<div class="logo"><img src="images/Logo.gif"></div>
 
 <!-- Main Navigation -->
 

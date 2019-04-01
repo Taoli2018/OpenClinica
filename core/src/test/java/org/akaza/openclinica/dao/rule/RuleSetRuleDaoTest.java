@@ -1,6 +1,5 @@
 package org.akaza.openclinica.dao.rule;
 
-import org.akaza.openclinica.dao.hibernate.AuthoritiesDao;
 import org.akaza.openclinica.dao.hibernate.RuleDao;
 import org.akaza.openclinica.dao.hibernate.RuleSetDao;
 import org.akaza.openclinica.dao.hibernate.RuleSetRuleDao;
@@ -9,44 +8,15 @@ import org.akaza.openclinica.domain.rule.RuleSetBean;
 import org.akaza.openclinica.domain.rule.RuleSetRuleBean;
 import org.akaza.openclinica.templates.HibernateOcDbTestCase;
 import org.hibernate.HibernateException;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.junit.Ignore;
 
 import java.util.List;
 
+@Ignore
 public class RuleSetRuleDaoTest extends HibernateOcDbTestCase {
     private static RuleSetRuleDao ruleSetRuleDao;
     private static RuleDao ruleDao;
     private static RuleSetDao ruleSetDao;
-    /*static
-    {
-        
-        loadProperties();
-        dbName = properties.getProperty("dbName");
-        dbUrl = properties.getProperty("url");
-        dbUserName = properties.getProperty("username");
-        dbPassword = properties.getProperty("password");
-        dbDriverClassName = properties.getProperty("driver");
-        locale = properties.getProperty("locale");
-        initializeLocale();
-        initializeQueriesInXml();
-       
-     
-        
-        context =
-            new ClassPathXmlApplicationContext(
-                    new String[] { "classpath*:applicationContext-core-s*.xml", "classpath*:org/akaza/openclinica/applicationContext-core-db.xml",
-                        "classpath*:org/akaza/openclinica/applicationContext-core-email.xml",
-                        "classpath*:org/akaza/openclinica/applicationContext-core-hibernate.xml",
-                                           "classpath*:org/akaza/openclinica/applicationContext-core-service.xml",
-                       " classpath*:org/akaza/openclinica/applicationContext-core-timer.xml",
-                        "classpath*:org/akaza/openclinica/applicationContext-security.xml" });
-      transactionManager = (PlatformTransactionManager) context.getBean("transactionManager");
-      transactionManager.getTransaction(new DefaultTransactionDefinition());
-        
-
-    }*/
     @Override
     public void setUp() throws Exception{
         super.setUp();
@@ -89,10 +59,9 @@ public class RuleSetRuleDaoTest extends HibernateOcDbTestCase {
     }
     public void tearDown(){
         try {
-           ruleSetDao.getSessionFactory().getCurrentSession().close();
-            ruleDao.getSessionFactory().getCurrentSession().close();
-        //   ruleDao.getSessionFactory().getCurrentSession().flush();
-            ruleSetRuleDao.getSessionFactory().getCurrentSession().close();
+            // if there are any uncommitted transactions, commit them now
+            if (ruleSetRuleDao.getCurrentSession().getTransaction().isActive())
+                ruleSetRuleDao.getCurrentSession().getTransaction().commit();
         } catch (HibernateException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

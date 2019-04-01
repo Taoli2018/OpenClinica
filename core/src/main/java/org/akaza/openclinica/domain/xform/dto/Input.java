@@ -1,5 +1,7 @@
 package org.akaza.openclinica.domain.xform.dto;
 
+import java.util.List;
+
 public class Input implements UserControl {
     private String ref;
     private String appearance;
@@ -40,6 +42,18 @@ public class Input implements UserControl {
 
     @Override
     public String getMediatype() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<Item> getItem() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ItemSet getItemSet() {
         // TODO Auto-generated method stub
         return null;
     }

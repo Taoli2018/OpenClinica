@@ -12,7 +12,6 @@ import java.sql.Connection;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
@@ -34,7 +33,7 @@ import org.akaza.openclinica.bean.managestudy.StudyEventBean;
 import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
 import org.akaza.openclinica.bean.submit.CRFVersionBean;
 import org.akaza.openclinica.bean.submit.EventCRFBean;
-import org.akaza.openclinica.bean.submit.ItemBean;
+import org.akaza.openclinica.bean.submit.FormLayoutBean;
 import org.akaza.openclinica.dao.EventCRFSDVFilter;
 import org.akaza.openclinica.dao.EventCRFSDVSort;
 import org.akaza.openclinica.dao.core.AuditableEntityDAO;
@@ -43,7 +42,6 @@ import org.akaza.openclinica.dao.core.DAODigester;
 import org.akaza.openclinica.dao.core.SQLFactory;
 import org.akaza.openclinica.dao.core.TypeNames;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.validator.util.SetAccessibility;
 
 /**
  * <P>
@@ -112,6 +110,7 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         this.setTypeExpected(21, TypeNames.BOOL);// sdv_status
         this.setTypeExpected(22, TypeNames.INT);// old_status
         this.setTypeExpected(23, TypeNames.INT); // sdv_update_id
+        this.setTypeExpected(24, TypeNames.INT); // form_layout_id
         // if ("oracle".equalsIgnoreCase(CoreResources.getDBName())) {
         // this.setTypeExpected(24, TypeNames.INT); // r
         // }
@@ -177,7 +176,8 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         // @pgawade 22-May-2011 added the sdv updater id variable
         variables.put(new Integer(19), ecb.getSdvUpdateId());
         // variables.put(new Integer(19), new Integer(ecb.getId()));
-        variables.put(new Integer(20), new Integer(ecb.getId()));
+        variables.put(new Integer(21), new Integer(ecb.getId()));
+        variables.put(new Integer(20), new Integer(ecb.getFormLayoutId()));
 
         this.execute(digester.getQuery("update"), variables, nullVars);
 
@@ -223,6 +223,7 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         variables.put(new Integer(9), new Integer(ecb.getStudySubjectId()));
         variables.put(new Integer(10), ecb.getValidateString());
         variables.put(new Integer(11), ecb.getValidatorAnnotations());
+        variables.put(new Integer(12), new Integer(ecb.getFormLayoutId()));
 
         executeWithPK(digester.getQuery("create"), variables, nullVars);
         if (isQuerySuccessful()) {
@@ -252,6 +253,7 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         eb.setStudySubjectId(((Integer) hm.get("study_subject_id")).intValue());
         eb.setSdvStatus((Boolean) hm.get("sdv_status"));
         eb.setSdvUpdateId((Integer) hm.get("sdv_update_id"));
+        eb.setFormLayoutId(((Integer) hm.get("form_layout_id")).intValue());
         Integer oldStatusId = (Integer) hm.get("old_status_id");
         eb.setOldStatus(Status.get(oldStatusId));
 
@@ -328,10 +330,11 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         return executeFindAllQuery("findAllByStudySubject", variables);
     }
 
-    public List<EventCRFBean> findAllCRFMigrationReportList(CRFVersionBean sourceCrfVersionBean , CRFVersionBean targetCrfVersionBean ,ArrayList<String> studyEventDefnlist ,ArrayList<String>  sitelist) {
+    public List<EventCRFBean> findAllCRFMigrationReportList(FormLayoutBean sourceCrfVersionBean, FormLayoutBean targetCrfVersionBean,
+            ArrayList<String> studyEventDefnlist, ArrayList<String> sitelist) {
         HashMap<Integer, Object> variables = new HashMap();
-        String eventStr =StringUtils.join(studyEventDefnlist, ",");
-        String siteStr =StringUtils.join(sitelist, ",");
+        String eventStr = StringUtils.join(studyEventDefnlist, ",");
+        String siteStr = StringUtils.join(sitelist, ",");
         variables.put(new Integer(1), new Integer(sourceCrfVersionBean.getId()));
         variables.put(2, eventStr);
         variables.put(3, siteStr);
@@ -340,8 +343,16 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
 
         return executeFindAllQuery("findAllCRFMigrationReportList", variables);
     }
-    
-    
+
+    public ArrayList findAllByStudyEventAndFormOrFormLayoutOid(StudyEventBean studyEvent, String crfVersionOrCrfOID) {
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(studyEvent.getId()));
+        variables.put(new Integer(2), crfVersionOrCrfOID);
+        variables.put(new Integer(3), crfVersionOrCrfOID);
+
+        return executeFindAllQuery("findAllByStudyEventAndFormOrFormLayoutOid", variables);
+    }
+
     public ArrayList findAllByStudyEventAndCrfOrCrfVersionOid(StudyEventBean studyEvent, String crfVersionOrCrfOID) {
         HashMap variables = new HashMap();
         variables.put(new Integer(1), new Integer(studyEvent.getId()));
@@ -351,7 +362,7 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         return executeFindAllQuery("findAllByStudyEventAndCrfOrCrfVersionOid", variables);
     }
 
-    public ArrayList<EventCRFBean> findAllByStudyEventInParticipantForm(StudyEventBean studyEvent,int sed_Id,int studyId) {
+    public ArrayList<EventCRFBean> findAllByStudyEventInParticipantForm(StudyEventBean studyEvent, int sed_Id, int studyId) {
         HashMap variables = new HashMap();
         variables.put(new Integer(1), new Integer(studyEvent.getId()));
         variables.put(new Integer(2), new Integer(sed_Id));
@@ -360,7 +371,6 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         return executeFindAllQuery("findAllByStudyEventInParticipantForm", variables);
     }
 
-    
     public ArrayList findAllByCRF(int crfId) {
         HashMap variables = new HashMap();
         variables.put(new Integer(1), new Integer(crfId));
@@ -440,6 +450,15 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         return executeFindAllQuery("findByEventSubjectVersion", variables);
     }
 
+    public ArrayList findByEventSubjectFormLayout(StudyEventBean studyEvent, StudySubjectBean studySubject, FormLayoutBean formLayout) {
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(studyEvent.getId()));
+        variables.put(new Integer(2), new Integer(formLayout.getId()));
+        variables.put(new Integer(3), new Integer(studySubject.getId()));
+
+        return executeFindAllQuery("findByEventSubjectFormLayout", variables);
+    }
+
     // TODO: to get rid of warning refactor executeFindAllQuery method in
     // superclass
     public EventCRFBean findByEventCrfVersion(StudyEventBean studyEvent, CRFVersionBean crfVersion) {
@@ -449,6 +468,20 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         variables.put(new Integer(2), new Integer(crfVersion.getId()));
 
         ArrayList<EventCRFBean> eventCrfs = executeFindAllQuery("findByEventCrfVersion", variables);
+        if (!eventCrfs.isEmpty() && eventCrfs.size() == 1) {
+            eventCrfBean = eventCrfs.get(0);
+        }
+        return eventCrfBean;
+
+    }
+
+    public EventCRFBean findByEventFormLayout(StudyEventBean studyEvent, FormLayoutBean formLayout) {
+        EventCRFBean eventCrfBean = null;
+        HashMap<Integer, Integer> variables = new HashMap<Integer, Integer>();
+        variables.put(new Integer(1), new Integer(studyEvent.getId()));
+        variables.put(new Integer(2), new Integer(formLayout.getId()));
+
+        ArrayList<EventCRFBean> eventCrfs = executeFindAllQuery("findByEventFormLayout", variables);
         if (!eventCrfs.isEmpty() && eventCrfs.size() == 1) {
             eventCrfBean = eventCrfs.get(0);
         }
@@ -635,14 +668,26 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         return executeFindAllQuery("getEventCRFsByStudyIdentifier", variables);
     }
 
-    public Integer getCountWithFilter(int studyId, int parentStudyId, EventCRFSDVFilter filter) {
+    public Integer getCountWithFilter(int studyId, int parentStudyId, EventCRFSDVFilter filter , String[] permissionTags) {
 
         setTypesExpected();
 
         HashMap variables = new HashMap();
-        variables.put(1, studyId);
-        variables.put(2, parentStudyId);
-        String sql = digester.getQuery("getCountWithFilter");
+
+        String sql = digester.getQuery("getCountWithFilterPart1");
+        if(permissionTags ==null || permissionTags.length==0) {
+            sql =sql+" "+ digester.getQuery("getCountWithFilter");
+            variables.put(new Integer(1), studyId);
+            variables.put(new Integer(2), parentStudyId);
+        }else{
+            sql =sql+" "+ digester.getQuery("getCountWithFilterWithTagId");
+            variables.put(new Integer(1), permissionTags);
+            variables.put(new Integer(2), permissionTags);
+            variables.put(new Integer(3), studyId);
+            variables.put(new Integer(4), parentStudyId);
+        }
+        sql =sql+" "+ digester.getQuery("getCountWithFilterPart2");
+
         sql += filter.execute("");
 
         ArrayList rows = this.select(sql, variables);
@@ -656,19 +701,32 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         }
     }
 
-    public ArrayList<EventCRFBean> getWithFilterAndSort(int studyId, int parentStudyId, EventCRFSDVFilter filter, EventCRFSDVSort sort, int rowStart, int rowEnd) {
+    public ArrayList<EventCRFBean> getWithFilterAndSort(int studyId, int parentStudyId, EventCRFSDVFilter filter, EventCRFSDVSort sort, int rowStart,
+            int rowEnd, String[]  permissionTags) {
         ArrayList<EventCRFBean> eventCRFs = new ArrayList<EventCRFBean>();
         setTypesExpected();
 
         HashMap variables = new HashMap();
-        variables.put(1, studyId);
-        variables.put(2, parentStudyId);
-        String sql = digester.getQuery("getWithFilterAndSort");
+
+        String sql = digester.getQuery("getWithFilterAndSortPart1");
+        if(permissionTags ==null || permissionTags.length==0) {
+            sql =sql+" "+ digester.getQuery("getCountWithFilter");
+            variables.put(1, studyId);
+            variables.put(2, parentStudyId);
+        }else{
+            sql =sql+" "+ digester.getQuery("getCountWithFilterWithTagId");
+            variables.put(1, permissionTags);
+            variables.put(2, permissionTags);
+            variables.put(3, studyId);
+            variables.put(4, parentStudyId);
+        }
+        sql =sql+" "+ digester.getQuery("getWithFilterAndSortPart2");
+
         sql = sql + filter.execute("");
         // sql = sql + sort.execute("");
         sql = sql + " order By  ec.date_created ASC "; // major hack
         if ("oracle".equalsIgnoreCase(CoreResources.getDBName())) {
-            // sql += " )  where rownum <= " + rowEnd + " and rownum >" + rowStart + " ";
+            // sql += " ) where rownum <= " + rowEnd + " and rownum >" + rowStart + " ";
             sql += " )x)where r between " + (rowStart + 1) + " and " + rowEnd;
         } else {
             sql = sql + " LIMIT " + (rowEnd - rowStart) + " OFFSET " + rowStart;
@@ -997,6 +1055,29 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         variables.put(4, false);
         variables.put(5, event_crf_id);
         String sql = digester.getQuery("updateCRFVersionID");
+        // this is the way to make the change transactional
+        if (con == null) {
+            this.execute(sql, variables);
+        } else {
+            this.execute(sql, variables, con);
+        }
+    }
+
+    public void updateFormLayoutID(int event_crf_id, int form_layout_id, int user_id, Connection con) {
+        this.unsetTypeExpected();
+        this.setTypeExpected(1, TypeNames.INT);
+        this.setTypeExpected(2, TypeNames.INT);
+        this.setTypeExpected(3, TypeNames.INT);
+        this.setTypeExpected(4, TypeNames.BOOL);
+        this.setTypeExpected(3, TypeNames.INT);
+
+        HashMap variables = new HashMap();
+        variables.put(1, form_layout_id);
+        variables.put(2, user_id);
+        variables.put(3, user_id);
+        variables.put(4, false);
+        variables.put(5, event_crf_id);
+        String sql = digester.getQuery("updateFormLayoutID");
         // this is the way to make the change transactional
         if (con == null) {
             this.execute(sql, variables);

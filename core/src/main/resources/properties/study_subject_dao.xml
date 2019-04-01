@@ -55,16 +55,25 @@
                 ( s.study_id = ? or s.parent_study_id = ? )) as ss
         </sql>
     </query>
+
+	<query>
+		<name>getCountofStudySubjectsBasedOnStatus</name>
+		<sql>
+			select count (*) from (select DISTINCT(ss.*) from study_subject ss,study s, status where
+			status.status_id = ss.status_id  AND
+			ss.study_id = s.study_id AND
+			( s.study_id = ? or s.parent_study_id = ? ) AND
+			status.status_id = ? ) as ss
+		</sql>
+	</query>
+
     <query>
-        <name>getCountofStudySubjectsBasedOnStatus</name>
+        <name>getCountOfActiveStudySubjects</name>
         <sql>
-            select count (*) from (select DISTINCT(ss.*) from study_subject ss,study s, status where
-                status.status_id = ss.status_id  AND
-                ss.study_id = s.study_id AND
-                ( s.study_id = ? or s.parent_study_id = ? ) AND
-                status.status_id = ? ) as ss
+            select count (*) from study_subject ss WHERE ss.status_id in (1,8)
         </sql>
     </query>
+
     <query>
         <name>getCountWithFilter</name>
         <sql>SELECT COUNT( DISTINCT  SS.study_subject_id)
@@ -73,6 +82,14 @@
                     SS.SUBJECT_ID=S.SUBJECT_ID
                     AND SS.study_id = ST.study_id
                     AND (ST.study_id=? or ST.parent_study_id=?)
+        </sql>
+    </query>
+    <query>
+        <name>getFromStudy</name>
+        <sql>SELECT ss.*, ST.unique_identifier
+            FROM study_subject ss, STUDY ST
+            where SS.study_id = ST.study_id
+            AND (ST.study_id=? or ST.parent_study_id=?)
         </sql>
     </query>
     <query>
@@ -148,6 +165,11 @@
 	</query>
 
     <query>
+        <name>findAllBySitetId</name>
+        <sql>SELECT * FROM study_subject where study_id=?</sql>
+    </query>
+
+    <query>
 		<name>findAnotherBySameLabel</name>
 		<sql>
 			SELECT ss.*
@@ -181,6 +203,14 @@
 			WHERE ss.label=?
 				AND ss.study_id=st.study_id
 				AND (st.study_id=? or st.parent_study_id=?)
+		</sql>
+	</query>
+	<query>
+		<name>findByLabel</name>
+		<sql>
+			SELECT ss.*
+			FROM study_subject ss
+			WHERE ss.label=?
 		</sql>
 	</query>
 	<query>
@@ -262,7 +292,7 @@
 		<sql>
 		  UPDATE study_subject SET LABEL=?,  SUBJECT_ID=?,  STUDY_ID=?,
 		  STATUS_ID=?, ENROLLMENT_DATE=?, DATE_UPDATED=now(),
-		  UPDATE_ID=?, SECONDARY_LABEL=?, TIME_ZONE=? WHERE STUDY_SUBJECT_ID=?
+		  UPDATE_ID=?, SECONDARY_LABEL=?, TIME_ZONE=? , USER_ID=?::integer, USER_STATUS_ID=? WHERE STUDY_SUBJECT_ID=?
 	    </sql>
 	</query>
 	<query>
@@ -328,13 +358,13 @@
 		select count(Distinct ec.study_subject_id) from event_crf ec 
 			JOIN study_subject ss on ss.study_subject_id = ec.study_subject_id
 			JOIN study_event se on se.study_event_id = ec.study_event_id
-			JOIN crf_version cv on cv.crf_version_id = ec.crf_version_id
+			JOIN form_layout fl on fl.form_layout_id = ec.form_layout_id
 			JOIN study_event_definition sed on sed.study_event_definition_id= se.study_event_definition_id
             JOIN study s on s.study_id=ss.study_id			
-			LEFT JOIN event_definition_crf edc on (edc.crf_id = cv.crf_id and
+			LEFT JOIN event_definition_crf edc on (edc.crf_id = fl.crf_id and
 			edc.study_id = ss.study_id and edc.study_event_definition_id=
 			se.study_event_definition_id)
-where ec.crf_version_id=?
+where ec.form_layout_id=?
 			and
             (sed.oc_oid = ANY(string_to_array(?,',')))  
                   and    
@@ -350,13 +380,13 @@ and (edc.selected_version_ids isNull or edc.selected_version_ids='' or (? = ANY 
 		select count(*) from event_crf ec 
 			JOIN study_subject ss on ss.study_subject_id = ec.study_subject_id
 			JOIN study_event se on se.study_event_id = ec.study_event_id
-			JOIN crf_version cv on cv.crf_version_id = ec.crf_version_id
+			JOIN form_layout fl on fl.form_layout_id = ec.form_layout_id
 			JOIN study_event_definition sed on sed.study_event_definition_id= se.study_event_definition_id
             JOIN study s on s.study_id=ss.study_id			
-			LEFT JOIN event_definition_crf edc on (edc.crf_id = cv.crf_id and
+			LEFT JOIN event_definition_crf edc on (edc.crf_id = fl.crf_id and
 			edc.study_id = ss.study_id and edc.study_event_definition_id=
 			se.study_event_definition_id)
-where ec.crf_version_id=?
+where ec.form_layout_id=?
 			and
             (sed.oc_oid = ANY(string_to_array(?,',')))  
                   and    

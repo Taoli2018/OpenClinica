@@ -7,6 +7,7 @@
  */
 package org.akaza.openclinica.control.submit;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,9 +27,9 @@ import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.bean.managestudy.StudyEventBean;
 import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
 import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
-import org.akaza.openclinica.bean.submit.CRFVersionBean;
 import org.akaza.openclinica.bean.submit.DisplayEventCRFBean;
 import org.akaza.openclinica.bean.submit.EventCRFBean;
+import org.akaza.openclinica.bean.submit.FormLayoutBean;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.control.managestudy.ViewStudySubjectServlet;
@@ -41,8 +42,8 @@ import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
 import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
 import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
 import org.akaza.openclinica.dao.rule.RuleSetDAO;
-import org.akaza.openclinica.dao.submit.CRFVersionDAO;
 import org.akaza.openclinica.dao.submit.EventCRFDAO;
+import org.akaza.openclinica.dao.submit.FormLayoutDAO;
 import org.akaza.openclinica.dao.submit.ItemDataDAO;
 import org.akaza.openclinica.i18n.core.LocaleResolver;
 import org.akaza.openclinica.service.crfdata.HideCRFManager;
@@ -70,14 +71,17 @@ public class EnterDataForStudyEventServlet extends SecureController {
     // property; this
     // value will be saved as a request attribute
     public final static String HAS_LOCATION_NOTE = "hasLocationNote";
+    public final static String LOCATION_NOTE = "locationNote";
     // The study event has an existing discrepancy note related to its start
     // date property; this
     // value will be saved as a request attribute
     public final static String HAS_START_DATE_NOTE = "hasStartDateNote";
+    public final static String START_DATE_NOTE = "startDateNote";
     // The study event has an existing discrepancy note related to its end date
     // property; this
     // value will be saved as a request attribute
     public final static String HAS_END_DATE_NOTE = "hasEndDateNote";
+    public final static String END_DATE_NOTE = "endDateNote";
 
     private StudyEventBean getStudyEvent(int eventId) throws Exception {
         StudyEventDAO sedao = new StudyEventDAO(sm.getDataSource());
@@ -100,8 +104,8 @@ public class EnterDataForStudyEventServlet extends SecureController {
         StudyEventDefinitionDAO seddao = new StudyEventDefinitionDAO(sm.getDataSource());
         StudyEventDefinitionBean sedb = (StudyEventDefinitionBean) seddao.findByPK(seb.getStudyEventDefinitionId());
         seb.setStudyEventDefinition(sedb);
-        //A. Hamid mantis issue 5048
-        if(!(currentRole.isDirector() || currentRole.isCoordinator()) && seb.getSubjectEventStatus().isLocked()){
+        // A. Hamid mantis issue 5048
+        if (!(currentRole.isDirector() || currentRole.isCoordinator()) && seb.getSubjectEventStatus().isLocked()) {
             seb.setEditable(false);
         }
         return seb;
@@ -114,12 +118,13 @@ public class EnterDataForStudyEventServlet extends SecureController {
      */
     @Override
     protected void processRequest() throws Exception {
-       // removeLockedCRF(ub.getId());
-        getCrfLocker().unlockAllForUser(ub.getId());
+        // removeLockedCRF(ub.getId());
+        getEventCrfLocker().unlockAllForUser(ub.getId());
         FormProcessor fp = new FormProcessor(request);
 
         int eventId = fp.getInt(INPUT_EVENT_ID, true);
         request.setAttribute("eventId", eventId + "");
+        request.setAttribute("originatingPage", URLEncoder.encode("EnterDataForStudyEvent?eventId=" + eventId, "UTF-8"));
 
         // so we can display the event for which we're entering data
         StudyEventBean seb = getStudyEvent(eventId);
@@ -144,26 +149,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
         DiscrepancyNoteDAO discrepancyNoteDAO = new DiscrepancyNoteDAO(sm.getDataSource());
         ArrayList<DiscrepancyNoteBean> allNotesforSubjectAndEvent = new ArrayList<DiscrepancyNoteBean>();
 
-        /*
-         * allNotesforSubjectAndEvent =
-         * discrepancyNoteDAO.findAllStudyEventByStudyAndId(currentStudy,
-         * studySubjectBean.getId());
-         */
-
-        // These methods return only parent disc notes
-        if (subjectStudyIsCurrentStudy && isParentStudy) {
-            allNotesforSubjectAndEvent = discrepancyNoteDAO.findAllStudyEventByStudyAndId(currentStudy, studySubjectBean.getId());
-        } else { // findAllStudyEventByStudiesAndSubjectId
-            if (!isParentStudy) {
-                StudyBean stParent = (StudyBean) studydao.findByPK(study.getParentStudyId());
-                allNotesforSubjectAndEvent = discrepancyNoteDAO.findAllStudyEventByStudiesAndSubjectId(stParent, study, studySubjectBean.getId());
-            } else {
-
-                allNotesforSubjectAndEvent = discrepancyNoteDAO.findAllStudyEventByStudiesAndSubjectId(currentStudy, study, studySubjectBean.getId());
-
-            }
-
-        }
+        allNotesforSubjectAndEvent = discrepancyNoteDAO.findExistingNoteForStudyEvent(seb);
 
         if (!allNotesforSubjectAndEvent.isEmpty()) {
             setRequestAttributesForNotes(allNotesforSubjectAndEvent);
@@ -210,9 +196,8 @@ public class EnterDataForStudyEventServlet extends SecureController {
         // ArrayList displayEventCRFs = getDisplayEventCRFs(eventCRFs,
         // eventDefinitionCRFs, seb.getSubjectEventStatus());
 
-        ArrayList displayEventCRFs =
-            ViewStudySubjectServlet
-                    .getDisplayEventCRFs(sm.getDataSource(), eventCRFs, eventDefinitionCRFs, ub, currentRole, seb.getSubjectEventStatus(), study);
+        ArrayList displayEventCRFs = ViewStudySubjectServlet.getDisplayEventCRFs(sm.getDataSource(), eventCRFs, eventDefinitionCRFs, ub, currentRole,
+                seb.getSubjectEventStatus(), study);
 
         // Issue 3212 BWP << hide certain CRFs at the site level
         if (currentStudy.getParentStudyId() > 0) {
@@ -230,7 +215,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
         request.setAttribute(BEAN_UNCOMPLETED_EVENTDEFINITIONCRFS, uncompletedEventDefinitionCRFs);
         request.setAttribute(BEAN_DISPLAY_EVENT_CRFS, displayEventCRFs);
 
-        //@pgawade 31-Aug-2012 fix for issue #15315: Reverting to set the request variable "beans" back 
+        // @pgawade 31-Aug-2012 fix for issue #15315: Reverting to set the request variable "beans" back
         // this is for generating side info panel
         ArrayList beans = ViewStudySubjectServlet.getDisplayStudyEventsForStudySubject(studySubjectBean, sm.getDataSource(), ub, currentRole);
         request.setAttribute("beans", beans);
@@ -307,11 +292,11 @@ public class EnterDataForStudyEventServlet extends SecureController {
             startedButIncompleted.put(new Integer(edcrf.getCrfId()), new EventCRFBean());
         }
 
-        CRFVersionDAO cvdao = new CRFVersionDAO(sm.getDataSource());
+        FormLayoutDAO fldao = new FormLayoutDAO(sm.getDataSource());
         ItemDataDAO iddao = new ItemDataDAO(sm.getDataSource());
         for (i = 0; i < eventCRFs.size(); i++) {
             EventCRFBean ecrf = (EventCRFBean) eventCRFs.get(i);
-            int crfId = cvdao.getCRFIdFromCRFVersionId(ecrf.getCRFVersionId());
+            int crfId = fldao.getCRFIdFromFormLayoutId(ecrf.getFormLayoutId());
             ArrayList idata = iddao.findAllByEventCRFId(ecrf.getId());
             if (!idata.isEmpty()) {// this crf has data already
                 completed.put(new Integer(crfId), Boolean.TRUE);
@@ -370,7 +355,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
 
     private void populateUncompletedCRFsWithCRFAndVersions(ArrayList uncompletedEventDefinitionCRFs) {
         CRFDAO cdao = new CRFDAO(sm.getDataSource());
-        CRFVersionDAO cvdao = new CRFVersionDAO(sm.getDataSource());
+        FormLayoutDAO fldao = new FormLayoutDAO(sm.getDataSource());
 
         int size = uncompletedEventDefinitionCRFs.size();
         for (int i = 0; i < size; i++) {
@@ -384,12 +369,12 @@ public class EnterDataForStudyEventServlet extends SecureController {
                 // go to the JSP for this one, I think
                 dedcrf.getEdc().setCrf(cb);
 
-                ArrayList theVersions = (ArrayList) cvdao.findAllActiveByCRF(dedcrf.getEdc().getCrfId());
+                ArrayList theVersions = (ArrayList) fldao.findAllActiveByCRF(dedcrf.getEdc().getCrfId());
                 ArrayList versions = new ArrayList();
-                HashMap<String, CRFVersionBean> crfVersionIds = new HashMap<String, CRFVersionBean>();
+                HashMap<String, FormLayoutBean> crfVersionIds = new HashMap<String, FormLayoutBean>();
 
                 for (int j = 0; j < theVersions.size(); j++) {
-                    CRFVersionBean crfVersion = (CRFVersionBean) theVersions.get(j);
+                    FormLayoutBean crfVersion = (FormLayoutBean) theVersions.get(j);
                     crfVersionIds.put(String.valueOf(crfVersion.getId()), crfVersion);
                 }
 
@@ -409,7 +394,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
                 if (versions != null && versions.size() != 0) {
                     boolean isLocked = false;
                     for (int ii = 0; ii < versions.size(); ii++) {
-                        CRFVersionBean crfvb = (CRFVersionBean) versions.get(ii);
+                        FormLayoutBean crfvb = (FormLayoutBean) versions.get(ii);
                         logger.debug("...checking versions..." + crfvb.getName());
                         if (!crfvb.getStatus().equals(Status.AVAILABLE)) {
                             logger.debug("found a non active crf version");
@@ -426,7 +411,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
                     dedcrf.setStatus(Status.LOCKED);
                     dedcrf.getEventCRF().setStage(DataEntryStage.LOCKED);
                     uncompletedEventDefinitionCRFs.set(i, dedcrf);
-                }// added 102007, tbh
+                } // added 102007, tbh
             } else {
                 dedcrf.getEdc().setCrf(cb);
                 logger.debug("_found a non active crf _");
@@ -434,7 +419,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
                 dedcrf.getEventCRF().setStage(DataEntryStage.LOCKED);
                 dedcrf.getEdc().getCrf().setStatus(Status.LOCKED);
                 uncompletedEventDefinitionCRFs.set(i, dedcrf);
-            }// enclosing if statement added 102007, tbh
+            } // enclosing if statement added 102007, tbh
         }
     }
 
@@ -461,7 +446,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
         }
 
         CRFDAO cdao = new CRFDAO(sm.getDataSource());
-        CRFVersionDAO cvdao = new CRFVersionDAO(sm.getDataSource());
+        FormLayoutDAO fldao = new FormLayoutDAO(sm.getDataSource());
         ItemDataDAO iddao = new ItemDataDAO(sm.getDataSource());
 
         for (i = 0; i < eventCRFs.size(); i++) {
@@ -470,19 +455,19 @@ public class EnterDataForStudyEventServlet extends SecureController {
             logger.debug("0. found event crf bean: " + ecb.getName());
 
             // populate the event CRF with its crf bean
-            int crfVersionId = ecb.getCRFVersionId();
+            int crfVersionId = ecb.getFormLayoutId();
             CRFBean cb = cdao.findByVersionId(crfVersionId);
             logger.debug("1. found crf bean: " + cb.getName());
 
             ecb.setCrf(cb);
 
-            CRFVersionBean cvb = (CRFVersionBean) cvdao.findByPK(crfVersionId);
+            FormLayoutBean cvb = (FormLayoutBean) fldao.findByPK(crfVersionId);
             logger.debug("2. found crf version bean: " + cvb.getName());
 
-            ecb.setCrfVersion(cvb);
+            ecb.setFormLayout(cvb);
 
-            logger.debug("found subj event status: " + status.getName() + " cb status: " + cb.getStatus().getName() + " cvb status: "
-                + cvb.getStatus().getName());
+            logger.debug(
+                    "found subj event status: " + status.getName() + " cb status: " + cb.getStatus().getName() + " cvb status: " + cvb.getStatus().getName());
             // below added tbh 092007
             boolean invalidate = false;
             if (status.isLocked()) {
@@ -551,7 +536,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
      *         event, ordered by the EventDefinitionCRF ordinal property, and
      *         with flags already set.
      */
-    public static ArrayList getDisplayEventCRFs(StudyEventBean studyEvent, EventCRFDAO ecdao, EventDefinitionCRFDAO edcdao, CRFVersionDAO crfvdao,
+    public static ArrayList getDisplayEventCRFs(StudyEventBean studyEvent, EventCRFDAO ecdao, EventDefinitionCRFDAO edcdao, FormLayoutDAO fldao,
             UserAccountBean user, StudyUserRoleBean surb) {
         ArrayList answer = new ArrayList();
         HashMap indexByCRFId = new HashMap();
@@ -560,10 +545,10 @@ public class EnterDataForStudyEventServlet extends SecureController {
         ArrayList eventDefinitionCRFs = edcdao.findAllByEventDefinitionId(studyEvent.getStudyEventDefinitionId());
 
         // TODO: map this out to another function
-        ArrayList crfVersions = (ArrayList) crfvdao.findAll();
+        ArrayList crfVersions = (ArrayList) fldao.findAll();
         HashMap crfIdByCRFVersionId = new HashMap();
         for (int i = 0; i < crfVersions.size(); i++) {
-            CRFVersionBean cvb = (CRFVersionBean) crfVersions.get(i);
+            FormLayoutBean cvb = (FormLayoutBean) crfVersions.get(i);
             crfIdByCRFVersionId.put(new Integer(cvb.getId()), new Integer(cvb.getCrfId()));
         }
 
@@ -581,7 +566,7 @@ public class EnterDataForStudyEventServlet extends SecureController {
         for (int i = 0; i < eventCRFs.size(); i++) {
             EventCRFBean ecb = (EventCRFBean) eventCRFs.get(i);
 
-            Integer crfVersionId = new Integer(ecb.getCRFVersionId());
+            Integer crfVersionId = new Integer(ecb.getFormLayoutId());
             if (crfIdByCRFVersionId.containsKey(crfVersionId)) {
                 Integer crfId = (Integer) crfIdByCRFVersionId.get(crfVersionId);
 
@@ -623,11 +608,14 @@ public class EnterDataForStudyEventServlet extends SecureController {
         for (DiscrepancyNoteBean discrepancyNoteBean : discBeans) {
             if ("location".equalsIgnoreCase(discrepancyNoteBean.getColumn())) {
                 request.setAttribute(HAS_LOCATION_NOTE, "yes");
+                request.setAttribute(LOCATION_NOTE, discrepancyNoteBean);
             } else if ("start_date".equalsIgnoreCase(discrepancyNoteBean.getColumn())) {
                 request.setAttribute(HAS_START_DATE_NOTE, "yes");
+                request.setAttribute(START_DATE_NOTE, discrepancyNoteBean);
 
             } else if ("end_date".equalsIgnoreCase(discrepancyNoteBean.getColumn())) {
                 request.setAttribute(HAS_END_DATE_NOTE, "yes");
+                request.setAttribute(END_DATE_NOTE, discrepancyNoteBean);
             }
 
         }

@@ -11,6 +11,11 @@
 <jsp:include page="../include/sideAlert.jsp"/>
 
 <link rel="stylesheet" href="includes/jmesa/jmesa.css" type="text/css">
+<style>
+    .icon > span {
+        font-family: 'Open Sans', arial, helvetica, sans-serif;
+    }
+</style>
 
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.min.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.jmesa.js"></script>
@@ -18,7 +23,11 @@
 <%-- <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa-original.js"></script> --%>
 <script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery.blockUI.js"></script>
 
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.1.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.4.1.js"></script>
+
+<c:if test="${participantIDVerification == 'true'}">
+    <script type="text/javascript" language="JavaScript" src="js/lib/bootstrap-tour.js"></script>
+</c:if>
 
 <script type="text/javascript">
     function onInvokeAction(id,action) {
@@ -34,23 +43,37 @@
 
     jQuery(document).ready(function() {
         jQuery('#addSubject').click(function() {
-			jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", top:"10px" } });
+            jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", top:"10px" } });
         });
 
-        jQuery('#cancel').click(function() {
+        jQuery('input#cancel').click(function() {
             jQuery.unblockUI();
             return false;
         });
+
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('addNewSubject')) {
+            jQuery('#addSubject').click();
+        }
     });
+
+    window.onload = function() {
+        document.getElementById("btn").focus();
+            <c:if test="${showOverlay}">
+                jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", top:"10px" } });
+            </c:if>
+    };
+
+
 </script>
 
 <!-- then instructions-->
 <tr id="sidebar_Instructions_open" style="display: none">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${resword}"/></b>
+        <fmt:message key="instructions" bundle="${resword}"/>
 
         <div class="sidebar_tab_content">
 
@@ -62,9 +85,9 @@
 <tr id="sidebar_Instructions_closed" style="display: all">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${resword}"/></b>
+        <fmt:message key="instructions" bundle="${resword}"/>
 
     </td>
 </tr>
@@ -74,11 +97,28 @@
 <jsp:useBean scope='request' id='crf' class='org.akaza.openclinica.bean.admin.CRFBean'/>
 
 
-<h1><span class="title_manage">
-<fmt:message key="view_subjects_in" bundle="${restext}"/> <c:out value="${study.name}"/>
-<a href="javascript:openDocWindow('https://docs.openclinica.com/3.1/openclinica-user-guide/submit-data-module-overview/subject-matrix')">
-    <img src="images/bt_Help_Manage.gif" border="0" alt="<fmt:message key="help" bundle="${restext}"/>" title="<fmt:message key="help" bundle="${restext}"/>"></a>
-</span></h1>
+<h1>
+    <span class="title_manage">
+        <fmt:message key="view_subjects_in" bundle="${restext}"/> <c:out value="${study.name}"/>
+    </span>
+</h1>
+<br/>
+
+<div id="box" class="dialog">
+    <span id="mbm">
+        <br>
+        <c:if test="${(!study.status.pending)}">
+            <fmt:message key="study_frozen_locked_note" bundle="${restext}"/>
+        </c:if>
+
+        <c:if test="${(study.status.pending)}">
+            <fmt:message key="study_design_note" bundle="${restext}"/>
+        </c:if>
+    </span><br>
+    <div style="text-align:center; width:100%;">
+        <button id="btn" onclick="hm('box');">OK</button>
+    </div>
+</div>
 
 <div id="findSubjectsDiv">
     <form  action="${pageContext.request.contextPath}/ListStudySubjects">
@@ -86,16 +126,13 @@
         ${findSubjectsHtml}
     </form>
 </div>
-<div id="addSubjectForm" style="display:none;">
-      <c:import url="../submit/addNewSubjectExpressNew.jsp">
-      </c:import>
-</div>
+
+<c:if test="${userRole.monitor || userRole.coordinator || userRole.director || userRole.investigator || userRole.researchAssistant || userRole.researchAssistant2}">
+    <div id="addSubjectForm" style="display:none;">
+          <c:import url="../submit/addNewSubjectExpressNew.jsp">
+          </c:import>
+    </div>
+</c:if>
 
 <br>
 <jsp:include page="../include/footer.jsp"/>
-
-<script type="text/javascript">
-    <c:if test="${showOverlay}">
-        jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", top:"10px" } });
-    </c:if>
-</script>

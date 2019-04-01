@@ -31,15 +31,17 @@ public class ResolutionStatus extends Term {
 
     public static final ResolutionStatus INVALID = new ResolutionStatus(0, "invalid", null, null);
 
-    public static final ResolutionStatus OPEN = new ResolutionStatus(1, "New", null, "images/icon_Note.gif");
+    public static final ResolutionStatus OPEN = new ResolutionStatus(1, "New", null, "fa fa-bubble-red");
 
-    public static final ResolutionStatus UPDATED = new ResolutionStatus(2, "Updated", null, "images/icon_flagYellow.gif");
+    public static final ResolutionStatus UPDATED = new ResolutionStatus(2, "Updated", null, "fa fa-bubble-orange");
 
-    public static final ResolutionStatus RESOLVED = new ResolutionStatus(3, "Resolution_Proposed", null, "images/icon_flagGreen.gif");
+    public static final ResolutionStatus RESOLVED = new ResolutionStatus(3, "Resolution_Proposed", null, "");
 
-    public static final ResolutionStatus CLOSED = new ResolutionStatus(4, "Closed", null, "images/icon_flagBlack.gif");
+    public static final ResolutionStatus CLOSED = new ResolutionStatus(4, "Closed", null, "fa fa-bubble-black");
 
-    public static final ResolutionStatus NOT_APPLICABLE = new ResolutionStatus(5, "Not_Applicable", null, "images/icon_flagWhite.gif");
+    public static final ResolutionStatus NOT_APPLICABLE = new ResolutionStatus(5, "Not_Applicable", null, "fa fa-bubble-white");
+
+    public static final ResolutionStatus CLOSED_MODIFIED = new ResolutionStatus(6, "Closed_Modified", null, "fa fa-bubble-gray");
 
     private String iconFilePath;
 
@@ -55,6 +57,10 @@ public class ResolutionStatus extends Term {
         return this == ResolutionStatus.CLOSED;
     }
 
+    public boolean isClosedModified() {
+        return this == ResolutionStatus.CLOSED_MODIFIED;
+    }
+
     public boolean isUpdated() {
         return this == ResolutionStatus.UPDATED;
     }
@@ -67,13 +73,17 @@ public class ResolutionStatus extends Term {
         return this == ResolutionStatus.NOT_APPLICABLE;
     }
 
-    private static final ResolutionStatus[] members = { OPEN, UPDATED, RESOLVED, CLOSED, NOT_APPLICABLE };
+    private static final ResolutionStatus[] members = { OPEN, UPDATED, RESOLVED, CLOSED, NOT_APPLICABLE, CLOSED_MODIFIED };
 
     public static ResolutionStatus[] getMembers() {
         return members;
     }
 
     public static final List<ResolutionStatus> list = Arrays.asList(members);
+
+    private static final ResolutionStatus[] membersResStatus = { OPEN, UPDATED, CLOSED, CLOSED_MODIFIED };
+
+    public static final List<ResolutionStatus> listResStatus = Arrays.asList(membersResStatus);
 
     private List privileges;
 
@@ -94,6 +104,16 @@ public class ResolutionStatus extends Term {
     }
 
     public static ResolutionStatus getByName(String name) {
+        for (int i = 0; i < list.size(); i++) {
+            ResolutionStatus temp = list.get(i);
+            if (temp.getName().equals(name)) {
+                return temp;
+            }
+        }
+        return INVALID;
+    }
+
+    public static ResolutionStatus getByNameResStatus(String name) {
         for (int i = 0; i < list.size(); i++) {
             ResolutionStatus temp = list.get(i);
             if (temp.getName().equals(name)) {
@@ -128,4 +148,5 @@ public class ResolutionStatus extends Term {
 
         ResolutionStatus test = new ResolutionStatus(1, "New", null, null);
     }
+
 }

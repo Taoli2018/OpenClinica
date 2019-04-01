@@ -123,6 +123,12 @@ public class ReassignStudySubjectServlet extends SecureController {
                     request.setAttribute("newStudy", st);
                     forwardPage(Page.REASSIGN_STUDY_SUBJECT_CONFIRM);
                 } else {
+
+                    int subjectCount = getSubjectCount(st);
+
+                    st.setSubjectCount(subjectCount+1);
+                    sdao.update(st);
+
                     logger.info("submit to reassign the subject");
                     studySub.setUpdatedDate(new Date());
                     studySub.setUpdater(ub);

@@ -35,7 +35,6 @@
 <div class="textbox_center">
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
   <tr valign="top"><td class="table_header_column"><fmt:message key="event_definition_name" bundle="${resword}"/>:</td><td class="table_cell"><c:out value="${event.studyEventDefinition.name}"/></td></tr>
-  <tr valign="top"><td class="table_header_column"><fmt:message key="location" bundle="${resword}"/>:</td><td class="table_cell"><c:out value="${event.location}"/></td></tr>
   <tr valign="top"><td class="table_header_column"><fmt:message key="visit" bundle="${resword}"/>:</td><td class="table_cell"><c:out value="${event.sampleOrdinal}"/></td></tr>
 
   <tr valign="top"><td class="table_header_column"><fmt:message key="date_started" bundle="${resword}"/>:</td><td class="table_cell"><fmt:formatDate value="${event.dateStarted}" pattern="${dteFormat}"/></td></tr>
@@ -113,32 +112,28 @@
 <br>
  </c:if>
    <c:choose>
-    <c:when test="${!empty items && count>0}">
-     <form action='DeleteEventCRF?action=submit&ecId=<c:out value="${displayEventCRF.eventCRF.id}"/>&ssId=<c:out value="${studySub.id}"/>' method="POST">
-      <input type="submit" name="submit" value="<fmt:message key="delete_event_CRF" bundle="${resword}"/>" class="button_xlong" onClick='return confirm("<fmt:message key="this_CRF_has_data_want_delete" bundle="${restext}"/>");'>
-         &nbsp;
-       <input type="button" onclick="confirmCancel('EnterDataForStudyEvent?eventId=<c:out value="${event.id}"/>');"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/>
-     </form>
-    </c:when>
-    <c:otherwise>
-      <form action='DeleteEventCRF?action=submit&ecId=<c:out value="${displayEventCRF.eventCRF.id}"/>&ssId=<c:out value="${studySub.id}"/>' method="POST">
-      <input type="submit" name="submit" value="<fmt:message key="delete_event_CRF" bundle="${resword}"/>" class="button_xlong" onClick='return confirm("<fmt:message key="are_you_sure_you_want_to_delete_it" bundle="${restext}"/>");'>
-          &nbsp;
-        <input type="button" onclick="confirmCancel('EnterDataForStudyEvent?eventId=<c:out value="${event.id}"/>');"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/>
-     </form>
-    </c:otherwise>
+       <c:when test="${!empty items && count>0}">
+         <form action='DeleteEventCRF?action=submit&eventCrfId=<c:out value="${displayEventCRF.eventCRF.id}"/>&ssId=<c:out value="${studySub.id}"/>' method="POST">
+          <input type="submit" name="submit" value="<fmt:message key="delete_event_CRF" bundle="${resword}"/>" class="button_xlong" onClick='return confirm("<fmt:message key="this_CRF_has_data_want_delete" bundle="${restext}"/>");'>
+             &nbsp;
+           <input type="button" onclick="confirmCancel(window.originatingPage);"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/>
+         </form>
+        </c:when>
+        <c:otherwise>
+          <form action='DeleteEventCRF?action=submit&eventCrfId=<c:out value="${displayEventCRF.eventCRF.id}"/>&ssId=<c:out value="${studySub.id}"/>' method="POST">
+          <input type="submit" name="submit" value="<fmt:message key="delete_event_CRF" bundle="${resword}"/>" class="button_xlong" onClick='return confirm("<fmt:message key="are_you_sure_you_want_to_delete_it" bundle="${restext}"/>");'>
+              &nbsp;
+            <input type="button" onclick="confirmCancel(window.originatingPage);"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/>
+         </form>
+        </c:otherwise>
    </c:choose>
 
-<c:choose>
-  <c:when test="${userBean.sysAdmin}">
-  <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="admin"/>
-  </c:import>
- </c:when>
-  <c:otherwise>
-   <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/>
-  </c:import>
-  </c:otherwise>
- </c:choose>
 <jsp:include page="../include/footer.jsp"/>
+<c:choose>
+    <c:when test="${!empty errorData}">
+        <script type="text/javascript" language="javascript">
+            var errorData = "${errorData}";
+            alert(errorData);
+        </script>
+    </c:when>
+</c:choose>

@@ -10,6 +10,8 @@ public class Bind {
     private String required;
     private String jrPreload;
     private String relevant;
+    private String itemGroup;
+    private String enkFor;
 
     public String getRelevant() {
         return relevant;
@@ -82,4 +84,21 @@ public class Bind {
     public void setJrPreload(String jrPreload) {
         this.jrPreload = jrPreload;
     }
+
+    public String getItemGroup() {
+        return itemGroup;
+    }
+
+    public void setItemGroup(String itemGroup) {
+        this.itemGroup = itemGroup;
+    }
+
+    public String getEnkFor() {
+        return enkFor;
+    }
+
+    public void setEnkFor(String enkFor) {
+        this.enkFor = enkFor;
+    }
+
 }

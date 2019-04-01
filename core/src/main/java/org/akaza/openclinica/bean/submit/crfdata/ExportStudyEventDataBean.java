@@ -11,6 +11,8 @@ package org.akaza.openclinica.bean.submit.crfdata;
 
 import java.util.ArrayList;
 
+import org.akaza.openclinica.domain.datamap.StudyEvent;
+
 /**
  * OpenClinica event attributes have been included in addition to ODM
  * StudyEventData attributes
@@ -24,6 +26,8 @@ public class ExportStudyEventDataBean extends StudyEventDataBean {
     private String endDate;
     private String status;
     private Integer ageAtEvent;
+    private String eventName;
+    private StudyEvent studyEvent;
     private ArrayList<ExportFormDataBean> exportFormData;
 
     public ExportStudyEventDataBean() {
@@ -78,4 +82,21 @@ public class ExportStudyEventDataBean extends StudyEventDataBean {
     public Integer getAgeAtEvent() {
         return this.ageAtEvent;
     }
+
+    public String getEventName() {
+        return eventName;
+    }
+
+    public void setEventName(String eventName) {
+        this.eventName = eventName;
+    }
+
+    public StudyEvent getStudyEvent() {
+        return studyEvent;
+    }
+
+    public void setStudyEvent(StudyEvent studyEvent) {
+        this.studyEvent = studyEvent;
+    }
+
 }

@@ -34,9 +34,9 @@
 <tr id="sidebar_Instructions_open" style="display: all">
 	<td class="sidebar_tab">
 		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');">
-			<img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10">
+			<span class="icon icon-caret-down gray"></span>
 		</a>
-		<b><fmt:message key="instructions" bundle="${restext}"/></b>
+		<fmt:message key="instructions" bundle="${restext}"/>
 		<div class="sidebar_tab_content">
 			<fmt:message key="import_side_bar_instructions" bundle="${restext}"/>
 		</div>
@@ -46,9 +46,9 @@
 <tr id="sidebar_Instructions_closed" style="display: none">
 	<td class="sidebar_tab">
 		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');">
-			<img src="images/sidebar_expand.gif" border="0" align="right" hspace="10">
+			<span class="icon icon-caret-right gray"></span>
 		</a>
-		<b><fmt:message key="instructions" bundle="${restext}"/></b>
+		<fmt:message key="instructions" bundle="${restext}"/>
 	</td>
 </tr>
 
@@ -147,7 +147,8 @@
 	        <c:when test="${importCRF.preImportStage.doubleDE_Complete}"><fmt:message key="data_entry_complete" bundle="${resword}"/></c:when>
 	        <c:when test="${importCRF.preImportStage.admin_Editing}"><fmt:message key="administrative_editing" bundle="${resword}"/></c:when>
 	        <c:when test="${importCRF.preImportStage.locked}"><fmt:message key="locked" bundle="${resword}"/></c:when>
-	        <c:otherwise><fmt:message key="invalid" bundle="${resword}"/></c:otherwise>
+			<c:when test="${importCRF.preImportStage.complete}"><fmt:message key="complete" bundle="${resword}"/></c:when>
+			<c:otherwise><div class="alert"><fmt:message key="invalid" bundle="${resword}"/></div></c:otherwise>
         </c:choose>
     </td>
     </tr>
@@ -566,18 +567,5 @@
 			<%-- end of the other loop --%>
 	</c:otherwise>
 </c:choose>
-
-<c:choose>
-  <c:when test="${userBean.sysAdmin && module=='admin'}">
-  <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="admin"/>
-  </c:import>
- </c:when>
-  <c:otherwise>
-   <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/>
-  </c:import>
-  </c:otherwise>
- </c:choose>
 
 <jsp:include page="../include/footer.jsp"/>

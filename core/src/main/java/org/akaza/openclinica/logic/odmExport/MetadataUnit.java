@@ -9,7 +9,15 @@
 
 package org.akaza.openclinica.logic.odmExport;
 
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+
 import org.akaza.openclinica.bean.extract.DatasetBean;
+import org.akaza.openclinica.bean.login.UserAccountBean;
 import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
 import org.akaza.openclinica.bean.odmbeans.ElementRefBean;
@@ -20,20 +28,18 @@ import org.akaza.openclinica.bean.odmbeans.ODMBean;
 import org.akaza.openclinica.bean.odmbeans.OdmStudyBean;
 import org.akaza.openclinica.bean.odmbeans.RangeCheckBean;
 import org.akaza.openclinica.bean.service.StudyParameterValueBean;
+import org.akaza.openclinica.dao.core.CoreResources;
 import org.akaza.openclinica.dao.extract.OdmExtractDAO;
+import org.akaza.openclinica.dao.hibernate.EventDefinitionCrfPermissionTagDao;
 import org.akaza.openclinica.dao.hibernate.RuleSetRuleDao;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
 import org.akaza.openclinica.dao.service.StudyConfigService;
 import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
-
-import javax.sql.DataSource;
+import org.akaza.openclinica.domain.datamap.EventDefinitionCrfPermissionTag;
+import org.akaza.openclinica.service.PermissionService;
+import org.springframework.http.HttpRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * A class for ODM metadata of one study.
@@ -43,18 +49,19 @@ import javax.sql.DataSource;
 
 public class MetadataUnit extends OdmUnit {
     private OdmStudyBean odmStudy;
-  
-	private StudyBean parentStudy;
+    private StudyBean parentStudy;
     private RuleSetRuleDao ruleSetRuleDao;
+    private String permissionTagsString;
 
-    public static final String FAKE_STUDY_NAME ="OC_FORM_LIB_STUDY";
+
+    public static final String FAKE_STUDY_NAME = "OC_FORM_LIB_STUDY";
     public static final String FAKE_STUDY_OID = "OC_FORM_LIB";
     public static final String FAKE_STUDY_EVENT_OID = "OC_FORM_LIB_SE";
     public static final String FAKE_SE_NAME = "OC_FORM_LIB_SE_NAME";
-    public static final String FAKE_SE_REPEATING="NO";
-    public static final String FAKE_SE_TYPE ="SCHEDULED";
+    public static final String FAKE_SE_REPEATING = "NO";
+    public static final String FAKE_SE_TYPE = "SCHEDULED";
     public static final String FAKE_FR_MANDATORY = "No";
-    
+
     public MetadataUnit() {
     }
 
@@ -67,15 +74,22 @@ public class MetadataUnit extends OdmUnit {
             this.parentStudy = new StudyBean();
         }
     }
-    
-    public MetadataUnit(DataSource ds){
-    	this.ds = ds;
+
+    public MetadataUnit(DataSource ds, boolean showArchived) {
+        super(ds, showArchived);
+        this.ds = ds;
     }
 
-    public MetadataUnit(DataSource ds, DatasetBean dataset, ODMBean odmBean, StudyBean study, int category,RuleSetRuleDao ruleSetRuleDao) {
-        super(ds, dataset, odmBean, study, category);
+    public MetadataUnit(DataSource ds) {
+        this.ds = ds;
+    }
+
+    public MetadataUnit(DataSource ds, DatasetBean dataset, ODMBean odmBean, StudyBean study, int category, RuleSetRuleDao ruleSetRuleDao,
+            boolean showArchived ,String permissionTagsString) {
+        super(ds, dataset, odmBean, study, category, showArchived);
         this.odmStudy = new OdmStudyBean();
         this.ruleSetRuleDao = ruleSetRuleDao;
+        this.permissionTagsString=permissionTagsString;
         if (study.getParentStudyId() > 0) {
             this.parentStudy = (StudyBean) new StudyDAO(ds).findByPK(study.getParentStudyId());
         } else {
@@ -91,34 +105,30 @@ public class MetadataUnit extends OdmUnit {
             studyOID = "" + study.getId();
         }
         odmStudy.setOid(studyOID);
-        if(studyOID.equals(FAKE_STUDY_OID)){
-        	
-        	collectGlobalVariables();
-        	collectBasicDefinitions(formVersionOID);
-        	collectMetaDataVersion(formVersionOID)
-        	;
+        if (studyOID.equals(FAKE_STUDY_OID)) {
+
+            collectGlobalVariables();
+            collectBasicDefinitions(formVersionOID);
+            collectMetaDataVersion(formVersionOID);
+        } else {
+            collectGlobalVariables();
+            collectBasicDefinitions();
+            collectMetaDataVersion();
+
         }
-        else
-        	{
-        	collectGlobalVariables();     
-        	collectBasicDefinitions();
-        	collectMetaDataVersion();
-        	
-        	}
-        
+
     }
-    
-    
-    public void collectOdmStudy(){
-    	  StudyBean study = studyBase.getStudy();
-          String studyOID = study.getOid();
-          if (studyOID == null || studyOID.length() <= 0) {
-              logger.info("Constructed studyOID using study_id because oc_oid is missing from the table - study.");
-              studyOID = "" + study.getId();
-          }
-          collectGlobalVariables();     
-      	collectBasicDefinitions();
-      	collectMetaDataVersion();
+
+    public void collectOdmStudy() {
+        StudyBean study = studyBase.getStudy();
+        String studyOID = study.getOid();
+        if (studyOID == null || studyOID.length() <= 0) {
+            logger.info("Constructed studyOID using study_id because oc_oid is missing from the table - study.");
+            studyOID = "" + study.getId();
+        }
+        collectGlobalVariables();
+        collectBasicDefinitions();
+        collectMetaDataVersion();
     }
 
     private void collectGlobalVariables() {
@@ -138,43 +148,43 @@ public class MetadataUnit extends OdmUnit {
     }
 
     private void collectBasicDefinitions() {
-        int studyid = studyBase.getStudy().getParentStudyId()>0 ? studyBase.getStudy().getParentStudyId() : studyBase.getStudy().getId();
+        int studyid = studyBase.getStudy().getParentStudyId() > 0 ? studyBase.getStudy().getParentStudyId() : studyBase.getStudy().getId();
         new OdmExtractDAO(this.ds).getBasicDefinitions(studyid, odmStudy.getBasicDefinitions());
     }
-    
-    
-    private void collectBasicDefinitions(String formVersionOID){
-    	new OdmExtractDAO(this.ds).getBasicDefinitions(formVersionOID, odmStudy.getBasicDefinitions());
+
+    private void collectBasicDefinitions(String formVersionOID) {
+        new OdmExtractDAO(this.ds).getBasicDefinitions(formVersionOID, odmStudy.getBasicDefinitions());
     }
+
     /**
      * To retrieve the ODM with form version OID as one of the parameters
+     * 
      * @param formVersionOID
      */
-    private void collectMetaDataVersion(String formVersionOID){
+    private void collectMetaDataVersion(String formVersionOID) {
         StudyBean study = studyBase.getStudy();
-        OdmExtractDAO oedao = new OdmExtractDAO(this.ds);
+        OdmExtractDAO oedao = new OdmExtractDAO(this.ds, showArchived);
         MetaDataVersionBean metadata = this.odmStudy.getMetaDataVersion();
-        
+
         ODMBean odmBean = new ODMBean();
         odmBean.setODMVersion("oc1.3");
-       setOdmBean( odmBean);
-        
-    	 ArrayList<StudyEventDefinitionBean> sedBeansInStudy = (ArrayList<StudyEventDefinitionBean>) studyBase.getSedBeansInStudy();
-         if (sedBeansInStudy == null || sedBeansInStudy.size() < 1) {
-             logger.info("null, because there is no study event definition in this study.");
-             return;
-         }
-         
-         
-         if (metadata.getOid() == null || metadata.getOid().length() <= 0) {
-             metadata.setOid("v1.0.0");
-         }
-         if (metadata.getName() == null || metadata.getName().length() <= 0) {
-             metadata.setName("MetaDataVersion_v1.0.0");
-         }
+        setOdmBean(odmBean);
 
-         oedao.getODMMetadataForForm(metadata,formVersionOID,this.odmBean.getODMVersion());
-    	
+        ArrayList<StudyEventDefinitionBean> sedBeansInStudy = (ArrayList<StudyEventDefinitionBean>) studyBase.getSedBeansInStudy();
+        if (sedBeansInStudy == null || sedBeansInStudy.size() < 1) {
+            logger.info("null, because there is no study event definition in this study.");
+            return;
+        }
+
+        if (metadata.getOid() == null || metadata.getOid().length() <= 0) {
+            metadata.setOid("v1.0.0");
+        }
+        if (metadata.getName() == null || metadata.getName().length() <= 0) {
+            metadata.setName("MetaDataVersion_v1.0.0");
+        }
+
+        oedao.getODMMetadataForForm(metadata, formVersionOID, this.odmBean.getODMVersion());
+
     }
 
     private void collectMetaDataVersion() {
@@ -184,20 +194,22 @@ public class MetadataUnit extends OdmUnit {
             return;
         }
 
+
+
+
         StudyBean study = studyBase.getStudy();
-     
+
         StudyConfigService studyConfig = new StudyConfigService(this.ds);
         study = studyConfig.setParametersForStudy(study);
-   
+
         MetaDataVersionBean metadata = this.odmStudy.getMetaDataVersion();
         metadata.setStudy(study);
-
         StudyParameterValueDAO spvdao = new StudyParameterValueDAO(this.ds);
-        int parentId = study.getParentStudyId()>0 ? study.getParentStudyId() : study.getId();
+        int parentId = study.getParentStudyId() > 0 ? study.getParentStudyId() : study.getId();
         StudyParameterValueBean spv = spvdao.findByHandleAndStudy(parentId, "discrepancyManagement");
         metadata.setSoftHard(spv.getValue().equalsIgnoreCase("true") ? "Hard" : "Soft");
 
-        OdmExtractDAO oedao = new OdmExtractDAO(this.ds);
+        OdmExtractDAO oedao = new OdmExtractDAO(this.ds, showArchived);
         int studyId = study.getId();
         int parentStudyId = study.getParentStudyId() > 0 ? study.getParentStudyId() : studyId;
         if (this.getCategory() == 1 && study.isSite(study.getParentStudyId())) {
@@ -218,8 +230,9 @@ public class MetadataUnit extends OdmUnit {
             // populate Include
             this.collectIncludeFromParentInSameFile();
 
+
             // populate protocol
-            oedao.getUpdatedSiteMetadata(parentStudyId, studyId, metadata, this.odmBean.getODMVersion());
+            oedao.getUpdatedSiteMetadata(parentStudyId, studyId, metadata, this.odmBean.getODMVersion(),permissionTagsString);
         } else {
             if (dataset != null) {
                 metadata.setOid(dataset.getODMMetaDataVersionOid());
@@ -254,7 +267,7 @@ public class MetadataUnit extends OdmUnit {
             // studyId,
             // metadata, this.getODMBean().getODMVersion());
             // studyBase.setNullClSet(nullCodeSet);
-            oedao.getMetadata(parentStudyId, studyId, metadata, this.odmBean.getODMVersion());
+            oedao.getMetadata(parentStudyId, studyId, metadata, this.odmBean.getODMVersion(),permissionTagsString);
             metadata.setRuleSetRules(getRuleSetRuleDao().findByRuleSetStudyIdAndStatusAvail(parentStudyId));
         }
     }
@@ -307,13 +320,13 @@ public class MetadataUnit extends OdmUnit {
             return "text";
         case 10: // partial-date
             return "partialDate";
-            // INT
+        // INT
         case 6:
             return "integer";
-            // REAL
+        // REAL
         case 7:
             return "float";
-            // DATE
+        // DATE
         case 9:
             return "date";
         default:
@@ -332,9 +345,9 @@ public class MetadataUnit extends OdmUnit {
                 switch (OCDataTypeId) {
                 case 1:
                     return "boolean";
-                //not be supported in openclinica-3.0.4.1
-                //case 10:
-                    //return "partialDate";
+                // not be supported in openclinica-3.0.4.1
+                // case 10:
+                // return "partialDate";
                 default:
                     return getOdmItemDataType(OCDataTypeId);
                 }
@@ -482,7 +495,7 @@ public class MetadataUnit extends OdmUnit {
         }
         return false;
     }
-    
+
     public static boolean needMultiSelectList(int rsTypeId) {
         if (rsTypeId == 3 || rsTypeId == 7) {
             return true;
@@ -554,13 +567,15 @@ public class MetadataUnit extends OdmUnit {
     public void setRuleSetRuleDao(RuleSetRuleDao ruleSetRuleDao) {
         this.ruleSetRuleDao = ruleSetRuleDao;
     }
-    
-    public StudyBean getParentStudy() {
-  		return parentStudy;
-  	}
 
-  	public void setParentStudy(StudyBean parentStudy) {
-  		this.parentStudy = parentStudy;
-  	}
+    public StudyBean getParentStudy() {
+        return parentStudy;
+    }
+
+    public void setParentStudy(StudyBean parentStudy) {
+        this.parentStudy = parentStudy;
+    }
+
+
 
 }

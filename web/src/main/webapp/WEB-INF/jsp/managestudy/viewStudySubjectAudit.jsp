@@ -36,34 +36,15 @@
 </form>
 
 <%-- Subject Summary --%>
-<table border="0" cellpadding="0" cellspacing="0" width="650" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+<table border="1" cellpadding="0" cellspacing="0" width="650" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
     <tr>
         <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="study_subject_ID" bundle="${resword}"/></b></td>
-        <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="secondary_subject_ID" bundle="${resword}"/></b></td>
-        <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="date_of_birth" bundle="${resword}"/></b></td>
-        <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="person_ID" bundle="${resword}"/></b></td>
         <!--  <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="date_record_created" bundle="${resword}"/></b></td> -->
         <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="created_by" bundle="${resword}"/></b></td>
         <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="status" bundle="${resword}"/></b></td>
     </tr>
     <tr>
         <td class="table_header_column"><c:out value="${studySub.label}"/></td>
-        <td class="table_header_column"><c:out value="${studySub.secondaryLabel}"/></td>
-         <c:choose>
-                <c:when test="${collectdob=='used'}">
-        <td class="table_header_column"><fmt:formatDate value="${subject.dateOfBirth}" pattern="${dteFormat}" /></td>
-                </c:when>
-                <c:when test="${collectdob=='notUsed'}">
-        <td class="table_header_column"><c:out value="" /></td>
-                </c:when>
-                <c:when test="${collectdob=='yearOnly'}">
-        <td class="table_header_column"><fmt:formatDate value="${subject.dateOfBirth}" pattern="${yearFormat}" /></td>
-                </c:when>
-                <c:otherwise>
-        <td class="table_header_column"><c:out value="" /></td>
-                </c:otherwise>
-            </c:choose>
-        <td class="table_header_column"><c:out value="${subject.uniqueIdentifier}"/></td>
         <!--   <td class="table_header_column"><fmt:formatDate value="${studySub.createdDate}" pattern="${dteFormat}"/></td> -->
         <td class="table_header_column"><c:out value="${studySub.owner.name}"/></td>
         <td class="table_header_column"><c:out value="${studySub.status.name}"/></td>
@@ -71,10 +52,10 @@
     </tr>
 </table><br><br>
 
-		<!-- excel encoding -->
-	
+        <!-- excel encoding -->
+    
 <%-- Subject Audit Events --%>
-<table border="0" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+<table border="1" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
     <tr>
         <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="audit_event" bundle="${resword}"/></b></td>
         <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="date_time_of_server" bundle="${resword}"/></b></td>
@@ -103,7 +84,7 @@
 </table>
 <br>
 <%-- Study Events--%>
-<table border="0" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+<table border="1" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
     <tr>
         <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="study_events" bundle="${resword}"/></b><br></td>
         <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="location" bundle="${resword}"/></b><br></td>
@@ -112,8 +93,8 @@
     </tr>
     <c:forEach var="event" items="${events}">
         <tr>
-			<!-- Link to Dynamic Anchor -->
-			<td class="table_header_column"><a href="#<c:out value="${event.studyEventDefinition.name}"/><c:out value="${event.sampleOrdinal}"/>"><c:out value="${event.studyEventDefinition.name}"/>&nbsp;</a></td>
+            <!-- Link to Dynamic Anchor -->
+            <td class="table_header_column"><a href="#<c:out value="${event.studyEventDefinition.name}"/><c:out value="${event.sampleOrdinal}"/>"><c:out value="${event.studyEventDefinition.name}"/>&nbsp;</a></td>
             <%-- <td class="table_header_column"><c:out value="${event.studyEventDefinition.name}"/>&nbsp;</td> --%>
             <td class="table_header_column"><c:out value="${event.location}"/>&nbsp;</td>
             <c:choose>
@@ -133,7 +114,7 @@
 <%-- Study Event Summary --%>
 <!-- Embedded Anchor -->
 <a name="<c:out value="${event.studyEventDefinition.name}"/><c:out value="${event.sampleOrdinal}"/>"></a>
-<table border="0" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+<table border="1" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
 <tr>
     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="name" bundle="${resword}"/></b></td>
     <td class="table_header_column_top" style="color: #789EC5"><b><c:out value="${event.studyEventDefinition.name}"/></b>&nbsp;</td>
@@ -166,8 +147,8 @@
 <tr>
     <td colspan="2">
             <%--Audit for deleted event crfs --%>
-        <table border="0"><tr><td width="20">&nbsp;</td><td><%-- Margin --%>
-            <table border="0" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+        <table border="1"><tr><td width="20">&nbsp;</td><td><%-- Margin --%>
+            <table border="1" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
                 <tr>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="name" bundle="${resword}"/></b></td>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="version" bundle="${resword}"/></b></td>
@@ -179,7 +160,7 @@
 
                         <tr>
                             <td class="table_header_column"><c:out value="${deletedEventCRF.crfName}"/>&nbsp;</td>
-                            <td class="table_header_column"><c:out value="${deletedEventCRF.crfVersion}"/>&nbsp;</td>
+                            <td class="table_header_column"><c:out value="${deletedEventCRF.formLayout}"/>&nbsp;</td>
                             <td class="table_header_column"><c:out value="${deletedEventCRF.deletedBy}"/>&nbsp;</td>
                             <td class="table_header_column"><fmt:formatDate value="${deletedEventCRF.deletedDate}" type="both" pattern="${dteFormat}" timeStyle="short"/>&nbsp;</td>
                         </tr>
@@ -195,8 +176,8 @@
 <tr>
     <td colspan="2">
             <%--Audit Events for Study Event --%>
-        <table border="0"><tr><td width="20">&nbsp;</td><td><%-- Margin --%>
-            <table border="0" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+        <table border="1"><tr><td width="20">&nbsp;</td><td><%-- Margin --%>
+            <table border="1" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
                 <tr>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="audit_event" bundle="${resword}"/></b></td>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="date_time_of_server" bundle="${resword}"/></b></td>
@@ -204,6 +185,7 @@
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="value_type" bundle="${resword}"/></b></td>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="old" bundle="${resword}"/></b></td>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="new" bundle="${resword}"/></b></td>
+                    <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="details" bundle="${resword}"/></b></td>
                 </tr>
 
                 <c:forEach var="studyEventAudit" items="${studyEventAudits}">
@@ -271,6 +253,8 @@
                                     </c:otherwise>
                                 </c:choose>
                                 &nbsp;</td>
+                             <td class="table_header_column"><c:out value="${studyEventAudit.details}"/>&nbsp;</td>
+                                
                         </tr>
                     </c:if>
                 </c:forEach>
@@ -284,7 +268,7 @@
 <c:forEach var="eventCRF" items="${event.eventCRFs}">
     <tr>
         <td colspan="2">
-            <table border="0" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+            <table border="1" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
                 <tr>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="name" bundle="${resword}"/></b></td>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="version" bundle="${resword}"/></b></td>
@@ -294,11 +278,11 @@
                 </tr>
                 <tr>
                     <td class="table_header_column"><c:out value="${eventCRF.crf.name}"/>&nbsp;</td>
-                    <td class="table_header_column"><c:out value="${eventCRF.crfVersion.name}"/>&nbsp;</td>
+                    <td class="table_header_column"><c:out value="${eventCRF.formLayout.name}"/>&nbsp;</td>
                     <td class="table_header_column">
-						<fmt:formatDate value="${eventCRF.dateInterviewed}" type="both" pattern="${dteFormat}" timeStyle="short"/>&nbsp;
-                    	<%--<c:out value="${eventCRF.dateInterviewed}"/>&nbsp;--%>
-					</td>
+                        <fmt:formatDate value="${eventCRF.dateInterviewed}" type="both" pattern="${dteFormat}" timeStyle="short"/>&nbsp;
+                        <%--<c:out value="${eventCRF.dateInterviewed}"/>&nbsp;--%>
+                    </td>
                     <td class="table_header_column"><c:out value="${eventCRF.interviewerName}"/>&nbsp;</td>
                     <td class="table_header_column"><c:out value="${eventCRF.owner.name}"/>&nbsp;</td>
                 </tr>
@@ -310,8 +294,8 @@
     <td colspan="2">
 
             <%-- Event CRFs Audit Events --%>
-        <table border="0"><tr><td width="20">&nbsp;</td><td><%-- Margin --%>
-            <table border="0" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
+        <table border="1"><tr><td width="20">&nbsp;</td><td><%-- Margin --%>
+            <table border="1" cellpadding="0" cellspacing="0" width="550" style="border-style: solid; border-width: 1px; border-color: #CCCCCC;">
                 <tr>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="audit_event" bundle="${resword}"/></b></td>
                     <td class="table_header_column_top" style="color: #789EC5"><b><fmt:message key="date_time_of_server" bundle="${resword}"/></b></td>
@@ -357,11 +341,11 @@
                                         <c:if test="${eventCRFAudit.oldValue eq '11'}">reset</c:if>
                                     </c:when>
                                     <c:when test='${eventCRFAudit.auditEventTypeId == 32}' >
-                                    	<c:choose>
-                                    	<c:when test="${eventCRFAudit.oldValue eq '1'}">TRUE</c:when>
-                                    	<c:when test="${eventCRFAudit.oldValue eq '0'}">FALSE</c:when>
-                                    	<c:otherwise><c:out value="${eventCRFAudit.oldValue}"/></c:otherwise>
-                                    	</c:choose>
+                                        <c:choose>
+                                        <c:when test="${eventCRFAudit.oldValue eq '1'}">TRUE</c:when>
+                                        <c:when test="${eventCRFAudit.oldValue eq '0'}">FALSE</c:when>
+                                        <c:otherwise><c:out value="${eventCRFAudit.oldValue}"/></c:otherwise>
+                                        </c:choose>
                                     </c:when>
                                     <c:otherwise>
                                         <c:choose>
@@ -390,11 +374,11 @@
                                         <c:if test="${eventCRFAudit.newValue eq '11'}">reset</c:if>
                                     </c:when>
                                     <c:when test='${eventCRFAudit.auditEventTypeId == 32}' >
-                                    	<c:choose>
-                                    	<c:when test="${eventCRFAudit.newValue eq '1'}">TRUE</c:when>
-                                    	<c:when test="${eventCRFAudit.newValue eq '0'}">FALSE</c:when>
-                                    	<c:otherwise><c:out value="${eventCRFAudit.newValue}"/></c:otherwise>
-                                    	</c:choose>
+                                        <c:choose>
+                                        <c:when test="${eventCRFAudit.newValue eq '1'}">TRUE</c:when>
+                                        <c:when test="${eventCRFAudit.newValue eq '0'}">FALSE</c:when>
+                                        <c:otherwise><c:out value="${eventCRFAudit.newValue}"/></c:otherwise>
+                                        </c:choose>
                                     </c:when>
                                     <c:otherwise>
                                         <c:choose>
@@ -416,9 +400,9 @@
         </td></tr></table><%-- Margin --%>
     </td>
     </tr>
-	<!-- Return to Root -->
+    <!-- Return to Root -->
     <tr><td colspan="2" class="table_header_column_top" style="color: #789EC5"><a href="#root"><fmt:message key="return_to_top" bundle="${resword}"/></a>&nbsp;</td></tr>
-	
+    
 
 </c:forEach>
 </table>

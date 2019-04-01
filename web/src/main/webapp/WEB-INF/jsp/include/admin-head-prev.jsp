@@ -16,9 +16,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=11" />
 
-    <title><fmt:message key="openclinica" bundle="${resword}"/></title>
+    <title><fmt:message key="openclinica" bundle="${resword}"/></title> 
+    <link rel="SHORTCUT ICON" href="images/favicon.png" type="image/x-icon" />
+
 
     <link rel="stylesheet" href="includes/styles.css" type="text/css">
 <%-- <link rel="stylesheet" href="includes/styles2.css" type="text/css">--%>
@@ -44,7 +46,7 @@
 <%-- style="width:1152px;" I removed this include because you cannot have both
      "onLoad" tests: <jsp:include page="../include/showPopUp.jsp"/> reduce file size--%>
 <%--  TabsForwardByNum(<c:out value="${tabId}"/>);--%>
-<body style="width:1024px;" class="main_BG"
+<body style="width:100%;" class="main_BG"
 <c:choose>
 <c:when test="${tabId != null && tabId>0}">
       onload="<jsp:include page="../include/showPopUp2.jsp"/>"

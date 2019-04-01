@@ -15,8 +15,8 @@
         <c:set var="moduleStr" value="manage"/>
     </c:when>
     <c:otherwise>
-    	<jsp:include page="../include/submit-header.jsp"/>
-    	<c:set var="moduleStr" value="submit"/>
+        <jsp:include page="../include/submit-header.jsp"/>
+        <c:set var="moduleStr" value="submit"/>
     </c:otherwise>
 </c:choose>
 
@@ -24,7 +24,7 @@
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.min.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.jmesa.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa.js"></script>
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.1.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.4.1.js"></script>
 
 <script type="text/javascript">
     function onInvokeAction(id,action) {
@@ -48,9 +48,9 @@
 <tr id="sidebar_Instructions_open" style="display: all">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${restext}"/></b>
+        <fmt:message key="instructions" bundle="${restext}"/>
 
         <div class="sidebar_tab_content">
 
@@ -66,9 +66,9 @@
 <tr id="sidebar_Instructions_closed" style="display: none">
     <td class="sidebar_tab">
 
-        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+        <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-right gray"></span></a>
 
-        <b><fmt:message key="instructions" bundle="${restext}"/></b>
+        <fmt:message key="instructions" bundle="${restext}"/>
 
     </td>
 </tr>
@@ -111,24 +111,19 @@ applied on resolution status or type--%>
 
     <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&type=${param.type}" <c:if test="${param.type == 50}">style="color:green"</c:if>><fmt:message key="all_notes" bundle="${resterm}"/></a>&nbsp;
 
-    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=1&type=${param.type}"><img
-      name="icon_Note" src="images/icon_Note.gif" border="0"
+    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=1&type=${param.type}"><span class="icon icon-flag red"  border="0"
       alt="<fmt:message key="Open" bundle="${resterm}"/>" title="<fmt:message key="Open" bundle="${resterm}"/>"/></a> (<fmt:message key="Open" bundle="${resterm}"/>)&nbsp;
 
-    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=2&type=${param.type}"><img
-      name="icon_flagYellow" src="images/icon_flagYellow.gif" border="0"
+    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=2&type=${param.type}"><span class="icon icon icon-flag orange" border="0"
       alt="<fmt:message key="Updated" bundle="${resterm}"/>" title="<fmt:message key="Updated" bundle="${resterm}"/>"/></a> (<fmt:message key="Updated" bundle="${resterm}"/>)&nbsp;
 
-    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=3&type=${param.type}"><img
-      name="icon_flagGreen" src="images/icon_flagGreen.gif" border="0"
+    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=3&type=${param.type}"><span class="icon icon icon-flag green" border="0"
       alt="<fmt:message key="Resolved" bundle="${resterm}"/>" title="<fmt:message key="Resolved" bundle="${resterm}"/>"/></a> (<fmt:message key="Resolved" bundle="${resterm}"/>)&nbsp;
 
-    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=4&type=${param.type}"><img
-      name="icon_flagBlack" src="images/icon_flagBlack.gif" border="0"
+    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=4&type=${param.type}"><span class="icon icon-flag black" border="0"
       alt="<fmt:message key="Closed" bundle="${resterm}"/>" title="<fmt:message key="Closed" bundle="${resterm}"/>"/></a> (<fmt:message key="Closed" bundle="${resterm}"/>)&nbsp;
 
-    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=5&type=${param.type}"><img
-      name="icon_flagNA" src="images/icon_flagWhite.gif" border="0"
+    <a href="ListDiscNotesSubjectServlet?module=${moduleStr}&resolutionStatus=5&type=${param.type}"><span class="icon icon-flag-empty blue" border="0"
       alt="<fmt:message key="Not_Applicable" bundle="${resterm}"/>" title="<fmt:message key="Not_Applicable" bundle="${resterm}"/>"/></a> (<fmt:message key="Not_Applicable" bundle="${resterm}"/>)&nbsp;
 
     &nbsp;<strong>[#] = <fmt:message key="Repeated_events" bundle="${resword}"/></strong>
@@ -216,113 +211,6 @@ applied on resolution status or type--%>
 
 <br><br>
 
-<!-- EXPANDING WORKFLOW BOX -->
-<div style="clear:left">
-    <table border="0" cellpadding="0" cellspacing="0" style="position: relative; left: -14px;">
-        <tr>
-            <td id="sidebar_Workflow_closed" style="display: none">
-                <a href="javascript:leftnavExpand('sidebar_Workflow_closed'); leftnavExpand('sidebar_Workflow_open');"><img src="images/<fmt:message key="image_dir" bundle="${resformat}"/>/tab_Workflow_closed.gif" border="0"></a>
-            </td>
-            <td id="sidebar_Workflow_open" style="display: all">
-                <table border="0" cellpadding="0" cellspacing="0" class="workflowBox">
-                    <tr>
-                        <td class="workflowBox_T" valign="top">
-                            <table border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td class="workflow_tab">
-                                        <a href="javascript:leftnavExpand('sidebar_Workflow_closed'); leftnavExpand('sidebar_Workflow_open');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
-
-                                        <b><fmt:message key="workflow" bundle="${restext}"/></b>
-
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                        <td class="workflowBox_T" align="right" valign="top"><img src="images/workflowBox_TR.gif"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" class="workflowbox_B">
-                            <div class="box_R"><div class="box_B"><div class="box_BR">
-                                <div class="workflowBox_center">
-
-
-                                    <!-- Workflow items -->
-
-                                    <table border="0" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td>
-
-                                                <!-- These DIVs define shaded box borders -->
-                                                <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
-
-                                                    <div class="textbox_center" align="center">
-
-                                                        <c:choose>
-                                                        <c:when test="${userRole.manageStudy}">
-                               <span class="title_manage">
-                               <a href="ManageStudy"><fmt:message key="manage_study" bundle="${resworkflow}"/></a>
-                             </c:when>
-                             <c:otherwise>
-                               <span class="title_submit">
-                               <a href="ListStudySubjects"><fmt:message key="submit_data" bundle="${resworkflow}"/></a>
-                             </c:otherwise>
-                             </c:choose>
-
-
-
-
-							</span>
-
-                                                    </div>
-                                                </div></div></div></div></div></div></div></div>
-
-                                            </td>
-                                            <td><img src="images/arrow.gif"></td>
-                                            <td>
-
-                                                <!-- These DIVs define shaded box borders -->
-                                                <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
-
-                                                    <div class="textbox_center" align="center">
-
-                                                        <c:choose>
-                                                        <c:when test="${userRole.manageStudy}">
-                               <span class="title_manage">
-                             </c:when>
-                             <c:otherwise>
-                               <span class="title_submit">
-                             </c:otherwise>
-                             </c:choose>
-
-							<b><fmt:message key="list_discrepancy_notes" bundle="${restext}"/></b>
-
-							</span>
-
-                                                    </div>
-                                                </div></div></div></div></div></div></div></div>
-
-                                            </td>
-                                        </tr>
-                                    </table>
-
-
-                                    <!-- end Workflow items -->
-
-                                </div>
-                            </div></div></div>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</div>
-
-<!-- END WORKFLOW BOX -->
-
-<%--<c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/>
-</c:import>--%>
 
 <jsp:include page="../include/footer.jsp"/>
 

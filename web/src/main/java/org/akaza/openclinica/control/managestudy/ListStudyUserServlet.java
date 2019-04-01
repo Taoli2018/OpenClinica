@@ -8,8 +8,6 @@
 package org.akaza.openclinica.control.managestudy;
 
 import org.akaza.openclinica.bean.core.Role;
-import org.akaza.openclinica.bean.login.UserAccountBean;
-import org.akaza.openclinica.bean.odmbeans.UserBean;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
@@ -53,9 +51,10 @@ public class ListStudyUserServlet extends SecureController {
 
     @Override
     public void processRequest() throws Exception {
+        request.setAttribute("requestSchema", "public");
         FormProcessor fp = new FormProcessor(request);
         UserAccountDAO udao = new UserAccountDAO(sm.getDataSource());
-        ArrayList users = udao.findAllAssignedUsersByStudy(currentStudy.getId());
+        ArrayList users = udao.findAllUsersByStudy(currentPublicStudy.getId());
 
         EntityBeanTable table = fp.getEntityBeanTable();
         ArrayList allStudyUserRows = StudyUserRoleRow.generateRowsFromBeans(users);

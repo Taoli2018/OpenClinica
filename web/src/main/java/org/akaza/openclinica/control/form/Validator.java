@@ -774,7 +774,16 @@ public class Validator {
             case COMPARES_TO_STATIC_VALUE:
                 NumericComparisonOperator operator = (NumericComparisonOperator) v.getArg(0);
                 float compareTo = v.getFloat(1);
-                errorMessage = resexception.getString("input_provided_is_not") + operator.getDescription() + " " + new Float(compareTo).intValue() + ".";
+                int compareToInt = new Float(compareTo).intValue();
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(new Date());
+                if (compareToInt == 1000 && operator.getDescription().equals("greater than or equal")) {
+                    errorMessage = resexception.getString("year_must_be") + " " + resword.getString("greater_than") + " " + compareToInt + ".";
+                } else if (compareToInt == cal.get(Calendar.YEAR) && operator.getDescription().equals("less than or equal to")) {
+                    errorMessage = resexception.getString("date_provided_not_past");
+                } else {
+                    errorMessage = resexception.getString("input_provided_is_not") + operator.getDescription() + " " + new Float(compareTo).intValue() + ".";
+                }
                 break;
             case LENGTH_NUMERIC_COMPARISON:
                 NumericComparisonOperator operator2 = (NumericComparisonOperator) v.getArg(0);
@@ -851,7 +860,7 @@ public class Validator {
                 errorMessage = resexception.getString("field_submission_url_not_unique");
                 break;
             case DOES_NOT_CONTAIN_HTML_LESSTHAN_GREATERTHAN_ELEMENTS:
-                errorMessage = resexception.getString("id_can_not_contain_html_lessthan_or_greaterthan_elements");
+                errorMessage = resexception.getString("study_subject_id_can_not_contain_html_lessthan_or_greaterthan_elements");
                 break;
             }
         }
@@ -1163,7 +1172,7 @@ break;
      * Instead of rewriting the whole Validation do this.
      */
     protected String getFieldValue(String fieldName) {
-        return request.getParameter(fieldName) == null ? request.getAttribute(fieldName) == null ? null : request.getAttribute(fieldName).toString() : request
+        return (request.getParameter(fieldName) == null || request.getParameter(fieldName).equals(resword.getString("id_generated_Save_Add"))) ? request.getAttribute(fieldName) == null ? null : request.getAttribute(fieldName).toString() : request
                 .getParameter(fieldName);
     }
 

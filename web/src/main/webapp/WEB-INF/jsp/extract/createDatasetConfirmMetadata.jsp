@@ -14,9 +14,9 @@
 <tr id="sidebar_Instructions_open" style="display: none">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+		<fmt:message key="instructions" bundle="${resword}"/>
 
 		<div class="sidebar_tab_content">
 
@@ -28,9 +28,9 @@
 	<tr id="sidebar_Instructions_closed" style="display: all">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></span></a>
 
-		<b><fmt:message key="instructions" bundle="${resword}"/></b>
+		<fmt:message key="instructions" bundle="${resword}"/>
 
 		</td>
   </tr>
@@ -60,7 +60,7 @@
 <form action="CreateDataset" method="post">
 <input type="hidden" name="action" value="confirmall" />
 
-<table>
+<table border="0">
 	<tr>
 		<td class="text"><fmt:message key="name" bundle="${resword}"/></td>
 		<td class="text"><b><c:out value="${newDataset.name}" /></b>
@@ -103,8 +103,6 @@
 	<tr>
 		<td colspan="2" align="left">
 		  <input type="submit" name="btnSubmit" value="<fmt:message key="confirm_and_save" bundle="${resword}"/>" class="button_xlong"/>
-		</td>
-		<td>
 		  <input type="submit" name="btnSubmit" value="<fmt:message key="back" bundle="${resword}"/>" class="button_xlong"/>
 		</td>
 	</tr>
@@ -112,7 +110,4 @@
 
 </form>
 
-<c:import url="../include/workflow.jsp">
-   <c:param name="module" value="extract"/>
-</c:import>
 <jsp:include page="../include/footer.jsp"/>

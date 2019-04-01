@@ -7,6 +7,20 @@
  */
 package org.akaza.openclinica.view;
 
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.TreeMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 import org.akaza.openclinica.bean.admin.CRFBean;
 import org.akaza.openclinica.bean.core.DataEntryStage;
 import org.akaza.openclinica.bean.core.Status;
@@ -25,21 +39,6 @@ import org.akaza.openclinica.bean.submit.EventCRFBean;
 import org.akaza.openclinica.bean.submit.SectionBean;
 import org.akaza.openclinica.i18n.core.LocaleResolver;
 import org.akaza.openclinica.i18n.util.ResourceBundleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.TreeMap;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 /**
  * To create a flexible panel of information that will change while the user
@@ -48,10 +47,8 @@ import javax.servlet.http.HttpSession;
  * @author thickerson
  *
  */
-public class StudyInfoPanel {
+public class StudyInfoPanel implements Serializable {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
-    ResourceBundle resword;
 
     private TreeMap data = new TreeMap();
 
@@ -186,7 +183,7 @@ public class StudyInfoPanel {
     public void setData(Page page, HttpSession session, HttpServletRequest request) {
 
         Locale locale = LocaleResolver.getLocale(request);
-        resword = ResourceBundleProvider.getWordsBundle();
+        ResourceBundle resword = ResourceBundleProvider.getWordsBundle();
         local_sdf = new SimpleDateFormat(ResourceBundleProvider.getFormatBundle(locale).getString("date_format_string"));
         // logger.info("found date format string: " +
         // ResourceBundleProvider.getFormatBundle
@@ -530,19 +527,19 @@ public class StudyInfoPanel {
     public String getStageImageText(DataEntryStage stage) {
         String answer = "";
         if (stage.isInitialDE()) {
-            answer = "<img src='images/icon_InitialDE.gif' alt='Initial Data Entry'>";
+            answer = "<span class='icon icon-pencil-squared orange' alt='Initial Data Entry'>";
         } else if (stage.isInitialDE_Complete()) {
-            answer = "<img src='images/icon_InitialDEcomplete.gif' alt='Initial Data Entry Complete'>";
+            answer = "<span class='icon icon-ok' alt='Initial Data Entry Complete'>";
         } else if (stage.isDoubleDE()) {
-            answer = "<img src='images/icon_DDE.gif' alt='Double Data Entry'>";
+            answer = "<span class='icon icon-icon-squared orange' alt='Double Data Entry'>";
         } else if (stage.isDoubleDE_Complete()) {
-            answer = "<img src='images/icon_DEcomplete.gif' alt='Data Entry Complete'>";
+            answer = "<span class='icon icon-ok' alt='Data Entry Complete'>";
         } else if (stage.isAdmin_Editing()) {
-            answer = "<img src='images/icon_AdminEdit.gif' alt='Administrative Editing'>";
+            answer = "<span class='icon icon-pencil' alt='Administrative Editing'>";
         } else if (stage.isLocked()) {
-            answer = "<img src='images/icon_Locked.gif' alt='Locked'>";
+            answer = "<span class='icon icon-lock' alt='Locked'>";
         } else {
-            answer = "<img src='images/icon_Invalid.gif' alt='Invalid'>";
+            answer = "<span class='icon icon-file-excel red' alt='Invalid'>";
         }
 
         return answer;
@@ -619,6 +616,7 @@ public class StudyInfoPanel {
      */
     public ArrayList generateTreeFromBeans(ArrayList rows, ArrayList displayData, StudySubjectBean studySubject, EventCRFBean ecb) {
         Iterator itRows = rows.iterator();
+        ResourceBundle resword = ResourceBundleProvider.getWordsBundle();
 
         displayData.add(new StudyInfoPanelLine(resword.getString("study_events"), "(" + rows.size() + ")", true, false, false));
 
@@ -675,10 +673,10 @@ public class StudyInfoPanel {
                     if (ecb != null && ecb.getId() == dedc.getEventCRF().getId() && ecb.getCrf().getId() == dedc.getEventCRF().getCrf().getId()) {
                         // logger.info("ecb id*******" + ecb.getId() +
                         // dedc.getEventCRF().getId());
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>", "<span class='alert'>"
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc' alt='Not Started'/>", "<span class='alert'>"
                             + dedc.getEdc().getCrf().getName() + "</span>", false, true, true));
                     } else {
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>",
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc' alt='Not Started'/>",
                                 "<span class='alert'>" + dedc.getEdc().getCrf().getName() + "</a>", false, true, false));
 
                     }
@@ -686,10 +684,10 @@ public class StudyInfoPanel {
                     if (ecb != null && ecb.getId() == dedc.getEventCRF().getId()) {
                         // logger.info("ecb id*******" + ecb.getId() +
                         // dedc.getEventCRF().getId());
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>", "<span class='alert'>"
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc' alt='Not Started'/>", "<span class='alert'>"
                             + dedc.getEdc().getCrf().getName() + "</span>", false, false, true));
                     } else {
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>",
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc' alt='Not Started'/>",
                                 "<span class='alert'>" + dedc.getEdc().getCrf().getName() + "</a>", false, false, false));
 
                     }
@@ -763,10 +761,10 @@ public class StudyInfoPanel {
                     if (ecb != null && ecb.getId() == dedc.getEventCRF().getId() && ecb.getCrf().getId() == dedc.getEventCRF().getCrf().getId()) {
                         // logger.info("ecb id*******" + ecb.getId() +
                         // dedc.getEventCRF().getId());
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>", "<span class='alert'>"
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc' alt='Not Started'/>", "<span class='alert'>"
                             + dedc.getEdc().getCrf().getName() + "</span>", false, true, true));
                     } else {
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>", dedc.getEdc().getCrf().getName(),
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc' alt='Not Started'/>", dedc.getEdc().getCrf().getName(),
                                 false, true, false));
 
                     }
@@ -774,10 +772,10 @@ public class StudyInfoPanel {
                     if (ecb != null && ecb.getId() == dedc.getEventCRF().getId()) {
                         // logger.info("ecb id*******" + ecb.getId() +
                         // dedc.getEventCRF().getId());
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>", "<span class='alert'>"
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc' alt='Not Started'/>", "<span class='alert'>"
                             + dedc.getEdc().getCrf().getName() + "</span>", false, false, true));
                     } else {
-                        displayData.add(new StudyInfoPanelLine("<img src='images/icon_NotStarted.gif' alt='Not Started'/>", dedc.getEdc().getCrf().getName(),
+                        displayData.add(new StudyInfoPanelLine("<span class='icon icon-doc'alt='Not Started'/>", dedc.getEdc().getCrf().getName(),
                                 false, false, false));
 
                     }

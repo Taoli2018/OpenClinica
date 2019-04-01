@@ -7,29 +7,44 @@
  */
 package org.akaza.openclinica.control.managestudy;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.akaza.openclinica.bean.admin.CRFBean;
 import org.akaza.openclinica.bean.core.ResolutionStatus;
 import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.core.Status;
-import org.akaza.openclinica.bean.managestudy.*;
+import org.akaza.openclinica.bean.login.UserAccountBean;
+import org.akaza.openclinica.bean.managestudy.DiscrepancyNoteBean;
+import org.akaza.openclinica.bean.managestudy.EventDefinitionCRFBean;
+import org.akaza.openclinica.bean.managestudy.StudyBean;
+import org.akaza.openclinica.bean.managestudy.StudyEventBean;
+import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
+import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
 import org.akaza.openclinica.bean.submit.CRFVersionBean;
 import org.akaza.openclinica.bean.submit.DisplayEventCRFBean;
 import org.akaza.openclinica.bean.submit.EventCRFBean;
 import org.akaza.openclinica.bean.submit.ItemDataBean;
+import org.akaza.openclinica.control.SpringServletAccess;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
-import org.akaza.openclinica.core.EmailEngine;
+import org.akaza.openclinica.core.LockInfo;
 import org.akaza.openclinica.dao.admin.CRFDAO;
-import org.akaza.openclinica.dao.managestudy.*;
+import org.akaza.openclinica.dao.hibernate.EventCrfDao;
+import org.akaza.openclinica.dao.login.UserAccountDAO;
+import org.akaza.openclinica.dao.managestudy.DiscrepancyNoteDAO;
+import org.akaza.openclinica.dao.managestudy.EventDefinitionCRFDAO;
+import org.akaza.openclinica.dao.managestudy.StudyDAO;
+import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
+import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
+import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
 import org.akaza.openclinica.dao.submit.CRFVersionDAO;
 import org.akaza.openclinica.dao.submit.EventCRFDAO;
 import org.akaza.openclinica.dao.submit.ItemDataDAO;
+import org.akaza.openclinica.domain.datamap.EventCrf;
 import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 /**
  * Removes an Event CRF
@@ -50,10 +65,9 @@ public class RemoveEventCRFServlet extends SecureController {
             return;
         }
 
-        if (currentRole.getRole().equals(Role.STUDYDIRECTOR) || currentRole.getRole().equals(Role.COORDINATOR)) {
+        if (!currentRole.getRole().equals(Role.MONITOR) ){
             return;
         }
-
         addPageMessage(respage.getString("no_have_correct_privilege_current_study") + respage.getString("change_study_contact_sysadmin"));
         throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("not_study_director"), "1");
 
@@ -62,13 +76,16 @@ public class RemoveEventCRFServlet extends SecureController {
     @Override
     public void processRequest() throws Exception {
         FormProcessor fp = new FormProcessor(request);
-        int eventCRFId = fp.getInt("id");// eventCRFId
+        int eventCRFId = fp.getInt("eventCrfId");// eventCRFId
         int studySubId = fp.getInt("studySubId");// studySubjectId
         checkStudyLocked("ViewStudySubject?id" + studySubId, respage.getString("current_study_locked"));
+        String originatingPage = request.getParameter(ORIGINATING_PAGE);
+        request.setAttribute(ORIGINATING_PAGE, originatingPage);
         StudyEventDAO sedao = new StudyEventDAO(sm.getDataSource());
         StudySubjectDAO subdao = new StudySubjectDAO(sm.getDataSource());
         EventCRFDAO ecdao = new EventCRFDAO(sm.getDataSource());
         StudyDAO sdao = new StudyDAO(sm.getDataSource());
+        EventCrfDao eventCrfDao = (EventCrfDao) SpringServletAccess.getApplicationContext(context).getBean("eventCrfDao");
 
         if (eventCRFId == 0) {
             addPageMessage(respage.getString("please_choose_an_event_CRF_to_remove"));
@@ -76,7 +93,12 @@ public class RemoveEventCRFServlet extends SecureController {
             forwardPage(Page.VIEW_STUDY_SUBJECT_SERVLET);
         } else {
             EventCRFBean eventCRF = (EventCRFBean) ecdao.findByPK(eventCRFId);
+            final EventCrf ec = eventCrfDao.findById(eventCRFId);
 
+            if (hasFormAccess(ec) != true) {
+                forwardPage(Page.NO_ACCESS);
+                return;
+            }
             StudySubjectBean studySub = (StudySubjectBean) subdao.findByPK(studySubId);
             request.setAttribute("studySub", studySub);
 
@@ -118,12 +140,32 @@ public class RemoveEventCRFServlet extends SecureController {
             ArrayList itemData = iddao.findAllByEventCRFId(eventCRF.getId());
 
             request.setAttribute("items", itemData);
-
             String action = request.getParameter("action");
+
+            if (getEventCrfLocker().isLocked(currentPublicStudy.getSchemaName()
+                    + eventCRF.getStudyEventId() + eventCRF.getFormLayoutId(), ub.getId(), request.getSession().getId())) {
+
+                LockInfo lockInfo = getEventCrfLocker().getLockOwner(currentPublicStudy.getSchemaName()
+                        + eventCRF.getStudyEventId() + eventCRF.getFormLayoutId());
+                UserAccountDAO uDAO = new UserAccountDAO(sm.getDataSource());
+                UserAccountBean userAccountBean = (UserAccountBean) uDAO.findByPK(lockInfo.getUserId());
+                request.setAttribute("errorData", "This form is currently unavailable for this action.\\n " +
+                        "User " + userAccountBean.getName() +" is currently entering data.\\n " +
+                        resword.getString("CRF_perform_action") +"\\n");
+                if ("confirm".equalsIgnoreCase(action)) {
+                    request.setAttribute("id", new Integer(studySubId).toString());
+                    forwardPage(Page.VIEW_STUDY_SUBJECT_SERVLET);
+                    return;
+                } else {
+                    request.setAttribute("displayEventCRF", dec);
+                    forwardPage(Page.REMOVE_EVENT_CRF);
+                    return;
+                }
+            }
             if ("confirm".equalsIgnoreCase(action)) {
                 if (eventCRF.getStatus().equals(Status.DELETED) || eventCRF.getStatus().equals(Status.AUTO_DELETED)) {
                     addPageMessage(respage.getString("this_event_CRF_is_removed_for_this_study") + " "
-                        + respage.getString("please_contact_sysadmin_for_more_information"));
+                            + respage.getString("please_contact_sysadmin_for_more_information"));
                     request.setAttribute("id", new Integer(studySubId).toString());
                     forwardPage(Page.VIEW_STUDY_SUBJECT_SERVLET);
                     return;
@@ -153,8 +195,8 @@ public class RemoveEventCRFServlet extends SecureController {
                         if (!dnNotesOfRemovedItem.isEmpty()) {
                             DiscrepancyNoteBean itemParentNote = null;
                             for (Object obj : dnNotesOfRemovedItem) {
-                                if (((DiscrepancyNoteBean)obj).getParentDnId() == 0) {
-                                    itemParentNote = (DiscrepancyNoteBean)obj;
+                                if (((DiscrepancyNoteBean) obj).getParentDnId() == 0) {
+                                    itemParentNote = (DiscrepancyNoteBean) obj;
                                 }
                             }
                             DiscrepancyNoteBean dnb = new DiscrepancyNoteBean();
@@ -170,21 +212,25 @@ public class RemoveEventCRFServlet extends SecureController {
                             dnb.setEntityId(item.getId());
                             dnb.setColumn("value");
                             dnb.setCreatedDate(new Date());
-                            dnb.setDescription("The item has been removed, this Discrepancy Note has been Closed.");
+                            String detailedNotes="The item has been removed, this Query has been Closed.";
+                            dnb.setDetailedNotes(detailedNotes);
                             dnDao.create(dnb);
                             dnDao.createMapping(dnb);
                             itemParentNote.setResolutionStatusId(ResolutionStatus.CLOSED.getId());
+                            itemParentNote.setDetailedNotes(detailedNotes);
                             dnDao.update(itemParentNote);
                         }
                     }
                 }
 
-                String emailBody =
-                    respage.getString("the_event_CRF") + " " + cb.getName() + " " + respage.getString("has_been_removed_from_the_event")
-                        + event.getStudyEventDefinition().getName() + ". "+ respage.getString("has_been_removed_from_the_event_cont");
+                /* OC-8797
+                    Do not send email notification when data is removed
+                    String emailBody = respage.getString("the_event_CRF") + " " + cb.getName() + " " + respage.getString("has_been_removed_from_the_event")
+                            + event.getStudyEventDefinition().getName() + ". " + respage.getString("has_been_removed_from_the_event_cont");
 
-                addPageMessage(emailBody);
-                sendEmail(emailBody);
+                    addPageMessage(emailBody);
+                    sendEmail(emailBody);
+                */
                 request.setAttribute("id", new Integer(studySubId).toString());
                 forwardPage(Page.VIEW_STUDY_SUBJECT_SERVLET);
             }
@@ -194,8 +240,7 @@ public class RemoveEventCRFServlet extends SecureController {
     /**
      * Send email to director and administrator
      * 
-     * @param request
-     * @param response
+     * @param emailBody
      */
     private void sendEmail(String emailBody) throws Exception {
 
@@ -203,7 +248,7 @@ public class RemoveEventCRFServlet extends SecureController {
         // to study director
 
         sendEmail(ub.getEmail().trim(), respage.getString("remove_event_CRF_from_event"), emailBody, false);
- //       sendEmail(EmailEngine.getAdminEmail(), respage.getString("remove_event_CRF_from_event"), emailBody, false);
+        // sendEmail(EmailEngine.getAdminEmail(), respage.getString("remove_event_CRF_from_event"), emailBody, false);
         logger.info("Sending email done..");
     }
 

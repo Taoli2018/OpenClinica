@@ -2,17 +2,11 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:tx="http://www.springframework.org/schema/tx"
-        xmlns:aop="http://www.springframework.org/schema/aop"
         xmlns:context="http://www.springframework.org/schema/context"
         xsi:schemaLocation="http://www.springframework.org/schema/beans
-                            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-                            http://www.springframework.org/schema/tx
-                            http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
-                            http://www.springframework.org/schema/aop
-                            http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+                            http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
                             http://www.springframework.org/schema/context 
-                            http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+                            http://www.springframework.org/schema/context/spring-context-4.3.xsd">
 
 
     <!--  Service layer supports legacy DAOs via constructor injection of dataSource
@@ -40,7 +34,7 @@
         <constructor-arg ref="dataSource"/>
     </bean>
 
-    <bean id="eventService" class="org.akaza.openclinica.service.EventService">
+    <bean id="importCRFDataService" class="org.akaza.openclinica.web.crfdata.ImportCRFDataService">
         <constructor-arg ref="dataSource"/>
     </bean>
 
@@ -85,7 +79,7 @@
         <property name="dataSource" ref="dataSource"/>
     </bean>
 
-    <bean id="userAccountDao" class="org.akaza.openclinica.dao.login.UserAccountDAO">
+    <bean id="userAccountDAO" class="org.akaza.openclinica.dao.login.UserAccountDAO">
         <constructor-arg ref="dataSource"/>
     </bean>
 
@@ -123,7 +117,8 @@
         <property name="viewNotesDao" ref="viewNotesDao"/>
     </bean>
 
-    <bean id="crfLocker" class="org.akaza.openclinica.core.CRFLocker"/>
+    <bean id="eventCrfLocker" class="org.akaza.openclinica.core.EventCRFLocker"/>
+
 
     <bean id = "generateClinicalDataService" class="org.akaza.openclinica.service.extract.GenerateClinicalDataServiceImpl">
         <property name="studyDao" ref="studyDaoDomain"></property>
@@ -132,6 +127,10 @@
         <property name="auditEventDAO" ref="auditLogEventDaoDomain"/>
         <property name="userAccountDao" ref="userDaoDomain"/>
         <property name="studyUserRoleDao" ref="studyUserRoleDao"/>        
+        <property name="itemGroupDao" ref="itemGroupDao"/>
+        <property name="eventDefinitionCrfDao" ref="eventDefinitionCrfDao"/>
+        <property name="eventDefinitionCrfPermissionTagDao" ref="eventDefinitionCrfPermissionTagDao"/>
+        <property name="itemDao" ref="itemDao"/>
     </bean>
 
     <bean id="beanPropertyService" class="org.akaza.openclinica.service.crfdata.BeanPropertyService" autowire="byName">
@@ -141,6 +140,24 @@
         <property name="studySubjectDao" ref = "studySubjectDaoDomain"/>
         <property name="userAccountDao" ref="userDaoDomain"/>
     </bean>
+
+    <bean id="notificationService" class="org.akaza.openclinica.service.NotificationService">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <bean id = "enketoCredentials" class="org.akaza.openclinica.service.crfdata.xform.EnketoCredentials">
+        <property name="studyDao" ref="studyDaoDomain"/>
+    </bean>
+
+    <bean id="xformParserHelper" class="org.akaza.openclinica.domain.xform.XformParserHelper"/>
+
+    <bean id="xformParser" class="org.akaza.openclinica.domain.xform.XformParser">
+        <property name="dataSource" ref="dataSource"></property>
+        <property name="coreResources" ref="coreResources"/>
+    </bean>
+<!-- moved from core-security-->
+    <bean id="xformService" class="org.akaza.openclinica.service.crfdata.XformMetaDataService"/>
+    <bean id="responseSetService" class="org.akaza.openclinica.service.crfdata.ResponseSetService"/>
 
     <bean id="ExpressionService" class="org.akaza.openclinica.service.rule.expression.ExpressionService">
        <constructor-arg ref="dataSource"/>

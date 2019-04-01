@@ -24,7 +24,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>OpenClinica <fmt:message key="administrative_editing" bundle="${resword}"/></title>
-    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=11" />
 
     <link rel="stylesheet" href="includes/styles.css" type="text/css">
     <script type="text/JavaScript" language="JavaScript" src="includes/global_functions_javascript.js"></script>
@@ -87,7 +87,7 @@ margin-top:20px; updateTabs(<c:out value="${tabId}"/>);--%>
                      title="<fmt:message key="double_data_entry" bundle="${resword}"/>">
             </c:when>
             <c:when test="${eventCRF.stage.doubleDE_Complete}">
-                <img src="images/icon_DEcomplete.gif" alt="<fmt:message key="data_entry_complete" bundle="${resword}"/>"
+                <span class="icon icon-checkbox-checked green" alt="<fmt:message key="data_entry_complete" bundle="${resword}"/>"
                      title="<fmt:message key="data_entry_complete" bundle="${resword}"/>">
             </c:when>
             <c:when test="${eventCRF.stage.admin_Editing}">

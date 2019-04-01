@@ -30,15 +30,17 @@ public enum Page {
    /**
      * Page for logging out
      */
-                LOGOUT("/WEB-INF/jsp/login/logout.jsp", "OpenClinica Log Out"),
+                LOGOUT("/WEB-INF/jsp/login/logout.jsp", "OpenClinica JsonLog Out"),
 
     /**
      * Page to show the main menu of openclinica
      */
                 MENU("/WEB-INF/jsp/menu.jsp", "Welcome to OpenClinica"),
                 MENU_SERVLET("/MainMenu", "Welcome to OpenClinica Main Servlet"),
-              
-    // YW 06-25-2007 <<
+                NO_ACCESS("/WEB-INF/jsp/noAccess.jsp", "No Access"),
+
+
+ // YW 06-25-2007 <<
     /**
      * Page for reset password when password is expired.
      */
@@ -79,8 +81,8 @@ public enum Page {
     /**
      * Page for changing study
      */
-   CHANGE_STUDY ("/WEB-INF/jsp/login/changeStudy.jsp", "Change Study"),
-    CHANGE_STUDY_CONFIRM ("/WEB-INF/jsp/login/changeStudyConfirm.jsp", "Change Study Confirm"),
+    CHANGE_STUDY ("/WEB-INF/jsp/login/changeStudy.jsp", "Change Study"),
+    CHANGE_STUDY_SERVLET ("/ChangeStudy", "Change Study Servlet"),
 
     REQUEST_ACCOUNT("/WEB-INF/jsp/login/requestAccount.jsp", "Request account form"),
 
@@ -151,7 +153,7 @@ public enum Page {
     UPDATE_STUDY7("/WEB-INF/jsp/managestudy/updateStudy7.jsp", "Update a Study seventh section"),
     UPDATE_STUDY8 ("/WEB-INF/jsp/managestudy/updateStudy8.jsp", "Update a Study last section"),
 
-     LIST_STUDY_SUBJECTS ("/WEB-INF/jsp/managestudy/findSubjects.jsp", "List Study Subjects"),
+    LIST_STUDY_SUBJECTS ("/WEB-INF/jsp/managestudy/findSubjects.jsp", "List Study Subjects"),
     LIST_STUDY_SUBJECTS_SERVLET("/ListStudySubjects", "List Study Subjects"),
 
      UPDATE_STUDY_SERVLET_NEW ("/UpdateStudyNew", "Update a Study"),
@@ -221,11 +223,6 @@ public enum Page {
      * Page for view all studies.
      */
     STUDY_LIST ("/WEB-INF/jsp/managestudy/studyList.jsp", "View All Studies"),
-
-    /**
-     * Page for view all studies.
-     */
-    STUDY_LIST_SERVLET ("/ListStudy", "View All Studies"),
 
     /**
      * Page for view all sites.
@@ -400,11 +397,11 @@ public enum Page {
     CREATE_CRF_VERSION_ERROR ("/WEB-INF/jsp/admin/createCRFVersionError.jsp", "Create a new CRF error"),
     REMOVE_CRF_VERSION_DEF ("/WEB-INF/jsp/admin/removeCRFVersionDef.jsp", "Remove CRF Version From Definition"),
 
-    AUDIT_LOG_USER ("/WEB-INF/jsp/admin/auditLogUser.jsp", "Audit Log display by User"),
-    AUDIT_LOG_STUDY ("/WEB-INF/jsp/admin/auditLogStudy.jsp", "Audit Log display by Study"),
-    AUDIT_LOGS_STUDY ("/WEB-INF/jsp/admin/studyAuditLog.jsp", "Audit Log display by Study"),
+    AUDIT_LOG_USER ("/WEB-INF/jsp/admin/auditLogUser.jsp", "Audit JsonLog display by User"),
+    AUDIT_LOG_STUDY ("/WEB-INF/jsp/admin/auditLogStudy.jsp", "Audit JsonLog display by Study"),
+    AUDIT_LOGS_STUDY ("/WEB-INF/jsp/admin/studyAuditLog.jsp", "Audit JsonLog display by Study"),
 
-    AUDIT_LOGS_ITEMS ("/WEB-INF/jsp/admin/auditItem.jsp", "Audit Log for Item"),
+    AUDIT_LOGS_ITEMS ("/WEB-INF/jsp/admin/auditItem.jsp", "Audit JsonLog for Item"),
 
     /**
      * Page for extract datasets main, tbh
@@ -484,7 +481,7 @@ public enum Page {
     VIEW_ALL_JOBS ("/WEB-INF/jsp/" + "admin/viewAllJobs.jsp", "View Jobs"),
     VIEW_IMPORT_JOB ("/WEB-INF/jsp/" + "admin/viewImportJobs.jsp", "View Import Jobs"),
     VIEW_IMPORT_JOB_SERVLET ("/ViewImportJob", "View Import Jobs"),
-    VIEW_LOG_MESSAGE ("/WEB-INF/jsp/" + "admin/viewLogMessage.jsp", "View Log Message"),
+    VIEW_LOG_MESSAGE ("/WEB-INF/jsp/" + "admin/viewLogMessage.jsp", "View JsonLog Message"),
     // below line for redirect without having to generate the table, tbh
     VIEW_JOB_SERVLET ("/ViewJob", "View Jobs"),
     VIEW_SINGLE_JOB ("/WEB-INF/jsp/" + "admin/viewSingleJob.jsp", "View Jobs"),
@@ -630,6 +627,9 @@ public enum Page {
     CHOOSE_DOWNLOAD_FORMAT ("/WEB-INF/jsp/submit/chooseDownloadFormat.jsp", "Choose download format"),
     LIST_SUBJECT_DISC_NOTE_SERVLET ("/ListDiscNotesSubjectServlet", "List Disc Notes Servlet"),
 
+    ADVANCED_SEARCH ("/WEB-INF/jsp/" + "managestudy/advancedSearch.jsp", "advanced search"),
+    ADVANCED_SEARCH_SERVLET ("/ParticipantSearch", "advanced search"),
+
     FILE_UPLOAD ("/WEB-INF/jsp/submit/uploadFile.jsp", "Form For File Uploading"),
     //UPLOAD_FILE_SERVLET ("/UploadFile", "Upload File"),
     DOWNLOAD_ATTACHED_FILE ("/WEB-INF/jsp/submit/downloadAttachedFile.jsp", "Download Attached File"),
@@ -650,8 +650,9 @@ public enum Page {
             "View default crf versions print"),
      MANAGE_STUDY_MODULE ( "/pages/studymodule",null),
      VIEW_SECTION_DATA_ENTRY_SERVLET_REST_URL ("/ViewSectionDataEntryRESTUrlServlet", "View Section Data Entry Servlet for REST Url call"),
-     PARTICIPANT_FORM_SERVLET("/WEB-INF/jsp/submit/participantFormServlet.jsp","Participant Form Servlet");
-    
+     PARTICIPANT_FORM_SERVLET("/WEB-INF/jsp/submit/participantFormServlet.jsp","Participant Form Servlet"),
+     UPLOAD_CRF_DATA_TO_MIRTH ("/WEB-INF/jsp/submit/uploadFileToMirth.jsp", "Upload CRF Data To Mirth"),
+     ENKETO_FORM_SERVLET("/WEB-INF/jsp/submit/enketoFormServlet.jsp","Enketo Form Servlet");
       	
   //  private final static String path = "/WEB-INF/jsp/";
   //  public final static String servletPath = "/OpenClinica";

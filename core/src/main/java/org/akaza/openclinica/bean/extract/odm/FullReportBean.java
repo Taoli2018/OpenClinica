@@ -7,13 +7,18 @@
  */
 package org.akaza.openclinica.bean.extract.odm;
 
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+
+import javax.sql.DataSource;
+
+import org.akaza.openclinica.bean.login.UserAccountBean;
 import org.akaza.openclinica.bean.odmbeans.OdmAdminDataBean;
 import org.akaza.openclinica.bean.odmbeans.OdmClinicalDataBean;
 import org.akaza.openclinica.bean.odmbeans.OdmStudyBean;
 import org.akaza.openclinica.dao.core.CoreResources;
-
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import org.akaza.openclinica.dao.hibernate.EventDefinitionCrfPermissionTagDao;
+import org.akaza.openclinica.service.PermissionService;
 
 /**
  * Create one ODM XML file.
@@ -31,38 +36,41 @@ public class FullReportBean extends OdmXmlReportBean {
     /**
      * Create one ODM XML This method is still under construction. Right now it is for Snapshot filetype only.
      */
-    @Override
-    public void createOdmXml(boolean isDataset) {
+    public void createOdmXml(boolean isDataset, DataSource dataSource, UserAccountBean userBean,String[] permissionTagsStringArray,boolean meta,boolean clinical,boolean crossForm) {
         this.addHeading();
         this.addRootStartLine();
-
-        // add the contents here in order
-        // 1) the information about Study
-        Iterator<OdmStudyBean> itm = this.odmStudyMap.values().iterator();
-        while (itm.hasNext()) {
-            OdmStudyBean s = itm.next();
-            addNodeStudy(s, isDataset);
-        }
-        // 2) the information about administrative data
-        String ODMVersion = this.getODMVersion();
-        if ("oc1.2".equalsIgnoreCase(ODMVersion) || "oc1.3".equalsIgnoreCase(ODMVersion)) {
-            Iterator<OdmAdminDataBean> ita = this.adminDataMap.values().iterator();
-            while (ita.hasNext()) {
-                OdmAdminDataBean a = ita.next();
-                addNodeAdminData(a);
+        if (meta) {
+            // add the contents here in order
+            // 1) the information about Study
+            Iterator<OdmStudyBean> itm = this.odmStudyMap.values().iterator();
+            while (itm.hasNext()) {
+                OdmStudyBean s = itm.next();
+                addNodeStudy(s, isDataset);
+            }
+            // 2) the information about administrative data
+            String ODMVersion = this.getODMVersion();
+            if ("oc1.2".equalsIgnoreCase(ODMVersion) || "oc1.3".equalsIgnoreCase(ODMVersion)) {
+                Iterator<OdmAdminDataBean> ita = this.adminDataMap.values().iterator();
+                while (ita.hasNext()) {
+                    OdmAdminDataBean a = ita.next();
+                    addNodeAdminData(a);
+                }
             }
         }
         // 3) the information about reference data
         // addNodeReferenceData();
         // 4) the information about clinical Data
-        Iterator<OdmClinicalDataBean> itc = this.clinicalDataMap.values().iterator();
-        while (itc.hasNext()) {
-            OdmClinicalDataBean c = itc.next();
-            if (c.getExportSubjectData().size() > 0) {
-                addNodeClinicalData(c);
+     if(clinical){
+        if (this.clinicalDataMap != null) {
+            Iterator<OdmClinicalDataBean> itc = this.clinicalDataMap.values().iterator();
+            while (itc.hasNext()) {
+                OdmClinicalDataBean c = itc.next();
+                if (c.getExportSubjectData().size() > 0) {
+                    addNodeClinicalData(c, crossForm, dataSource, userBean, permissionTagsStringArray);
+                }
             }
         }
-
+    }
         this.addRootEndLine();
     }
 
@@ -92,8 +100,8 @@ public class FullReportBean extends OdmXmlReportBean {
         this.addRootEndLine();
     }
 
-    public void createChunkedOdmXml(boolean isDataset, boolean header, boolean footer) {
-        ClinicalDataReportBean data = new ClinicalDataReportBean(this.clinicaldata);
+    public void createChunkedOdmXml(boolean isDataset, boolean header, boolean footer, DataSource dataSource, UserAccountBean userBean ,String[] permissionTagsStringArray) {
+        ClinicalDataReportBean data = new ClinicalDataReportBean(this.clinicaldata, dataSource, userBean,false,permissionTagsStringArray);
         data.setXmlOutput(this.getXmlOutput());
         data.setODMVersion(this.getODMVersion());
         data.addNodeClinicalData(header, footer);
@@ -116,8 +124,8 @@ public class FullReportBean extends OdmXmlReportBean {
         admin.addNodeAdminData();
     }
 
-    public void addNodeClinicalData(OdmClinicalDataBean clinicaldata) {
-        ClinicalDataReportBean data = new ClinicalDataReportBean(clinicaldata);
+    public void addNodeClinicalData(OdmClinicalDataBean clinicaldata, boolean crossForm, DataSource dataSource, UserAccountBean userBean,String[] permissionTagsStringArray) {
+        ClinicalDataReportBean data = new ClinicalDataReportBean(clinicaldata, dataSource, userBean,crossForm,permissionTagsStringArray);
         data.setODMVersion(this.getODMVersion());
         data.setXmlOutput(this.getXmlOutput());
         data.addNodeClinicalData(true, true);
@@ -157,6 +165,17 @@ public class FullReportBean extends OdmXmlReportBean {
 
     public void setCoreResources(CoreResources coreResources) {
         this.coreResources = coreResources;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.akaza.openclinica.bean.extract.odm.OdmXmlReportBean#createOdmXml(boolean)
+     */
+    @Override
+    public void createOdmXml(boolean isDataset) {
+        // TODO Auto-generated method stub
+
     }
 
 }

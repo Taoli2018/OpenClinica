@@ -33,9 +33,9 @@
 <tr id="sidebar_Instructions_open" style="display: all">
     <td class="sidebar_tab">
         <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');">
-            <img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10">
+            <span class="icon icon-caret-down gray"></span>
         </a>
-        <b><fmt:message key="instructions" bundle="${restext}"/></b>
+        <fmt:message key="instructions" bundle="${restext}"/>
         <div class="sidebar_tab_content">
             <fmt:message key="verify_import_rule_instructions" bundle="${restext}"/>
         </div>
@@ -45,9 +45,9 @@
 <tr id="sidebar_Instructions_closed" style="display: none">
     <td class="sidebar_tab">
         <a href="javascript:leftnavExpand('sidebar_Instructions_open'); leftnavExpand('sidebar_Instructions_closed');">
-            <img src="images/sidebar_expand.gif" border="0" align="right" hspace="10">
+            <span class="icon icon-caret-right gray"></span>
         </a>
-        <b><fmt:message key="instructions" bundle="${restext}"/></b>
+        <fmt:message key="instructions" bundle="${restext}"/>
     </td>
 </tr>
 
@@ -526,18 +526,5 @@
 <input type="button" onclick="goBack()"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/>
 
 </form>
-
-<c:choose>
-  <c:when test="${userBean.sysAdmin && module=='admin'}">
-  <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="admin"/>
-  </c:import>
- </c:when>
-  <c:otherwise>
-   <c:import url="../include/workflow.jsp">
-   <c:param name="module" value="manage"/>
-  </c:import>
-  </c:otherwise>
- </c:choose>
 
 <jsp:include page="../include/footer.jsp"/>

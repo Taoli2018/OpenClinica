@@ -21,10 +21,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-  <meta http-equiv="X-UA-Compatible" content="IE=8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=11" />
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
-<title><fmt:message key="openclinica" bundle="${resword}"/></title>
+<title><fmt:message key="openclinica" bundle="${resword}"/></title> 
+<link rel="SHORTCUT ICON" href="images/favicon.png" type="image/x-icon" />
 
 <link rel="stylesheet" href="includes/styles.css" type="text/css">
 <%-- <link rel="stylesheet" href="includes/styles2.css" type="text/css">--%>
@@ -49,7 +50,7 @@
 <script type="text/JavaScript" language="JavaScript" src="includes/effects.js"></script>--%></head>
 
 
-<body style="width:1024px;" class="main_BG"
+<body style="width:100%;" class="main_BG"
 
 <c:choose>
 
@@ -79,10 +80,6 @@ onload="TabsForwardByNum(<c:out value="${tabId}"/>);<jsp:include page="../includ
 
 			<tr>
 				<td valign="top">
-
-<!-- Logo -->
-
-	<div class="logo"><img src="images/Logo.gif"></div>
 
 <!-- Main Navigation -->
 

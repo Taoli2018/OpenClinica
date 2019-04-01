@@ -17,18 +17,18 @@
  <tr id="sidebar_Info_closed" style="display: all">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Info_open'); leftnavExpand('sidebar_Info_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Info_open'); leftnavExpand('sidebar_Info_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></a>
 
-		<b><fmt:message key="info" bundle="${resword}"/></b>
+		<fmt:message key="info" bundle="${resword}"/>
 
 		</td>
   </tr>
  <tr id="sidebar_Info_open" style="display: none">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_Info_open'); leftnavExpand('sidebar_Info_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_Info_open'); leftnavExpand('sidebar_Info_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></a>
 
-		<b><fmt:message key="info" bundle="${resword}"/></b>
+		<fmt:message key="info" bundle="${resword}"/>
 
 		<div class="sidebar_tab_content">
 
@@ -56,7 +56,7 @@
 	 <c:out value="${studySubject.label}"/>
 	<br><br>
 
-	<b><fmt:message key="study_event" bundle="${resword}"/></b>: &nbsp;
+	<b><fmt:message key="study_event" bundle="${resword}"/>:</b> &nbsp;
 	<c:choose>
 	 <c:when test="${toc != null}">	 
 	  <a href="EnterDataForStudyEvent?eventId=<c:out value="${toc.studyEvent.id}"/>"><c:out value="${toc.studyEventDefinition.name}"/></a>
@@ -67,19 +67,7 @@
 	</c:choose>
 	<br><br>
 	
-     <b><fmt:message key="location" bundle="${resword}"/></b>: 
-     <c:choose>
-	 <c:when test="${toc != null}">	 
-	   <c:out value="${toc.studyEvent.location}"/>
-	 </c:when>
-	 <c:otherwise>
-	  <c:out value="${studyEvent.location}"/>	   
-	 </c:otherwise>
-	</c:choose>    
-     <br><br>
-     
-     
-     <b><fmt:message key="start_date1" bundle="${resword}"/></b>:
+     <b><fmt:message key="start_date1" bundle="${resword}"/>:</b>&nbsp;
      <c:choose>
 	 <c:when test="${toc != null}">	 
 	    <fmt:formatDate value="${toc.studyEvent.dateStarted}" pattern="${dteFormat}"/>
@@ -134,8 +122,8 @@
   <tr id="sidebar_StudyEvents_open">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_StudyEvents_open'); leftnavExpand('sidebar_StudyEvents_closed');"><img src="images/sidebar_collapse.gif" border="0" align="right" hspace="10"></a>
-		<b><fmt:message key="study_events" bundle="${resword}"/></b>
+		<a href="javascript:leftnavExpand('sidebar_StudyEvents_open'); leftnavExpand('sidebar_StudyEvents_closed');"><span class="icon icon-caret-down gray" border="0" align="right" hspace="10"></a>
+		<fmt:message key="study_events" bundle="${resword}"/>
 
 		<div class="sidebar_tab_content">  
            <c:import url="../include/submitDataSide.jsp"/>	
@@ -147,9 +135,9 @@
 	<tr id="sidebar_StudyEvents_closed" style="display: none">
 		<td class="sidebar_tab">
 
-		<a href="javascript:leftnavExpand('sidebar_StudyEvents_open'); leftnavExpand('sidebar_StudyEvents_closed');"><img src="images/sidebar_expand.gif" border="0" align="right" hspace="10"></a>
+		<a href="javascript:leftnavExpand('sidebar_StudyEvents_open'); leftnavExpand('sidebar_StudyEvents_closed');"><span class="icon icon-caret-right gray" border="0" align="right" hspace="10"></a>
 
-		<b><fmt:message key="study_events" bundle="${resword}"/></b>
+		<fmt:message key="study_events" bundle="${resword}"/>
 
 		</td>
 	</tr>

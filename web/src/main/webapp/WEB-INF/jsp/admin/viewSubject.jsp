@@ -99,8 +99,8 @@
     <td class="table_cell">
      <a href="ViewStudySubject?id=<c:out value="${studySub.id}"/>&from=listSubject&module=admin"
 	  onMouseDown="javascript:setImage('bt_View1','images/bt_View_d.gif');"
-	  onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"><img
-	  name="bt_View1" src="images/bt_View.gif" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="6"></a>
+	  onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"><span
+	  name="bt_View1" class="icon icon-search" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="6"></a>
 
     </td>
     </tr>
@@ -115,7 +115,5 @@
 	</tr>
 </table>
 <br><p><a href="ListSubject"><fmt:message key="go_back_to_subject_list" bundle="${resword}"/></a></p>
- <c:import url="../include/workflow.jsp">
-  <c:param name="module" value="admin"/>
- </c:import>
+
 <jsp:include page="../include/footer.jsp"/>

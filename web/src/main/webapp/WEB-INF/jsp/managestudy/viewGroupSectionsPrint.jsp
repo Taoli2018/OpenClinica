@@ -9,7 +9,7 @@
 <html>
 <head><title>Print CRF</title>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=11" />
   <script type="text/JavaScript" language="JavaScript" src=
     "includes/global_functions_javascript.js"></script>
   <script type="text/javascript"  language="JavaScript" src=
@@ -39,7 +39,7 @@
         <img src="images/icon_DDE.gif" alt="<fmt:message key="double_data_entry" bundle="${resword}"/>" title="<fmt:message key="double_data_entry" bundle="${resword}"/>">
       </c:when>
       <c:when test="${EventCRFBean.stage.doubleDE_Complete}">
-        <img src="images/icon_DEcomplete.gif" alt="<fmt:message key="data_entry_complete" bundle="${resword}"/>" title="<fmt:message key="data_entry_complete" bundle="${resword}"/>">
+        <span class="icon icon-checkbox-checked green" alt="<fmt:message key="data_entry_complete" bundle="${resword}"/>" title="<fmt:message key="data_entry_complete" bundle="${resword}"/>">
       </c:when>
       <c:when test="${EventCRFBean.stage.admin_Editing}">
         <img src="images/icon_AdminEdit.gif" alt="<fmt:message key="administrative_editing" bundle="${resword}"/>" title="<fmt:message key="administrative_editing" bundle="${resword}"/>">

@@ -5,13 +5,14 @@
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=11" />
 
 <title>OpenClinica</title>
 
 <link rel="stylesheet" href="../includes/styles.css" type="text/css">
 <%--<link rel="stylesheet" href="../includes/styles2.css" type="text/css">--%>
 
+<link rel="stylesheet" href="includes/font-awesome-4.7.0/css/font-awesome.css">
 
 <script type="text/JavaScript" language="JavaScript" src="../includes/global_functions_javascript.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="../includes/Tabs.js"></script>
@@ -60,11 +61,11 @@
 				<td><fmt:message key="print" bundle="${resword}"/></td>
 			</tr>
 			<tr>
-				<td><img src="../images/icon_Note.gif"></td>
+				<td><span class="fa fa-bubble-red"></td>
 				<td><fmt:message key="discrepancy_note" bundle="${resword}"/></td>
 			</tr>
 			<tr>
-				<td><img src="../images/icon_noNote.gif"></td>
+				<td><span class="fa fa-bubble-white"></td>
 				<td><fmt:message key="add_discrepancy_note" bundle="${resword}"/></td>
 			</tr>
 			<tr>
@@ -76,7 +77,7 @@
 				<td><fmt:message key="unsaved_data_in_form" bundle="${resword}"/></td>
 			</tr>
 			<tr>
-				<td><img src="../images/icon_DEcomplete.gif"></td>
+				<td><span class="icon icon-checkbox-checked green"></td>
 				<td><fmt:message key="completed" bundle="${resword}"/></td>
 			</tr>
 			<tr>
