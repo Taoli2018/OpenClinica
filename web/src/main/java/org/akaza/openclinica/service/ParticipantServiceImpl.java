@@ -10,6 +10,7 @@ import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
 import org.akaza.openclinica.bean.managestudy.StudyType;
 import org.akaza.openclinica.bean.managestudy.SubjectTransferBean;
 import org.akaza.openclinica.bean.submit.SubjectBean;
+import org.akaza.openclinica.controller.StudyParticipantController;
 import org.akaza.openclinica.dao.core.CoreResources;
 import org.akaza.openclinica.dao.hibernate.StudySubjectDao;
 import org.akaza.openclinica.dao.hibernate.UserAccountDao;
@@ -586,4 +587,46 @@ private void updateStudySubjectSize(StudyBean currentStudy) {
 
     }
 
+    public StudyParticipantDTO getStudyParticipantDTO(String studyOid, String siteOid, String participantID, StudyBean study) throws Exception {
+    	
+	      
+		  StudyBean studyToCheck;   
+		  /**
+	         *  pass in site OID, so will return data in site level
+	         */
+	       if(siteOid != null && !(siteOid.equals(studyOid))) {
+	    	   studyToCheck = getStudyDao().findByOid(siteOid);
+	       }else {
+	    	   studyToCheck = study;
+	       }
+	      
+	        
+	        StudySubjectBean studySubject = getStudySubjectDAO().findByLabelAndStudy(participantID,studyToCheck);
+	        
+	        StudyParticipantDTO spDTO = null;
+	        if(studySubject != null) {
+	        	spDTO= new StudyParticipantDTO();
+	        	        			        			        	
+	        	spDTO.setSubjectOid(studySubject.getOid());
+	        	spDTO.setSubjectKey(studySubject.getLabel());
+	        	spDTO.setStatus(studySubject.getStatus().getName());
+	        	
+	        	if(studySubject.getOwner()!=null) {
+	        		spDTO.setCreatedBy(studySubject.getOwner().getName());
+	        	}
+	        	if(studySubject.getCreatedDate()!=null) {
+	        		spDTO.setCreatedAt(studySubject.getCreatedDate().toLocaleString());
+	        	}
+	        	if(studySubject.getUpdatedDate() !=null) {
+	        		spDTO.setLastModified(studySubject.getUpdatedDate().toLocaleString());
+	        	}
+	        	if(studySubject.getUpdater() != null) {
+	        		spDTO.setLastModifiedBy(studySubject.getUpdater().getName());
+	        	}
+	        
+	        }
+	        
+	        return spDTO;
+	    
+	}
 }

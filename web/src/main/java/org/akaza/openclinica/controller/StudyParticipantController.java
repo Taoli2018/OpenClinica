@@ -433,6 +433,58 @@ public class StudyParticipantController {
 			return listStudySubjects(studyOid, siteOid, request);
 		}
 
+		@ApiOperation(value = "To get participant detail information",  notes = "only work for authorized users with the right acecss permission ")
+		@RequestMapping(value = "/studies/{studyOID}/sites/{sitesOID}/participant", method = RequestMethod.GET)
+		public ResponseEntity<Object> getStudySubjectInStudySite(@PathVariable("studyOID") String studyOid,@PathVariable("sitesOID") String siteOid,
+				@RequestParam( value = "participantID", required = true ) String participantID,
+				HttpServletRequest request) throws Exception {
+			if (studyOid != null)
+				studyOid = studyOid.toUpperCase();
+			if (siteOid != null)
+				siteOid = siteOid.toUpperCase();
+
+			return getStudySubject(studyOid, siteOid, participantID,request);
+		}
+
+		private ResponseEntity<Object> getStudySubject(String studyOid, String siteOid, String participantID,
+				HttpServletRequest request) throws Exception {
+
+			ResponseEntity<Object> response = null;
+			try {
+		         	     
+		            StudyBean study = null;
+		            try {
+		            	study = this.getRestfulServiceHelper().setSchema(studyOid, request);
+		            	study = participantService.validateRequestAndReturnStudy(studyOid, siteOid,request);
+		            } catch (OpenClinicaSystemException e) {	                	               	                
+		                
+		                String errorMsg = e.getErrorCode();
+		                HashMap<String, String> map = new HashMap<>();
+		                map.put("studyOid", studyOid);
+		                map.put("siteOid", siteOid);
+		    			ParameterizedErrorVM responseDTO =new ParameterizedErrorVM(errorMsg, map);
+		    			
+		        		response = new ResponseEntity(responseDTO, org.springframework.http.HttpStatus.EXPECTATION_FAILED);
+		        		
+		        		return response;
+		            }
+		            
+		            if(study != null) {		            	
+		            	StudyParticipantDTO studyParticipantDTO = participantService.getStudyParticipantDTO(studyOid, siteOid,participantID,study);            	  		 	            
+		 	          		 	          		            	
+		 	            response = new ResponseEntity(studyParticipantDTO, org.springframework.http.HttpStatus.OK);
+		            }	           
+		           
+		        } catch (Exception eee) {
+		            eee.printStackTrace();
+		            throw eee;
+		        }
+			 
+			return response;
+		
+		}
+
+
 
 		/**
 		 * @param studyOid
