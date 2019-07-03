@@ -437,16 +437,22 @@ public class StudyParticipantController {
 		@RequestMapping(value = "/studies/{studyOID}/sites/{sitesOID}/participant", method = RequestMethod.GET)
 		public ResponseEntity<Object> getStudySubjectInStudySite(@PathVariable("studyOID") String studyOid,@PathVariable("sitesOID") String siteOid,
 				@RequestParam( value = "participantID", required = true ) String participantID,
+				@RequestParam( value = "includeParticipateInfo", defaultValue = "n", required = false ) String includeParticipateInfo,
 				HttpServletRequest request) throws Exception {
 			if (studyOid != null)
 				studyOid = studyOid.toUpperCase();
 			if (siteOid != null)
 				siteOid = siteOid.toUpperCase();
+			
+			boolean incParticipateInfo = false;
+	        if(includeParticipateInfo!=null && includeParticipateInfo.trim().toUpperCase().equals("Y")) {
+	        	incParticipateInfo = true;
+	        }
 
-			return getStudySubject(studyOid, siteOid, participantID,request);
+			return getStudySubject(studyOid, siteOid, participantID,incParticipateInfo,request);
 		}
 
-		private ResponseEntity<Object> getStudySubject(String studyOid, String siteOid, String participantID,
+		private ResponseEntity<Object> getStudySubject(String studyOid, String siteOid, String participantID, boolean incParticipateInfo,
 				HttpServletRequest request) throws Exception {
 
 			ResponseEntity<Object> response = null;

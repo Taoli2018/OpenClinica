@@ -587,7 +587,7 @@ private void updateStudySubjectSize(StudyBean currentStudy) {
 
     }
 
-    public StudyParticipantDTO getStudyParticipantDTO(String studyOid, String siteOid, String participantID, StudyBean study) throws Exception {
+    public StudyParticipantDTO getStudyParticipantDTO(String studyOid, String siteOid, String participantID, StudyBean study,boolean incParticipateInfo) throws Exception {
     	
 	      
 		  StudyBean studyToCheck;   

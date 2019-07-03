@@ -25,5 +25,5 @@ public interface ParticipantService {
 								 UserAccountBean user, String accessToken, String customerUuid, MultipartFile file,
 								 JobDetail jobDetail, Locale locale, String uri, Map<String, Object> map) throws Exception;
 
-	StudyParticipantDTO getStudyParticipantDTO(String studyOid, String siteOid, String participantID, StudyBean study) throws Exception;
+	StudyParticipantDTO getStudyParticipantDTO(String studyOid, String siteOid, String participantID, StudyBean study,boolean incParticipateInfo) throws Exception;
 }
