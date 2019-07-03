@@ -5,8 +5,8 @@ import org.akaza.openclinica.bean.login.UserAccountBean;
 import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.bean.managestudy.StudySubjectBean;
 import org.akaza.openclinica.bean.managestudy.SubjectTransferBean;
-import org.akaza.openclinica.controller.StudyParticipantController;
 import org.akaza.openclinica.domain.datamap.JobDetail;
+import org.akaza.openclinica.domain.datamap.Study;
 import org.akaza.openclinica.domain.datamap.StudySubject;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +26,7 @@ public interface ParticipantService {
 								 UserAccountBean user, String accessToken, String customerUuid, MultipartFile file,
 								 JobDetail jobDetail, Locale locale, String uri, Map<String, Object> map) throws Exception;
 	
+	StudyParticipantDetailDTO getStudyParticipantDetailDTO(String studyOid, String siteOid, String participantID, Study study) throws Exception;
 	StudyParticipantDetailDTO buildStudyParticipantDetailDTO(StudySubject studySubject);
 
 }

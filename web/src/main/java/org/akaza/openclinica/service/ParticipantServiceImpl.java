@@ -13,6 +13,7 @@ import org.akaza.openclinica.bean.managestudy.SubjectTransferBean;
 import org.akaza.openclinica.bean.submit.SubjectBean;
 import org.akaza.openclinica.controller.StudyParticipantController;
 import org.akaza.openclinica.dao.core.CoreResources;
+import org.akaza.openclinica.dao.hibernate.StudyDao;
 import org.akaza.openclinica.dao.hibernate.StudySubjectDao;
 import org.akaza.openclinica.dao.hibernate.UserAccountDao;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
@@ -21,6 +22,7 @@ import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
 import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
 import org.akaza.openclinica.dao.submit.SubjectDAO;
 import org.akaza.openclinica.domain.datamap.JobDetail;
+import org.akaza.openclinica.domain.datamap.Study;
 import org.akaza.openclinica.domain.datamap.StudySubject;
 import org.akaza.openclinica.domain.datamap.StudySubjectDetail;
 import org.akaza.openclinica.domain.enumsupport.JobType;
@@ -79,6 +81,9 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Autowired
     private StudySubjectDao studySubjectHibDao;
+    
+    @Autowired
+    private StudyDao studyHibDao;
 
     @Autowired
     private CSVService csvService;
@@ -605,43 +610,25 @@ private void updateStudySubjectSize(StudyBean currentStudy) {
         return spDTO;
     }
 
-    public StudyParticipantDTO getStudyParticipantDTO(String studyOid, String siteOid, String participantID, StudyBean study,boolean incParticipateInfo) throws Exception {
+    public StudyParticipantDetailDTO getStudyParticipantDetailDTO(String studyOid, String siteOid, String participantID, Study study) throws Exception {
     	
 	      
-		  StudyBean studyToCheck;   
+		  Study studyToCheck;   
 		  /**
-	         *  pass in site OID, so will return data in site level
-	         */
+	        *  pass in site OID, so will return data in site level
+	        */
 	       if(siteOid != null && !(siteOid.equals(studyOid))) {
-	    	   studyToCheck = getStudyDao().findByOid(siteOid);
+	    	   studyToCheck = studyHibDao.findByOcOID(siteOid);
 	       }else {
 	    	   studyToCheck = study;
 	       }
-	      
+	      	        
+	        StudySubject studySubject = studySubjectHibDao.findByLabelAndStudy(participantID,studyToCheck);
+	     
 	        
-	        StudySubjectBean studySubject = getStudySubjectDAO().findByLabelAndStudy(participantID,studyToCheck);
-	        
-	        StudyParticipantDTO spDTO = null;
+	        StudyParticipantDetailDTO spDTO = null;
 	        if(studySubject != null) {
-	        	spDTO= new StudyParticipantDTO();
-	        	        			        			        	
-	        	spDTO.setSubjectOid(studySubject.getOid());
-	        	spDTO.setSubjectKey(studySubject.getLabel());
-	        	spDTO.setStatus(studySubject.getStatus().getName());
-	        	
-	        	if(studySubject.getOwner()!=null) {
-	        		spDTO.setCreatedBy(studySubject.getOwner().getName());
-	        	}
-	        	if(studySubject.getCreatedDate()!=null) {
-	        		spDTO.setCreatedAt(studySubject.getCreatedDate().toLocaleString());
-	        	}
-	        	if(studySubject.getUpdatedDate() !=null) {
-	        		spDTO.setLastModified(studySubject.getUpdatedDate().toLocaleString());
-	        	}
-	        	if(studySubject.getUpdater() != null) {
-	        		spDTO.setLastModifiedBy(studySubject.getUpdater().getName());
-	        	}
-	        
+	        	spDTO= buildStudyParticipantDetailDTO(studySubject);	        
 	        }
 	        
 	        return spDTO;

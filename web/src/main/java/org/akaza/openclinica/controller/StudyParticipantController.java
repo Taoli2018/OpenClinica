@@ -458,10 +458,12 @@ public class StudyParticipantController {
 			ResponseEntity<Object> response = null;
 			try {
 		         	     
-		            StudyBean study = null;
+		            StudyBean studyBean = null;
+		            Study study = null;
 		            try {
-		            	study = this.getRestfulServiceHelper().setSchema(studyOid, request);
-		            	study = participantService.validateRequestAndReturnStudy(studyOid, siteOid,request);
+		            	studyBean = this.getRestfulServiceHelper().setSchema(studyOid, request);
+		            	studyBean = participantService.validateRequestAndReturnStudy(studyOid, siteOid,request);
+		            	study =  studyDao.findByOcOID(studyOid);
 		            } catch (OpenClinicaSystemException e) {	                	               	                
 		                
 		                String errorMsg = e.getErrorCode();
@@ -475,10 +477,24 @@ public class StudyParticipantController {
 		        		return response;
 		            }
 		            
-		            if(study != null) {		            	
-		            	StudyParticipantDTO studyParticipantDTO = participantService.getStudyParticipantDTO(studyOid, siteOid,participantID,study);            	  		 	            
+		            if(studyBean != null) {		            	
+		            	StudyParticipantDetailDTO spDTO = participantService.getStudyParticipantDetailDTO(studyOid, siteOid, participantID, study);     
+		            	
+		            	if(incParticipateInfo) {
+		            		utilService.setSchemaFromStudyOid(studyOid);
+			                 String accessToken = utilService.getAccessTokenFromRequest(request);
+			                 String customerUuid = utilService.getCustomerUuidFromRequest(request);
+			                 UserAccountBean userAccountBean = utilService.getUserAccountFromRequest(request);
+
+			                 ParticipantAccessDTO participantAccessDTO = userService.getAccessInfo(accessToken, studyOid, participantID, customerUuid, userAccountBean, false,incParticipateInfo);
+			                 
+			                 if (participantAccessDTO != null && participantAccessDTO.getAccessCode() != null) {
+		                            spDTO.setAccessCode(participantAccessDTO.getAccessCode());
+		                        }	
+		            	}
+		            	 
 		 	          		 	          		            	
-		 	            response = new ResponseEntity(studyParticipantDTO, org.springframework.http.HttpStatus.OK);
+		 	            response = new ResponseEntity(spDTO, org.springframework.http.HttpStatus.OK);
 		            }	           
 		           
 		        } catch (Exception eee) {
