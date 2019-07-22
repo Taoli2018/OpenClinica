@@ -88,6 +88,9 @@
     color: red;
     font-weight: bold;
   }
+  .right {
+    float: right;
+  }
 </style>
 
 <script>
@@ -147,7 +150,7 @@
           targets: -1,
           orderable: false
         }],
-        order: [[6, 'desc']],
+        order: [[4, 'desc'], [6, 'desc']],
         language: {
           emptyTable: 'Loading...',
           paginate: {
@@ -216,6 +219,9 @@
   <c:otherwise>
     <div id="loading">Loading...</div>
     <div id="job-details" class="hide">
+      <a class="right" href="${pageContext.request.contextPath}/Jobs">
+        <fmt:message key="go_back" bundle="${resword}"/>
+      </a>
       <h1>
         Log For <span id="job-log-for"></span>
       </h1>
@@ -268,6 +274,10 @@
     </div>
 
     <table id="tbl-job"></table>
+    <a class="right" href="${pageContext.request.contextPath}/Jobs">
+      <fmt:message key="go_back" bundle="${resword}"/>
+    </a>
+
     <script>
       var url = '${pageContext.request.contextPath}/pages/auth/api/jobs/${param["uuid"]}/downloadFile?open=true';
       var jobResult = $.get(url, function(data) {
@@ -292,7 +302,25 @@
             return {title: title};
           }),
           paging: false,
-          dom: 'ft'
+          dom: 'ft',
+          "drawCallback": function( settings ) {
+            const dtWidth = $("#tbl-job").width() + 1;
+            const sidebarWidth = $("#sidebar_Instructions_closed").width();
+            const navbarWidth = dtWidth + sidebarWidth;
+            $("#tbl-job_wrapper").css({"width": "calc(" + dtWidth + "px + 1em)", "padding-right": "1em" });
+            let windowWidth = $(window).width();
+            if (!(windowWidth > navbarWidth)) {
+              $(".oc_nav").css({"width": "calc(" + navbarWidth + "px + 2em)"});
+            }
+            $( window ).resize(function() {
+              windowWidth = $(window).width() + 1;
+              if (windowWidth > navbarWidth) {
+                $(".oc_nav").css({"width": windowWidth + "px"});
+              } else {
+                $(".oc_nav").css({"width": "calc(" + navbarWidth + "px + 2em)"});
+              }
+            });
+          }
         });
       }).fail(function(e) {
         $('#loading').text(formatError(e));

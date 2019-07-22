@@ -288,7 +288,7 @@
   #inviteResultAlert > table {
     width: 600px;
   }
-  input[type=radio]:focus {
+  input[type=radio]:focus,input[type=checkbox]:focus {
     outline-style: solid;
   }
 </style>
@@ -1565,7 +1565,7 @@
     <tr class="reset-participant-access-code hide">
       <td>
         <label>
-          <input type="checkbox" name="reset_participant_access_code" value="true">
+          <input type="checkbox" id="reset-participant-access-code">
           <fmt:message key="reset_participant_access_code" bundle="${resword}"/>
         </label>
         <br><br>
@@ -1739,7 +1739,7 @@
             type: 'get',
             url: '${pageContext.request.contextPath}/pages/auth/api/clinicaldata/studies/${study.oid}/participants/${esc.escapeJavaScript(studySub.label)}/accessLink?includeAccessCode='+includeAccessCode,
             success: function(data) {
-                $('#access-code-input').val(data.accessCode);
+                $('#access-code-input').val(data.accessCode !=null ? data.accessCode:"loading...");
                 $('#access-url').text(data.host);
             },
             error: logDump
@@ -1763,14 +1763,19 @@
         });
 
         jQuery('#connect-button').click(function () {
+            var phoneNumber = $('#phone-input').val();
+            if (phoneNumber.trim())
+                phoneNumber = $('#country-code').text() + ' ' + phoneNumber;
+
             var data = {
                 firstName: $('#fname-input').val(),
                 lastName: $('#lname-input').val(),
                 email: $('#email-input').val(),
-                phoneNumber: $('#country-code').text() + ' ' + $('#phone-input').val(),
+                phoneNumber: phoneNumber,
                 inviteParticipant: $('#invite_via_email input:checked').val(),
                 inviteViaSms: $('#invite_via_sms input:checked').val(),
-                identifier: $('#secid-input').val()
+                identifier: $('#secid-input').val(),
+                resetAccessCode: $('#reset-participant-access-code').is(':checked')
             };
             if (data.inviteParticipant === 'true' || data.inviteViaSms === 'true') {
                 $('#inviting').show();
@@ -1828,8 +1833,8 @@
         function checkPhoneMaxLength() {
             var maxLength = 17;
             var ccLength = $('#country-code').text().length;
-            var phoneLength = $('#phone-input').val().replace(/ |-|\+/g, '').length;
-            var totalLength = ccLength + phoneLength;
+            var phoneLength = $('#phone-input').val().length;
+            var totalLength = ccLength + 1 + phoneLength;
             if (totalLength > maxLength) {
                 var extraLength = totalLength - maxLength;
                 $('#phone-input').val($('#phone-input').val().substring(0, phoneLength - extraLength));
@@ -1839,9 +1844,10 @@
         jQuery('#phone-input').on('input blur paste', function() {
             checkPhoneMaxLength();
             var phonePattern = /^\+[0-9]{1,3} [0-9]{1,14}$/;
-            var fullPhone = $('#country-code').text() + ' ' + $(this).val().replace(/ |-|\+/g, '');
+            var fullPhone = $('#country-code').text() + ' ' + $(this).val();
             var isValid = phonePattern.test(fullPhone);
-            if (isValid) {
+            var isEmpty = $(this).val().length === 0;
+            if (isValid || isEmpty) {
                 $('#phone-input-error').hide();
             }
             else {
@@ -1881,7 +1887,7 @@
         });
 
         jQuery('#participateAccess').click(function() {
-        	getAccessCode("N");
+            getAccessCode("N");
             $('#eye').show();
             $('#access-code-input').attr('type', 'password');
             jQuery.blockUI({ message: jQuery('#participateAccessForm'), css:{left: "300px", top:"10px" } });
@@ -2077,7 +2083,7 @@
             return;
 
         enableDisableControls();
-        var inputs = form.find('input:not(:disabled)');
+        var inputs = form.find('input:visible:not(:disabled)');
         var index = $.inArray(this, inputs);
         index += e.shiftKey ? -1 : 1;
         if (index < 0) {
