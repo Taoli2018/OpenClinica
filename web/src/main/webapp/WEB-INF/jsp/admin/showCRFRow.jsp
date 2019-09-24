@@ -37,6 +37,7 @@
                onMouseUp="javascript:setImage('bt_View1','images/bt_View.gif');"><span
           name="bt_View1" class="icon icon-search" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="6"></a>
         </td>
+		<td><a href="javascript:void(0)"  onclick="javascript:openPopup()"><span title="Print" border="0" align="left" class="icon icon-print" hspace="6" width="24 " height="15"/></td>
         <c:choose>
           <c:when test="${currRow.bean.status.available}">
             <c:if test="${userBean.sysAdmin || (userRole.manageStudy && userBean.name==currRow.bean.owner.name)}">
@@ -133,4 +134,11 @@
   </tr>
 </c:forEach>
 <tr><td class="table_divider" colspan="9">&nbsp;</td></tr>
+<script type="text/javascript">
+   
+    function openPopup() {
+        openDocWindow(window.location.href +'&print=yes')
+    }
+   
+</script>
   
