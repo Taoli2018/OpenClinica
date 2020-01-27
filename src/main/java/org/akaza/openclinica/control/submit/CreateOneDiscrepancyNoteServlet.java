@@ -34,6 +34,7 @@ import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.control.form.Validator;
 import core.org.akaza.openclinica.core.EmailEngine;
 import core.org.akaza.openclinica.dao.login.UserAccountDAO;
+import core.org.akaza.openclinica.dao.hibernate.DiscrepancyNoteDao;
 import core.org.akaza.openclinica.dao.managestudy.DiscrepancyNoteDAO;
 import core.org.akaza.openclinica.dao.managestudy.StudyEventDAO;
 import core.org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
@@ -44,8 +45,8 @@ import core.org.akaza.openclinica.i18n.core.LocaleResolver;
 import org.akaza.openclinica.view.Page;
 import core.org.akaza.openclinica.web.InsufficientPermissionException;
 import core.org.akaza.openclinica.web.SQLInitServlet;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Create a discrepancy note
@@ -119,7 +120,8 @@ public class CreateOneDiscrepancyNoteServlet extends SecureController {
         if (noteTree == null) {
             noteTree = new FormDiscrepancyNotes();
         }
-        String ypos = fp.getString("ypos"+parentId);
+        String ypos = StringEscapeUtils.escapeHtml(fp.getString("ypos"+parentId));
+        ypos = StringEscapeUtils.escapeJavaScript(ypos);
         int refresh = 0;
         String field = fp.getString(ENTITY_FIELD, true);
         
@@ -300,6 +302,11 @@ public class CreateOneDiscrepancyNoteServlet extends SecureController {
                             if (!"eventCrf".equalsIgnoreCase(dn.getEntityType())) {
                                 message.append(MessageFormat.format(respage.getString("mailDNParameters6"), item.getName()));
                             }
+                        }
+                        else {
+                            String description = getDiscrepancyNoteDao().findByPK(dn.getId()).getDnStudyEventMaps().get(0).getDnStudyEventMapId().getColumnName();
+                            description = description.equals("start_date") ? "Event Start Date" : "Event End Date";
+                            message.append(MessageFormat.format(respage.getString("mailDNParameters7"), description));
                         }
                     }
 

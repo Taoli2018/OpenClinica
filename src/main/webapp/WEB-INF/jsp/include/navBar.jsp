@@ -1,6 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ page import="org.apache.commons.lang.StringEscapeUtils" %>
 
 <fmt:setBundle basename="org.akaza.openclinica.i18n.workflow" var="resworkflow"/>
 <fmt:setBundle basename="org.akaza.openclinica.i18n.words" var="resword"/>
@@ -14,6 +15,8 @@
     }
     if (currentURL != null && request.getQueryString() != null) {
         currentURL += "?" + request.getQueryString();
+        currentURL = StringEscapeUtils.escapeHtml(currentURL);
+        currentURL = StringEscapeUtils.escapeJavaScript(currentURL);
     }
 %>
 
@@ -46,11 +49,15 @@
 <c:set var="urlPrefix" value=""/>
 <c:set var="requestFromSpringController" value="${param.isSpringController}"/>
 <c:set var="requestFromSpringControllerCCV" value="${param.isSpringControllerCCV}"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/includes/jmesa/jmesa.css" type="text/css">
+<script type="text/JavaScript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.min.js"></script>
+<script type="text/javascript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery-migrate-3.1.0.min.js"></script>
+<script type="text/JavaScript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jmesa.js"></script>
+<script type="text/JavaScript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.jmesa.js"></script>
+<script type="text/javascript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.blockUI.js"></script>
 <c:choose>
     <c:when test="${requestFromSpringController == 'true' || requestFromSpringControllerCCV == 'true'}">
         <c:set var="urlPrefix" value="${pageContext.request.contextPath}/"/>
-        <script type="text/JavaScript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.min.js"></script>
-        <script type="text/javascript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.blockUI.js"></script>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/includes/css/icomoon-style.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.4/bluebird.min.js"></script>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/lib/es6-promise.auto.min.js"></script>
@@ -69,8 +76,6 @@
         <script type="text/javascript" language="JavaScript" src="${pageContext.request.contextPath}/includes/moment.min.js"></script>
     </c:when>
     <c:otherwise>
-        <script type="text/JavaScript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.min.js"></script>
-        <script type="text/javascript" language="JavaScript" src="${pageContext.request.contextPath}/includes/jmesa/jquery.blockUI.js"></script>
         <link rel="stylesheet" href="includes/css/icomoon-style.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.4/bluebird.min.js"></script>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/lib/es6-promise.auto.min.js"></script>
@@ -160,20 +165,6 @@
     g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
     })();
 
-
-    // Walkme snippet
-    (function () {
-        var walkme = document.createElement('script');
-        walkme.type = 'text/javascript';
-        walkme.async = true;
-        walkme.src = '<c:out value="${sessionScope.walkmeURL}" />';
-        var s = document.getElementsByTagName('script')[0];
-        s.parentNode.insertBefore(walkme, s);
-        window._walkmeConfig = {
-            smartLoad: true
-        };
-    })();
-
     function confirmCancel(pageName) {
         var confirm1 = confirm('<fmt:message key="sure_to_cancel" bundle="${resword}"/>');
         if (confirm1) {
@@ -208,7 +199,6 @@
             var tform = document.forms["fr_cancel_button"];
             tform.action = contextPath + "/" + pageName;
             tform.submit();
-
         }
     }
 
@@ -218,7 +208,6 @@
             var tform = document.forms["fr_cancel_button"];
             tform.action = contextPath + "/" + pageName;
             tform.submit();
-
         }
     }
 
@@ -228,6 +217,9 @@
     }
 </script>
 
+<!-- Help Scout -->
+<script type="text/javascript">!function(e,t,n){function a(){var e=t.getElementsByTagName("script")[0],n=t.createElement("script");n.type="text/javascript",n.async=!0,n.src="https://beacon-v2.helpscout.net",e.parentNode.insertBefore(n,e)}if(e.Beacon=n=function(t,n,a){e.Beacon.readyQueue.push({method:t,options:n,data:a})},n.readyQueue=[],"complete"===t.readyState)return a();e.attachEvent?e.attachEvent("onload",a):e.addEventListener("load",a,!1)}(window,document,window.Beacon||function(){});</script>
+<script type="text/javascript">window.Beacon('init', 'fd568fcb-41a8-40bd-bcd7-0ba9518cfc49')</script>
 <!-- Main Navigation -->
 <div class="oc_nav">
     <div class="nav-top-bar">
@@ -255,46 +247,46 @@
             <a href="${isHref}"><img src="${isLogo}" alt="OpenClinica Logo"/></a>
         </div>
 
-         <div id="StudyInfo">
-              <c:choose>
-                  <c:when test='${study.study != null && study.study.studyId > 0}'>
-                      <b><a href="${urlPrefix}ViewStudy?id=${study.study.studyId}&viewFull=yes"
-                          title="<c:out value='${study.study.name}'/>"
-                          alt="<c:out value='${study.study.name}'/>" ><c:out value="${study.abbreviatedParentStudyName}" /></a>
-                          :&nbsp;<a href="${urlPrefix}ViewSite?id=${study.studyId}" title="<c:out value='${study.name}'/>" alt="<c:out value='${study.name}'/>"><c:out value="${study.abbreviatedName}" /></a></b>
-                  </c:when>
-                  <c:otherwise>
-                      <b><a href="${urlPrefix}ViewStudy?id=${study.studyId}&viewFull=yes" title="<c:out value='${study.name}'/>" alt="<c:out value='${study.name}'/>"><c:out value="${study.abbreviatedName}" /></a></b>
-                  </c:otherwise>
-              </c:choose>
-              (<c:out value="${study.abbreviatedIdentifier}" />)&nbsp;&nbsp;
-              <c:if test="${study.envType == 'PROD'}">
-                  <c:if test="${study.status.pending}">
-                      <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="design" bundle="${resword}"/></span>
-                  </c:if>
-                  <c:if test="${study.status.locked}">
-                      <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="locked" bundle="${resword}"/></span>
-                  </c:if>
-                  <c:if test="${study.status.frozen}">
-                      <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="frozen" bundle="${resword}"/></span>
-                  </c:if>
-              </c:if>
-              <c:if test="${study.envType == 'TEST'}">
-                  <c:if test="${study.status.pending}">
-                      <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/> | <fmt:message key="design" bundle="${resword}"/></span>
-                  </c:if>
-                  <c:if test="${study.status.locked}">
-                      <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/> | <fmt:message key="locked" bundle="${resword}"/></span>
-                  </c:if>
-                  <c:if test="${study.status.frozen}">
-                      <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/> | <fmt:message key="frozen" bundle="${resword}"/></span>
-                  </c:if>
-                  <c:if test="${study.status.available}">
-                      <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/></span>
-                  </c:if>
-              </c:if>&nbsp;&nbsp;|&nbsp;&nbsp;
-              <a href="${urlPrefix}ChangeStudy"><fmt:message key="change" bundle="${resword}"/></a>
-          </div>
+        <div id="StudyInfo">
+            <c:choose>
+                <c:when test='${study.study != null && study.study.studyId > 0}'>
+                    <b><a href="${urlPrefix}ViewStudy?id=${study.study.studyId}&viewFull=yes"
+                      title="<c:out value='${study.study.name}'/>"
+                      alt="<c:out value='${study.study.name}'/>" ><c:out value="${study.abbreviatedParentStudyName}" /></a>
+                      :&nbsp;<a href="${urlPrefix}ViewSite?id=${study.studyId}" title="<c:out value='${study.name}'/>" alt="<c:out value='${study.name}'/>"><c:out value="${study.abbreviatedName}" /></a></b>
+                </c:when>
+                <c:otherwise>
+                    <b><a href="${urlPrefix}ViewStudy?id=${study.studyId}&viewFull=yes" title="<c:out value='${study.name}'/>" alt="<c:out value='${study.name}'/>"><c:out value="${study.abbreviatedName}" /></a></b>
+                </c:otherwise>
+            </c:choose>
+            (<c:out value="${study.abbreviatedIdentifier}" />)&nbsp;&nbsp;
+            <c:if test="${study.envType == 'PROD'}">
+                <c:if test="${study.status.pending}">
+                    <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="design" bundle="${resword}"/></span>
+                </c:if>
+                <c:if test="${study.status.locked}">
+                    <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="locked" bundle="${resword}"/></span>
+                </c:if>
+                <c:if test="${study.status.frozen}">
+                    <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="frozen" bundle="${resword}"/></span>
+                </c:if>
+            </c:if>
+            <c:if test="${study.envType == 'TEST'}">
+                <c:if test="${study.status.pending}">
+                    <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/> | <fmt:message key="design" bundle="${resword}"/></span>
+                </c:if>
+                <c:if test="${study.status.locked}">
+                    <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/> | <fmt:message key="locked" bundle="${resword}"/></span>
+                </c:if>
+                <c:if test="${study.status.frozen}">
+                    <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/> | <fmt:message key="frozen" bundle="${resword}"/></span>
+                </c:if>
+                <c:if test="${study.status.available}">
+                    <span class="status-tag status-${fn:toLowerCase(study.envType)}"><fmt:message key="test_environment" bundle="${resword}"/></span>
+                </c:if>
+            </c:if>&nbsp;&nbsp;|&nbsp;&nbsp;
+            <a href="${urlPrefix}ChangeStudy"><fmt:message key="change" bundle="${resword}"/></a>
+        </div>
 
         <div id="UserInfo">
             <div id="userDropdown">
@@ -371,9 +363,8 @@
                                                                             <td align="right" style="font-weight: normal;" class="oc-menu-bar">
                                                                                 <ul>
                                                                                     <c:if test="${userRole.coordinator || userRole.director}">
-                                                                                        <li><a href="${urlPrefix}MainMenu"><fmt:message key="nav_home"
-                                                                                                                                        bundle="${resword}"/></a>
-                                                                                        </li>
+                                                                                        <li><a href="${urlPrefix}MainMenu"><fmt:message
+                                                                                                key="nav_home" bundle="${resword}"/></a></li>
                                                                                         <li><a href="${urlPrefix}ListStudySubjects"><fmt:message
                                                                                                 key="nav_subject_matrix" bundle="${resword}"/></a></li>
                                                                                         <li><a href="${urlPrefix}ViewNotes?module=submit&listNotes_f_discrepancyNoteBean.disType=Query"><fmt:message
@@ -383,8 +374,7 @@
                                                                                     </c:if>
                                                                                     <c:if test="${userRole.researchAssistant ||userRole.researchAssistant2}">
                                                                                         <li><a href="${urlPrefix}MainMenu"><fmt:message key="nav_home"
-                                                                                                                                        bundle="${resword}"/></a>
-                                                                                        </li>
+                                                                                                                                        bundle="${resword}"/></a></li>
                                                                                         <li><a href="${urlPrefix}ListStudySubjects"><fmt:message
                                                                                                 key="nav_subject_matrix" bundle="${resword}"/></a></li>
                                                                                         <c:if test="${study.status.available && !enrollmentCapped}">
@@ -396,8 +386,7 @@
                                                                                     </c:if>
                                                                                     <c:if test="${userRole.investigator}">
                                                                                         <li><a href="${urlPrefix}MainMenu"><fmt:message key="nav_home"
-                                                                                                                                        bundle="${resword}"/></a>
-                                                                                        </li>
+                                                                                                                                        bundle="${resword}"/></a></li>
                                                                                         <li><a href="${urlPrefix}ListStudySubjects"><fmt:message
                                                                                                 key="nav_subject_matrix" bundle="${resword}"/></a></li>
                                                                                         <c:if test="${study.status.available && !enrollmentCapped}">
@@ -409,8 +398,7 @@
                                                                                     </c:if>
                                                                                     <c:if test="${userRole.monitor }">
                                                                                         <li><a href="${urlPrefix}MainMenu"><fmt:message key="nav_home"
-                                                                                                                                        bundle="${resword}"/></a>
-                                                                                        </li>
+                                                                                                                                        bundle="${resword}"/></a></li>
                                                                                         <li><a href="${urlPrefix}ListStudySubjects"><fmt:message
                                                                                                 key="nav_subject_matrix" bundle="${resword}"/></a></li>
                                                                                         <li>
@@ -628,7 +616,7 @@
     dropdown = document.getElementById("subnav_Tasks");
 
     //close dropdown using esc
-    $(document).keyup(function(e) {
+    jQuery(document).keyup(function(e) {
         if (e.keyCode == 27) { // escape key maps to keycode `27`
             dropdown.style.display="none";
             jQuery.unblockUI();
@@ -636,27 +624,27 @@
     });
 
     //we have it open on mouse-over OR click when it is closed
-    $(document).ready(function(){
+    jQuery(document).ready(function(){
         var participantIDVerification = '<c:out value="${participantIDVerification}"/>';
         if (participantIDVerification == 'true') {
             // disable right click
-            $("input[name='findSubjects_f_studySubject.label']").on('contextmenu',function(){
+            jQuery("input[name='findSubjects_f_studySubject.label']").on('contextmenu',function(){
                 return false;
             });
             // disable cut copy paste
-            $("input[name='findSubjects_f_studySubject.label']").bind('cut copy paste', function (e) {
+            jQuery("input[name='findSubjects_f_studySubject.label']").bind('cut copy paste', function (e) {
                 e.preventDefault();
             });
         }
         // Show hide popover
-        $(".nav_TaskB").click(function(){
-            $(this).find(".dropdown").slideToggle("fast");
+        jQuery(".nav_TaskB").click(function(){
+            jQuery(this).find(".dropdown").slideToggle("fast");
         });
     });
-    $(document).on("click", function(event){
-        var $trigger = $(".nav_TaskB");
+    jQuery(document).on("click", function(event){
+        var $trigger = jQuery(".nav_TaskB");
         if($trigger !== event.target && !$trigger.has(event.target).length){
-            $(".dropdown").slideUp("fast");
+            jQuery(".dropdown").slideUp("fast");
         }
     });
     function showDropdown() {

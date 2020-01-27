@@ -18,17 +18,32 @@ public class StudySubjectDao extends AbstractDomainDao<StudySubject> {
         // TODO Auto-generated method stub
         return StudySubject.class;
     }
+
+    /**
+     * findAllByStudyWithAvailableAndSignedStatusOnly(Integer studyId,int pageNumber, int pageSize), finds all the studySubjects which are available or signed.
+     *
+     * @return a list of studySubjects
+     */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<StudySubject> findAllByStudy(Integer studyId,int pageNumber, int pageSize) {
-        String query = "from " + getDomainClassName() + " do where do.study.studyId = :studyid and status_id = :statusid  order by do.dateCreated ";
-        org.hibernate.Query q = getCurrentSession().createQuery(query);
-        q.setInteger("statusid",1);
-        q.setInteger("studyid", studyId);
+    public List<StudySubject> findAllByStudyWithAvailableAndSignedStatusOnly(Integer studyId,int pageNumber, int pageSize) {
+        String query = "from " + getDomainClassName() + " do where do.study.studyId = :studyid and (status_id = :statusId or status_id = :statusId1) order by do.dateCreated ";
+        Query q = getCurrentSession().createQuery(query);
+        q.setParameter("statusId",1);
+        q.setParameter("statusId1", 8);
+        q.setParameter("studyid", studyId);
         q.setFirstResult  ((pageNumber-1)*pageSize);
         q.setMaxResults(pageSize);
         return (List<StudySubject>) q.list();
 
+    }
+
+    public List<StudySubject> findAllByStudy(Study study){
+        String query = "from " + getDomainClassName() + " do where do.study.studyId = :studyid or do.study.study.studyId=:parentStudyId";
+        Query q = getCurrentSession().createQuery(query);
+        q.setParameter("studyid", study.getStudyId());
+        q.setParameter("parentStudyId", study.getStudyId());
+        return (List<StudySubject>) q.list();
     }
 
     public StudySubject findByOcOID(String OCOID) {

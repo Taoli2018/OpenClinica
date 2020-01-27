@@ -33,6 +33,7 @@ import core.org.akaza.openclinica.dao.submit.SubjectDAO;
 import core.org.akaza.openclinica.domain.rule.RuleSetBean;
 import core.org.akaza.openclinica.exception.OpenClinicaException;
 import core.org.akaza.openclinica.service.rule.RuleSetService;
+import org.akaza.openclinica.controller.helper.TemplateHelper;
 import org.akaza.openclinica.view.Page;
 import core.org.akaza.openclinica.web.InsufficientPermissionException;
 import org.slf4j.Logger;
@@ -213,7 +214,22 @@ public class AddNewSubjectServlet extends SecureController {
             String label = fp.getString(INPUT_LABEL).trim();
 
             if (label.equalsIgnoreCase(resword.getString("id_generated_Save_Add"))) {
-                label = generateParticipantIdUsingTemplate();
+                boolean labelExists;
+                int iteration =0;
+                do {
+                    labelExists = false;
+                    iteration++;
+                    label = generateParticipantIdUsingTemplate();
+                    StudySubjectBean subjectWithSameLabel = ssd.findByLabelAndStudyForCreatingParticipant(label, currentStudy.getStudyId());
+                    StudySubjectBean subjectWithSameLabelInParent = null;
+                    if (currentStudy.isSite()) {
+                        subjectWithSameLabelInParent = ssd.findByLabelAndStudyForCreatingParticipant(label, currentStudy.getStudy().getStudyId());
+                    }
+                    if (subjectWithSameLabel.isActive() || (subjectWithSameLabelInParent != null && subjectWithSameLabelInParent.isActive())) {
+                        labelExists = true;
+                    }
+                } while (labelExists && iteration < 11);
+
                 request.setAttribute(INPUT_LABEL, label);
             }
             v.addValidation(INPUT_LABEL, Validator.NO_BLANKS);
@@ -515,6 +531,7 @@ public class AddNewSubjectServlet extends SecureController {
         // Adding Sample data to validate templateID
         data.put("siteId", siteId);
         data.put("siteParticipantCount", subjectCount);
+        data.put("helper", new TemplateHelper());
         StringWriter wtr = new StringWriter();
         Template template = null;
 

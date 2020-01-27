@@ -7,12 +7,6 @@
 <jsp:include page="../include/submit-header.jsp"/>
 <!-- move the alert message to the sidebar-->
 <jsp:include page="../include/sideAlert.jsp"/>
-<link rel="stylesheet" href="includes/jmesa/jmesa.css" type="text/css">
-<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.min.js"></script>
-<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.jmesa.js"></script>
-<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa.js"></script>
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery.blockUI.js"></script>
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.4.1.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"/>
 <script type="text/JavaScript" language="JavaScript" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
 <script type="text/JavaScript" language="JavaScript" src="//cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.23/moment-timezone-with-data-2012-2022.min.js"></script>
@@ -88,8 +82,11 @@
 
 <script>
   var dateFormat = 'hh:mma MMM DD YYYY';
-  function formatDate(date) {
-    return moment(date).format(dateFormat);
+  function formatDateWithNull(date){
+    if(date == null)
+        return ""
+    else
+        return moment(date).format(dateFormat);
   }
   function formatError(e) {
     return 'ERROR: ' + e.status + ': ' + e.statusText;
@@ -221,9 +218,9 @@
             logEntry.type,
             logEntry.siteOid && (logEntry.siteOid != logEntry.studyOid) ? logEntry.siteOid : logEntry.studyOid,
             logEntry.status,
-            formatDate(logEntry.dateCreated),
+            formatDateWithNull(logEntry.dateCreated),
             logEntry.createdByUsername,
-            formatDate(logEntry.dateCompleted),
+            formatDateWithNull(logEntry.dateCompleted),
             actionView + actionDownload + actionDelete
           ];
         }));
@@ -322,7 +319,7 @@
     </a>
 
     <script>
-      var url = '${pageContext.request.contextPath}/pages/auth/api/jobs/${param["uuid"]}/downloadFile?open=true';
+      var url = '${pageContext.request.contextPath}/pages/auth/api/jobs/${uuid}/downloadFile?open=true';
       var jobResult = $.get(url, function(data) {
         var rows = data.trim().split('\n');
         var header = rows[0];
@@ -359,7 +356,7 @@
       jobs.done(function(data) {
         var logEntry;
         for (var i=0; i<data.length; i++) {
-          if (data[i].uuid === '${param["uuid"]}') {
+          if (data[i].uuid === '${uuid}') {
             logEntry = data[i];
             break;
           }
@@ -368,9 +365,9 @@
           return;
         $('#job-log-for').text(logEntry.sourceFileName || logEntry.type);
         $('#job-site-name').text(logEntry.siteOid && (logEntry.siteOid != logEntry.studyOid) ? logEntry.siteOid : logEntry.studyOid);
-        $('#job-start-time').text(formatDate(logEntry.dateCreated));
+        $('#job-start-time').text(formatDateWithNull(logEntry.dateCreated));
         $('#job-submitted-by').text(logEntry.createdByUsername);
-        $('#job-completion-time').text(formatDate(logEntry.dateCompleted));
+        $('#job-completion-time').text(formatDateWithNull(logEntry.dateCompleted));
         $('#job-details').show();
       }).fail(function(e) {
         $('#loading').text(formatError(e));

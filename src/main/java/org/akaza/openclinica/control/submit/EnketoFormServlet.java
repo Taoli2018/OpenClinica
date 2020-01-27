@@ -19,6 +19,7 @@ import org.akaza.openclinica.view.Page;
 import core.org.akaza.openclinica.web.InsufficientPermissionException;
 import core.org.akaza.openclinica.web.pform.OpenRosaServices;
 import core.org.akaza.openclinica.web.pform.PFormCache;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -84,6 +85,7 @@ public class EnketoFormServlet extends SecureController {
         subjectContext.setStudyOid((currentStudy.getOc_oid()));
         subjectContext.setFormLoadMode(mode);
         contextHash = cache.putSubjectContext(subjectContext);
+        logger.info("Subject Context info *** {} *** ",subjectContext.toString());
 
         Study parentStudy = enketoCredentials.getParentStudy(currentStudy.getOc_oid());
         StudyUserRoleBean currentRole = (StudyUserRoleBean) request.getSession().getAttribute("userRole");

@@ -8,13 +8,6 @@
 <jsp:include page="../include/submit-header.jsp"/>
 <!-- move the alert message to the sidebar-->
 <jsp:include page="../include/sideAlert.jsp"/>
-<link rel="stylesheet" href="includes/jmesa/jmesa.css" type="text/css">
-<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.min.js"></script>
-<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jquery.jmesa.js"></script>
-<script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa.js"></script>
-<%-- <script type="text/JavaScript" language="JavaScript" src="includes/jmesa/jmesa-original.js"></script> --%>
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery.blockUI.js"></script>
-<script type="text/javascript" language="JavaScript" src="includes/jmesa/jquery-migrate-1.4.1.js"></script>
 <script type="text/javascript">
   function onInvokeAction(id,action) {
       if(id.indexOf('findSubjects') == -1)  {
@@ -90,7 +83,7 @@
         sessionStorage.setItem(store.key, JSON.stringify(store.data));
         if (
           store.data.ocStatusHide !== 'oc-status-removed' ||
-          store.data.datatables.some(function(state) {return canReset(state)}) ||
+          canResetAny(store.data.datatables) ||
           $('#studySubjectRecord.collapsed, #subjectEvents.collapsed, #commonEvents>.expanded').length
         )
           $('#reset-all-filters').removeClass('invisible');
@@ -103,7 +96,7 @@
   store.key = participantKey + '${studySub.oid}';
   store.data = JSON.parse(sessionStorage.getItem(store.key)) || {
     collapseSections: {},
-    datatables: [],
+    datatables: {},
     ocStatusHide: 'oc-status-removed'
   };
   store.dirty = false;
@@ -115,6 +108,14 @@
         || state.search.search !== '' 
         || state.start > 0
         || state.length > defaultPageSize;
+  }
+
+  function canResetAny(states) {
+    for (var key in states) {
+      if (canReset(states[key]))
+        return true;
+    }
+    return false;
   }
 
   function resetAllFilters() {
@@ -291,6 +292,11 @@
   }
   #inviteResultAlert > table {
     width: 600px;
+  }
+  #copy-result {
+    font-weight: bold;
+    font-size: 14px;
+    color: #3a6087;
   }
   input[type=radio]:focus,input[type=checkbox]:focus {
     outline-style: solid;
@@ -1619,6 +1625,18 @@
                   <span><i><fmt:message key="viewing_audited" bundle="${resword}"/></i></span>
                 </td>
               </tr>
+              <tr id="copy-result" style="display:none;">
+                <td></td>
+                <td colspan="2" id="copy-result-message"></td>
+              </tr>
+              <tr id="btn-copy" style="display:none;">
+                <td></td>
+                <td colspan="2">
+                  <button>
+                    <fmt:message key="copy_access_code_to_clipboard" bundle="${resword}"/>
+                  </button>
+                </td>
+              </tr>
               <tr valign="top">
                 <td></td>
                 <td valign="top" colspan="2" style="padding-top:7px;">
@@ -1710,6 +1728,7 @@
             $('tr.reset-participant-access-code').show();
         }
     }
+    
     function enableDisableControls() {
         if (!$('#email-input').length)
             return;
@@ -1764,6 +1783,20 @@
 
         jQuery('#editParticipantID').click(function () {
             jQuery.blockUI({message: jQuery('#editSubjectForm'), css: {left: "300px", top: "10px"}});
+        });
+
+        jQuery('#btn-copy button').click(function() {
+          var accessCode = document.getElementById('access-code-input');
+          accessCode.select();
+          accessCode.setSelectionRange(0, 99999); // for mobile devices
+          var copied = document.execCommand("copy");
+          if (copied) {
+            jQuery('#copy-result-message').text('<fmt:message key="copy_to_clipboard_success" bundle="${resword}"/>');
+          } else {
+            jQuery('#copy-result-message').text('<fmt:message key="copy_to_clipboard_failed" bundle="${resword}"/>');
+          }
+          jQuery('#copy-result').show();          
+          return false;
         });
 
         jQuery('#connect-button').click(function () {
@@ -1894,6 +1927,7 @@
         jQuery('#participateAccess').click(function() {
             getAccessCode("N");
             $('#eye').show();
+            $('#btn-copy,#copy-result').hide();
             $('#access-code-input').attr('type', 'password');
             jQuery.blockUI({ message: jQuery('#participateAccessForm'), css:{left: "300px", top:"10px" } });
         });
@@ -1919,6 +1953,7 @@
             getAccessCode("Y");
             $(this).hide();
             $('#access-code-input').attr('type', 'text');
+            $("#btn-copy").show();
         });
      });
 
