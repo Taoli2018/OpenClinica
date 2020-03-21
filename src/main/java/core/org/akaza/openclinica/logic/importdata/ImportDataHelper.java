@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +21,6 @@ import core.org.akaza.openclinica.bean.admin.CRFBean;
 import core.org.akaza.openclinica.bean.core.AuditableEntityBean;
 import core.org.akaza.openclinica.bean.core.EntityBean;
 import core.org.akaza.openclinica.bean.core.Status;
-import core.org.akaza.openclinica.bean.core.SubjectEventStatus;
 import core.org.akaza.openclinica.bean.login.UserAccountBean;
 import core.org.akaza.openclinica.bean.managestudy.StudyEventBean;
 import core.org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
@@ -43,6 +43,7 @@ import core.org.akaza.openclinica.dao.submit.EventCRFDAO;
 import core.org.akaza.openclinica.dao.submit.FormLayoutDAO;
 import core.org.akaza.openclinica.dao.submit.SubjectDAO;
 import core.org.akaza.openclinica.domain.datamap.Study;
+import org.akaza.openclinica.domain.enumsupport.StudyEventWorkflowStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -211,7 +212,6 @@ public class ImportDataHelper {
                 // eventCrfBean.setCrfVersion((CRFVersionBean)crfVersion);
                 eventCrfBean.setOwner(ub);
                 // eventCrfBean.setCrf((CRFBean)crf);
-                eventCrfBean.setStatus(Status.AVAILABLE);
                 eventCrfBean.setCompletionStatusId(1);
                 // problem with the line below
                 eventCrfBean.setStudySubjectId(studySubjectBean.getId());
@@ -259,7 +259,7 @@ public class ImportDataHelper {
             } else {
                 // TODO change status here, tbh
                 // 2/08 this part seems to work, tbh
-                studyEventBean.setSubjectEventStatus(SubjectEventStatus.DATA_ENTRY_STARTED);
+                studyEventBean.setWorkflowStatus(StudyEventWorkflowStatusEnum.DATA_ENTRY_STARTED);
                 studyEventBean.setUpdater(ub);
                 studyEventBean.setUpdatedDate(new Date());
                 studyEventDao.update(studyEventBean);
@@ -736,6 +736,7 @@ public class ImportDataHelper {
     	      }
     	    }
     	
+    	fileList.sort(new LogFileSorter());
     	return fileList;
     }
     
@@ -870,6 +871,14 @@ public int getCurrentActiveStudyId() {
 
 public void setCurrentActiveStudyId(int currentActiveStudyId) {
 	this.currentActiveStudyId = currentActiveStudyId;
+}
+
+class LogFileSorter implements Comparator<File> 
+{
+    @Override
+    public int compare(File f1, File f2) {
+        return Long.compare(f2.lastModified(), f1.lastModified());
+    }
 }
 
    }
